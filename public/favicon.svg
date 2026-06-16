@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="7" fill="#0A0B0F"/>
+  <text x="6" y="22" font-family="Inter, system-ui, -apple-system, sans-serif" font-weight="700" font-size="18" fill="#F5F1EA" letter-spacing="-0.05em">Q</text>
+  <text x="13" y="22" font-family="Inter, system-ui, -apple-system, sans-serif" font-weight="700" font-size="18" fill="#FF5C2E" letter-spacing="-0.05em">u</text>
+  <text x="21" y="22" font-family="Inter, system-ui, -apple-system, sans-serif" font-weight="700" font-size="18" fill="#F5F1EA" letter-spacing="-0.05em">R</text>
+</svg>

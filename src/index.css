@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * QurTag base layer
+ * Pure white default. Inter Display. Premium software typography.
+ */
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --cairn-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  .dark {
+    color-scheme: dark;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: 'cv11', 'ss03', 'cv02';
+  }
+
+  /* When Inter var is available, switch to the variable font feature set. */
+  @supports (font-variation-settings: normal) {
+    html {
+      font-family: 'Inter var', Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+    }
+  }
+
+  body {
+    @apply bg-canvas text-ink-900 font-sans antialiased;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .dark body {
+    @apply bg-ink-950 text-ink-50;
+  }
+
+  ::selection {
+    @apply bg-ink-900 text-canvas;
+  }
+
+  .dark ::selection {
+    @apply bg-canvas text-ink-900;
+  }
+
+  /* All display headings get the same tight, confident treatment. */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display text-ink-900;
+    font-feature-settings: 'cv11', 'ss03', 'cv02';
+  }
+
+  .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+    @apply text-ink-50;
+  }
+
+  /* Focus ring that respects the type. */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-ink-900/40 ring-offset-2 ring-offset-canvas;
+    border-radius: 4px;
+  }
+
+  .dark *:focus-visible {
+    @apply ring-canvas/30 ring-offset-ink-950;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* Skip link. Invisible until focused, then snaps into view above all chrome. */
+  .skip-link {
+    @apply absolute left-2 top-2 z-[100] inline-flex h-10 items-center rounded-pill bg-ink-900 text-canvas px-4 text-caption font-medium;
+    @apply transform -translate-y-[200%] focus-visible:translate-y-0;
+    @apply transition-transform duration-cairn ease-cairn;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  /* Subtle hairline that adapts to theme */
+  .border-hairline {
+    border-color: theme('colors.hairline');
+  }
+
+  .dark .border-hairline {
+    border-color: theme('colors.hairline-dark');
+  }
+
+  /* Editorial link. Text + arrow + slow underline.
+   * Replaces button chrome everywhere except primary CTAs. */
+  .link-arrow {
+    @apply inline-flex items-center gap-1.5 font-sans font-medium text-ink-900 dark:text-ink-50;
+    @apply transition-all duration-cairn ease-cairn;
+  }
+  .link-arrow:hover {
+    @apply gap-2.5;
+  }
+}

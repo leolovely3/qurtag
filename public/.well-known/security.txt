@@ -1,0 +1,8 @@
+# QurTag. Security disclosure policy (RFC 9116)
+
+Contact: mailto:security@qurtag.com
+Expires: 2027-06-15T00:00:00.000Z
+Acknowledgments: https://qurtag.com/security#acknowledgments
+Preferred-Languages: en
+Canonical: https://qurtag.com/.well-known/security.txt
+Policy: https://qurtag.com/security

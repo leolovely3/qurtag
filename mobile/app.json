@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "QurTag",
+    "slug": "cairn",
+    "version": "0.0.1",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "cairn",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0B0F"
+    },
+    "ios": {
+      "bundleIdentifier": "co.qurtag.com",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Lets QurTag auto-arm your items when you leave home.",
+        "NFCReaderUsageDescription": "Lets QurTag write tags during setup.",
+        "NSCameraUsageDescription": "Lets QurTag scan QR codes during tag setup."
+      }
+    },
+    "android": {
+      "package": "co.qurtag.com",
+      "permissions": ["NOTIFICATIONS", "ACCESS_FINE_LOCATION", "CAMERA", "NFC"]
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#FF5C2E"
+        }
+      ]
+    ]
+  }
+}
