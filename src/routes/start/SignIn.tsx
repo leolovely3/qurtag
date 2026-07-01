@@ -46,7 +46,7 @@ export function StartSignIn() {
 
   return (
     <Container size="md">
-      <div className="min-h-[70vh] py-cairn-12 grid lg:grid-cols-12 gap-cairn-12 items-center">
+      <div className="min-h-[70vh] py-qurtag-12 grid lg:grid-cols-12 gap-qurtag-12 items-center">
         <div className="lg:col-span-6 flex flex-col gap-5">
           <Eyebrow>Start free</Eyebrow>
           <h1 className="font-display font-semibold text-ink-900 text-h3 sm:text-h2 lg:text-h1 tracking-[-0.032em] leading-[1.02] text-balance">
@@ -70,7 +70,7 @@ export function StartSignIn() {
         </div>
 
         <div className="lg:col-span-6">
-          <div className="rounded-modal border border-hairline bg-canvas p-cairn-5 shadow-card flex flex-col gap-5 max-w-md">
+          <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 shadow-card flex flex-col gap-5 max-w-md">
             {sent ? (
               <>
                 <div className="size-10 rounded-pill bg-ink-900 grid place-items-center">
@@ -115,7 +115,7 @@ export function StartSignIn() {
                 <details className="group">
                   <summary className="cursor-pointer list-none flex items-center justify-between text-caption font-medium text-ink-900 hover:opacity-70 transition-opacity">
                     <span>Add your first item now (optional)</span>
-                    <span className="text-muted transition-transform duration-cairn group-open:rotate-45">+</span>
+                    <span className="text-muted transition-transform duration-qurtag group-open:rotate-45">+</span>
                   </summary>
                   <div className="flex flex-col gap-3 mt-3">
                     <Input
@@ -141,7 +141,7 @@ export function StartSignIn() {
                 <button
                   type="submit"
                   disabled={submitting || !email}
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-pill bg-ink-900 text-canvas text-body font-medium hover:bg-ink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-cairn"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-pill bg-ink-900 text-canvas text-body font-medium hover:bg-ink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-qurtag"
                 >
                   {submitting ? 'Sending…' : 'Send my link'}
                   <ArrowRight size={16} strokeWidth={1.75} />

@@ -58,7 +58,7 @@ export const MessageComposer = forwardRef<HTMLTextAreaElement, MessageComposerPr
         )}
         <div
           className={cn(
-            'rounded-modal border flex flex-col gap-2 px-cairn-3 py-3 transition-colors duration-cairn',
+            'rounded-modal border flex flex-col gap-2 px-qurtag-3 py-3 transition-colors duration-qurtag',
             tone === 'dark'
               ? 'bg-ink-900 border-hairline-dark focus-within:border-ink-50/30'
               : 'bg-canvas border-hairline-strong focus-within:border-ink-900',
@@ -92,7 +92,7 @@ export const MessageComposer = forwardRef<HTMLTextAreaElement, MessageComposerPr
               disabled={!canSend}
               className={cn(
                 'inline-flex h-10 items-center gap-2 rounded-pill px-5 text-caption font-medium',
-                'transition-colors duration-cairn ease-cairn',
+                'transition-colors duration-qurtag ease-qurtag',
                 'disabled:opacity-50 disabled:cursor-not-allowed',
                 tone === 'dark'
                   ? 'bg-canvas text-ink-900 hover:bg-ink-50'

@@ -61,7 +61,7 @@ function SystemCard({ payload }: { payload: SystemPayload }) {
               <MapPin size={24} strokeWidth={1.5} className="text-muted" />
             </div>
           )}
-          <div className="p-cairn-3 flex items-start gap-2">
+          <div className="p-qurtag-3 flex items-start gap-2">
             <MapPin size={14} strokeWidth={1.75} className="mt-0.5 text-signal-500 shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-caption font-medium text-ink-900 truncate">
@@ -79,7 +79,7 @@ function SystemCard({ payload }: { payload: SystemPayload }) {
     }
     case 'courier_request':
       return (
-        <div className="rounded-modal border border-hairline bg-canvas p-cairn-3 flex items-start gap-3 max-w-md">
+        <div className="rounded-modal border border-hairline bg-canvas p-qurtag-3 flex items-start gap-3 max-w-md">
           <div className="size-9 rounded-pill bg-verdigris-100 grid place-items-center shrink-0">
             <Truck size={16} strokeWidth={1.75} className="text-verdigris-700" />
           </div>
@@ -97,7 +97,7 @@ function SystemCard({ payload }: { payload: SystemPayload }) {
       );
     case 'reward_offered':
       return (
-        <div className="rounded-modal border border-hairline bg-canvas p-cairn-3 flex items-center gap-3 max-w-md">
+        <div className="rounded-modal border border-hairline bg-canvas p-qurtag-3 flex items-center gap-3 max-w-md">
           <div className="size-9 rounded-pill bg-signal-500 grid place-items-center shrink-0">
             <ShieldCheck size={16} strokeWidth={1.75} className="text-canvas" />
           </div>
@@ -109,7 +109,7 @@ function SystemCard({ payload }: { payload: SystemPayload }) {
       );
     case 'reunited':
       return (
-        <div className="rounded-modal border border-hairline bg-canvas p-cairn-3 flex items-center gap-3 max-w-md">
+        <div className="rounded-modal border border-hairline bg-canvas p-qurtag-3 flex items-center gap-3 max-w-md">
           <div className="size-9 rounded-pill bg-verdigris-500 grid place-items-center shrink-0">
             <PartyPopper size={16} strokeWidth={1.75} className="text-canvas" />
           </div>
@@ -131,7 +131,7 @@ export function ThreadView({ messages, viewerKind, autoScroll = true, className 
     return (
       <div
         className={cn(
-          'flex items-center justify-center text-caption text-muted py-cairn-8',
+          'flex items-center justify-center text-caption text-muted py-qurtag-8',
           className,
         )}
       >

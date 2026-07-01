@@ -69,8 +69,8 @@ export function Tags() {
   const unassigned = tags.filter((t) => !t.current_item_id).length;
 
   return (
-    <div className="px-cairn-5 md:px-cairn-8 py-cairn-8 max-w-5xl">
-      <div className="flex items-end justify-between mb-cairn-5 gap-cairn-3 flex-wrap">
+    <div className="px-qurtag-5 md:px-qurtag-8 py-qurtag-8 max-w-5xl">
+      <div className="flex items-end justify-between mb-qurtag-5 gap-qurtag-3 flex-wrap">
         <div className="flex flex-col gap-2">
           <Eyebrow>Tags</Eyebrow>
           <h1 className="font-display font-semibold text-ink-900 text-h3 sm:text-h2 tracking-[-0.028em] leading-[1.04] text-balance">
@@ -84,14 +84,14 @@ export function Tags() {
         </div>
         <Link
           to="/start/setup"
-          className="inline-flex h-11 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-4 hover:bg-ink-700 transition-colors duration-cairn"
+          className="inline-flex h-11 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-4 hover:bg-ink-700 transition-colors duration-qurtag"
         >
           <Plus size={14} strokeWidth={1.75} />
           New tag
         </Link>
       </div>
 
-      <div className="relative mb-cairn-3">
+      <div className="relative mb-qurtag-3">
         <Search
           size={16}
           strokeWidth={1.75}
@@ -102,11 +102,11 @@ export function Tags() {
           placeholder="Search by tag code or item name…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="h-11 w-full rounded-pill border border-hairline-strong bg-canvas pl-11 pr-4 text-body text-ink-900 placeholder:text-muted focus:outline-none focus:border-ink-900 transition-colors duration-cairn"
+          className="h-11 w-full rounded-pill border border-hairline-strong bg-canvas pl-11 pr-4 text-body text-ink-900 placeholder:text-muted focus:outline-none focus:border-ink-900 transition-colors duration-qurtag"
         />
       </div>
 
-      <div className="flex items-center gap-2 mb-cairn-5 flex-wrap">
+      <div className="flex items-center gap-2 mb-qurtag-5 flex-wrap">
         <Chip active={status === 'all'} onClick={() => setStatus('all')}>
           All status
         </Chip>
@@ -131,11 +131,11 @@ export function Tags() {
       </div>
 
       {loading ? (
-        <div className="rounded-modal border border-hairline bg-canvas p-cairn-8 flex items-center justify-center">
+        <div className="rounded-modal border border-hairline bg-canvas p-qurtag-8 flex items-center justify-center">
           <div className="size-6 rounded-full border-2 border-ink-100 border-t-ink-900 animate-spin" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-modal border border-hairline bg-paper p-cairn-8 flex flex-col items-start gap-3">
+        <div className="rounded-modal border border-hairline bg-paper p-qurtag-8 flex flex-col items-start gap-3">
           <div className="size-12 rounded-pill bg-canvas grid place-items-center shadow-card">
             <TagIcon size={20} strokeWidth={1.5} className="text-ink-900" />
           </div>
@@ -150,7 +150,7 @@ export function Tags() {
           {tags.length === 0 && (
             <Link
               to="/start/setup"
-              className="inline-flex h-11 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-5 hover:bg-ink-700 transition-colors duration-cairn"
+              className="inline-flex h-11 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-5 hover:bg-ink-700 transition-colors duration-qurtag"
             >
               <Plus size={14} strokeWidth={1.75} />
               Add an item to mint a tag
@@ -164,7 +164,7 @@ export function Tags() {
             return (
               <div
                 key={tag.id}
-                className="flex items-center gap-cairn-3 p-cairn-3 hover:bg-paper transition-colors duration-cairn"
+                className="flex items-center gap-qurtag-3 p-qurtag-3 hover:bg-paper transition-colors duration-qurtag"
               >
                 <div className="size-10 rounded-card bg-ink-50 grid place-items-center shrink-0">
                   <TagIcon size={16} strokeWidth={1.75} className="text-ink-900" />
@@ -187,11 +187,11 @@ export function Tags() {
                     <span className="text-caption text-muted italic">Not assigned to an item.</span>
                   )}
                 </div>
-                <div className="hidden sm:flex items-center gap-cairn-3 shrink-0">
+                <div className="hidden sm:flex items-center gap-qurtag-3 shrink-0">
                   <StatusBadge status={tag.status} />
                   <Link
                     to={`/app/tags/${tag.id}/print`}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-pill border border-hairline-strong text-ink-900 text-caption font-medium px-3 hover:border-ink-900 transition-colors duration-cairn"
+                    className="inline-flex h-9 items-center gap-1.5 rounded-pill border border-hairline-strong text-ink-900 text-caption font-medium px-3 hover:border-ink-900 transition-colors duration-qurtag"
                   >
                     <Printer size={12} strokeWidth={1.75} />
                     Reprint
@@ -234,7 +234,7 @@ function Chip({ active, onClick, children }: ChipProps) {
       onClick={onClick}
       className={cn(
         'inline-flex h-8 items-center rounded-pill border px-3 text-caption font-medium',
-        'transition-colors duration-cairn ease-cairn',
+        'transition-colors duration-qurtag ease-qurtag',
         active
           ? 'bg-ink-900 text-canvas border-ink-900'
           : 'bg-canvas text-ink-700 border-hairline-strong hover:border-ink-900',

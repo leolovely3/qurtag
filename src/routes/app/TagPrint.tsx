@@ -60,7 +60,7 @@ export function TagPrint() {
   if (!tag) {
     return (
       <Container size="md">
-        <div className="min-h-[60vh] flex flex-col items-start gap-3 py-cairn-12">
+        <div className="min-h-[60vh] flex flex-col items-start gap-3 py-qurtag-12">
           <Eyebrow>Tag not found</Eyebrow>
           <h1 className="font-display font-semibold text-h3 text-ink-900 tracking-[-0.022em]">
             That tag isn't in your account.
@@ -76,7 +76,7 @@ export function TagPrint() {
   return (
     <Container size="md">
       {/* Toolbar. Hidden in print */}
-      <div className="no-print py-cairn-3 flex items-center justify-between gap-3 border-b border-hairline">
+      <div className="no-print py-qurtag-3 flex items-center justify-between gap-3 border-b border-hairline">
         <Link
           to="/app"
           className="inline-flex items-center gap-2 text-caption text-muted hover:text-ink-900 transition-colors"
@@ -91,7 +91,7 @@ export function TagPrint() {
           <button
             type="button"
             onClick={() => window.print()}
-            className="inline-flex h-10 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-4 hover:bg-ink-700 transition-colors duration-cairn"
+            className="inline-flex h-10 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-4 hover:bg-ink-700 transition-colors duration-qurtag"
           >
             <Printer size={14} strokeWidth={1.75} />
             Print tag
@@ -100,16 +100,16 @@ export function TagPrint() {
       </div>
 
       {/* The printable area */}
-      <div className="py-cairn-8 flex justify-center">
-        <article className="w-full max-w-2xl bg-canvas border border-hairline rounded-modal p-cairn-8 print:border-0 print:rounded-none print:shadow-none shadow-card">
-          <div className="flex items-start justify-between mb-cairn-5">
+      <div className="py-qurtag-8 flex justify-center">
+        <article className="w-full max-w-2xl bg-canvas border border-hairline rounded-modal p-qurtag-8 print:border-0 print:rounded-none print:shadow-none shadow-card">
+          <div className="flex items-start justify-between mb-qurtag-5">
             <Wordmark />
             <span className="text-eyebrow uppercase tracking-[0.14em] text-muted">
               Tag · {tag.public_id}
             </span>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-cairn-5 items-center">
+          <div className="grid sm:grid-cols-2 gap-qurtag-5 items-center">
             <div className="flex flex-col gap-3">
               <Eyebrow>If found</Eyebrow>
               <h2 className="font-display font-semibold text-h2 sm:text-h1 text-ink-900 tracking-[-0.028em] leading-[0.98] text-balance">
@@ -143,14 +143,14 @@ export function TagPrint() {
           </div>
 
           {/* Fold + cut guide */}
-          <div className="mt-cairn-8 flex items-center gap-3 text-caption text-muted">
+          <div className="mt-qurtag-8 flex items-center gap-3 text-caption text-muted">
             <Scissors size={14} strokeWidth={1.75} />
             <span>Cut along the inside edge. Fold around a luggage tag sleeve or laminate.</span>
           </div>
         </article>
       </div>
 
-      <div className="no-print pb-cairn-8 max-w-2xl mx-auto flex flex-col gap-2">
+      <div className="no-print pb-qurtag-8 max-w-2xl mx-auto flex flex-col gap-2">
         <p className="text-caption text-muted">
           Tip: print on heavier paper (110gsm) or stick the cut-out onto an existing luggage tag.
           Laminating it doubles the lifetime.

@@ -57,7 +57,7 @@ function ReportForm({ onClose, onSubmit }: ReportFormProps) {
   const [submitting, setSubmitting] = useState(false);
 
   return (
-    <div className="rounded-modal border border-hairline bg-canvas p-cairn-5 mb-cairn-5 flex flex-col gap-3">
+    <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 mb-qurtag-5 flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <h2 className="font-display font-semibold text-h5 text-ink-900 tracking-[-0.018em]">Report this conversation</h2>
         <button
@@ -77,7 +77,7 @@ function ReportForm({ onClose, onSubmit }: ReportFormProps) {
             key={k}
             type="button"
             onClick={() => setKind(k)}
-            className={`inline-flex h-9 items-center rounded-pill px-3 text-caption font-medium border transition-colors duration-cairn ${
+            className={`inline-flex h-9 items-center rounded-pill px-3 text-caption font-medium border transition-colors duration-qurtag ${
               kind === k
                 ? 'bg-ink-900 text-canvas border-ink-900'
                 : 'bg-canvas text-ink-900 border-hairline-strong hover:border-ink-900'
@@ -92,7 +92,7 @@ function ReportForm({ onClose, onSubmit }: ReportFormProps) {
         onChange={(e) => setBody(e.target.value)}
         placeholder="Anything we should know."
         rows={4}
-        className="w-full rounded-card border border-hairline-strong bg-canvas p-3 text-body text-ink-900 placeholder:text-muted focus:outline-none focus:border-ink-900 transition-colors duration-cairn resize-none"
+        className="w-full rounded-card border border-hairline-strong bg-canvas p-3 text-body text-ink-900 placeholder:text-muted focus:outline-none focus:border-ink-900 transition-colors duration-qurtag resize-none"
       />
       <div className="flex items-center justify-end gap-3">
         <button
@@ -113,7 +113,7 @@ function ReportForm({ onClose, onSubmit }: ReportFormProps) {
             }
           }}
           disabled={submitting}
-          className="inline-flex h-11 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-5 hover:bg-ink-700 disabled:opacity-50 transition-colors duration-cairn"
+          className="inline-flex h-11 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-5 hover:bg-ink-700 disabled:opacity-50 transition-colors duration-qurtag"
         >
           {submitting ? 'Sending…' : 'Send report'}
         </button>
@@ -348,7 +348,7 @@ export function InboxThread() {
 
   if (error || !thread) {
     return (
-      <div className="px-cairn-5 md:px-cairn-8 py-cairn-8 max-w-3xl flex flex-col gap-5">
+      <div className="px-qurtag-5 md:px-qurtag-8 py-qurtag-8 max-w-3xl flex flex-col gap-5">
         <Link
           to="/app/inbox"
           className="inline-flex items-center gap-2 text-caption text-muted hover:text-ink-900 transition-colors"
@@ -365,9 +365,9 @@ export function InboxThread() {
   }
 
   return (
-    <div className="px-cairn-5 md:px-cairn-8 py-cairn-8 max-w-4xl">
+    <div className="px-qurtag-5 md:px-qurtag-8 py-qurtag-8 max-w-4xl">
       {/* Top bar */}
-      <div className="flex items-center justify-between mb-cairn-3">
+      <div className="flex items-center justify-between mb-qurtag-3">
         <Link
           to="/app/inbox"
           className="inline-flex items-center gap-2 text-caption text-muted hover:text-ink-900 transition-colors"
@@ -382,12 +382,12 @@ export function InboxThread() {
       </div>
 
       {/* Action row */}
-      <div className="flex items-center gap-2 mb-cairn-5 flex-wrap">
+      <div className="flex items-center gap-2 mb-qurtag-5 flex-wrap">
         <button
           type="button"
           onClick={() => setReunitedOpen(true)}
           disabled={!!actionPending || thread.status === 'reunited'}
-          className="inline-flex h-9 items-center gap-1.5 rounded-pill bg-verdigris-500 text-canvas text-caption font-medium px-4 hover:bg-verdigris-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-cairn"
+          className="inline-flex h-9 items-center gap-1.5 rounded-pill bg-verdigris-500 text-canvas text-caption font-medium px-4 hover:bg-verdigris-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-qurtag"
         >
           <CheckCircle2 size={14} strokeWidth={1.75} />
           {actionPending === 'reunited' ? 'Closing…' : 'Mark as reunited'}
@@ -396,7 +396,7 @@ export function InboxThread() {
           type="button"
           onClick={() => setReportOpen(true)}
           disabled={!!actionPending}
-          className="inline-flex h-9 items-center gap-1.5 rounded-pill border border-hairline-strong text-ink-900 text-caption font-medium px-4 hover:border-ink-900 disabled:opacity-50 transition-colors duration-cairn"
+          className="inline-flex h-9 items-center gap-1.5 rounded-pill border border-hairline-strong text-ink-900 text-caption font-medium px-4 hover:border-ink-900 disabled:opacity-50 transition-colors duration-qurtag"
         >
           <Flag size={14} strokeWidth={1.75} />
           Report
@@ -405,7 +405,7 @@ export function InboxThread() {
           type="button"
           onClick={() => thread.finder_session_id && setBlockOpen(true)}
           disabled={!!actionPending || !thread.finder_session_id}
-          className="inline-flex h-9 items-center gap-1.5 rounded-pill border border-hairline-strong text-muted text-caption font-medium px-4 hover:border-signal-500 hover:text-signal-700 disabled:opacity-50 transition-colors duration-cairn"
+          className="inline-flex h-9 items-center gap-1.5 rounded-pill border border-hairline-strong text-muted text-caption font-medium px-4 hover:border-signal-500 hover:text-signal-700 disabled:opacity-50 transition-colors duration-qurtag"
         >
           <ShieldOff size={14} strokeWidth={1.75} />
           Block this finder
@@ -468,7 +468,7 @@ export function InboxThread() {
 
       {/* Courier order card */}
       {courier && (
-        <div className="rounded-modal border border-hairline bg-canvas p-cairn-5 mb-cairn-5 flex flex-col gap-3">
+        <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 mb-qurtag-5 flex flex-col gap-3">
           <div className="flex items-start gap-3">
             <div className="size-10 rounded-pill bg-verdigris-100 grid place-items-center shrink-0">
               <Truck size={18} strokeWidth={1.75} className="text-verdigris-700" />
@@ -492,7 +492,7 @@ export function InboxThread() {
                 type="button"
                 onClick={handleCourierPay}
                 disabled={labelPending}
-                className="shrink-0 inline-flex h-10 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-4 hover:bg-ink-700 disabled:opacity-50 transition-colors duration-cairn"
+                className="shrink-0 inline-flex h-10 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-4 hover:bg-ink-700 disabled:opacity-50 transition-colors duration-qurtag"
               >
                 {labelPending ? 'Opening Stripe…' : 'Pay $14.99 & generate label'}
               </button>
@@ -502,7 +502,7 @@ export function InboxThread() {
                 href={courier.label_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="shrink-0 inline-flex h-10 items-center gap-2 rounded-pill border border-hairline-strong text-ink-900 text-caption font-medium px-4 hover:border-ink-900 transition-colors duration-cairn"
+                className="shrink-0 inline-flex h-10 items-center gap-2 rounded-pill border border-hairline-strong text-ink-900 text-caption font-medium px-4 hover:border-ink-900 transition-colors duration-qurtag"
               >
                 Open label
                 <ExternalLink size={12} strokeWidth={1.75} />
@@ -517,7 +517,7 @@ export function InboxThread() {
 
       {/* Item context */}
       {item && (
-        <div className="rounded-modal border border-hairline bg-paper p-cairn-5 mb-cairn-5 flex items-center gap-cairn-3">
+        <div className="rounded-modal border border-hairline bg-paper p-qurtag-5 mb-qurtag-5 flex items-center gap-qurtag-3">
           {item.hero_photo_url ? (
             <img
               src={item.hero_photo_url}
@@ -549,7 +549,7 @@ export function InboxThread() {
       )}
 
       {/* Thread */}
-      <div className="rounded-modal border border-hairline bg-canvas p-cairn-5 mb-cairn-3 max-h-[60vh] overflow-y-auto">
+      <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 mb-qurtag-3 max-h-[60vh] overflow-y-auto">
         <ThreadView messages={messages} viewerKind="owner" />
       </div>
 
@@ -561,7 +561,7 @@ export function InboxThread() {
       />
 
       {/* Privacy strip */}
-      <div className="mt-cairn-3 rounded-card bg-paper border border-hairline p-cairn-3 flex items-start gap-3">
+      <div className="mt-qurtag-3 rounded-card bg-paper border border-hairline p-qurtag-3 flex items-start gap-3">
         <Lock size={16} strokeWidth={1.75} className="mt-0.5 text-ink-900 shrink-0" />
         <p className="text-caption text-ink-700 text-pretty">
           The finder doesn't see your email, phone, or any account detail. QurTag relays your reply

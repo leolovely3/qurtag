@@ -50,7 +50,7 @@ export function RewardPicker({ valueCents, onChange, disabled }: RewardPickerPro
                 onChange(p.cents === 0 ? null : p.cents);
               }}
               className={cn(
-                'h-10 px-4 rounded-pill text-caption font-medium border transition-colors duration-cairn ease-cairn',
+                'h-10 px-4 rounded-pill text-caption font-medium border transition-colors duration-qurtag ease-qurtag',
                 active
                   ? 'bg-ink-900 text-canvas border-ink-900'
                   : 'bg-canvas text-ink-900 border-hairline-strong hover:border-ink-900',
@@ -74,7 +74,7 @@ export function RewardPicker({ valueCents, onChange, disabled }: RewardPickerPro
             onChange={(e) => setCustom(e.target.value.replace(/[^0-9.]/g, ''))}
             className={cn(
               'h-10 w-28 pl-7 pr-3 rounded-pill bg-canvas border text-caption text-ink-900 placeholder:text-muted',
-              'border-hairline-strong focus:outline-none focus:border-ink-900 transition-colors duration-cairn',
+              'border-hairline-strong focus:outline-none focus:border-ink-900 transition-colors duration-qurtag',
               custom && 'border-ink-900',
               disabled && 'opacity-50 cursor-not-allowed',
             )}

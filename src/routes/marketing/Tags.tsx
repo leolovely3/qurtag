@@ -118,7 +118,7 @@ export function Tags() {
       {/* Hero */}
       <section>
         <Container size="xl">
-          <div className="pt-cairn-8 pb-cairn-8 md:pt-16 md:pb-cairn-8 max-w-3xl flex flex-col gap-5">
+          <div className="pt-qurtag-8 pb-qurtag-8 md:pt-16 md:pb-qurtag-8 max-w-3xl flex flex-col gap-5">
             <Eyebrow>The hardware</Eyebrow>
             <h1 className="font-display font-semibold text-ink-900 text-h2 sm:text-h1 tracking-[-0.035em] leading-[0.95] text-balance">
               From a $4 sticker to hand-stitched leather.
@@ -135,7 +135,7 @@ export function Tags() {
       {/* Stickers hero band */}
       <section className="border-t border-hairline bg-paper">
         <Container size="xl">
-          <div className="py-cairn-12 md:py-cairn-8 grid lg:grid-cols-12 gap-cairn-8 items-start">
+          <div className="py-qurtag-12 md:py-qurtag-8 grid lg:grid-cols-12 gap-qurtag-8 items-start">
             <div className="lg:col-span-5 flex flex-col gap-4 lg:sticky lg:top-28">
               <div className="size-12 rounded-pill bg-signal-500 grid place-items-center">
                 <Sticker size={22} strokeWidth={1.5} className="text-canvas" />
@@ -151,7 +151,7 @@ export function Tags() {
               <div className="flex items-center gap-6 mt-2">
                 <Link
                   to="/start"
-                  className="inline-flex h-12 items-center gap-2 rounded-pill bg-ink-900 px-6 text-body font-medium text-canvas hover:bg-ink-700 transition-colors duration-cairn"
+                  className="inline-flex h-12 items-center gap-2 rounded-pill bg-ink-900 px-6 text-body font-medium text-canvas hover:bg-ink-700 transition-colors duration-qurtag"
                 >
                   Get a pack. From $18
                   <ArrowRight size={16} strokeWidth={1.75} />
@@ -162,7 +162,7 @@ export function Tags() {
               {stickerUseCases.map((u) => (
                 <article
                   key={u.title}
-                  className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-3 hover:border-hairline-strong transition-colors duration-cairn"
+                  className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3 hover:border-hairline-strong transition-colors duration-qurtag"
                 >
                   <u.icon size={22} strokeWidth={1.25} className="text-verdigris-700" />
                   <h3 className="font-display font-semibold text-h5 text-ink-900 tracking-[-0.018em] text-balance">
@@ -179,7 +179,7 @@ export function Tags() {
       {/* All tiers */}
       <section className="border-t border-hairline">
         <Container size="xl">
-          <div className="py-cairn-12 md:py-cairn-8 flex flex-col gap-cairn-8">
+          <div className="py-qurtag-12 md:py-qurtag-8 flex flex-col gap-qurtag-8">
             <div className="max-w-3xl flex flex-col gap-4">
               <Eyebrow>The full lineup</Eyebrow>
               <h2 className="font-display font-semibold text-ink-900 text-h2 sm:text-h1 tracking-[-0.032em] leading-[1.02] text-balance">
@@ -191,8 +191,8 @@ export function Tags() {
                 <article
                   key={tier.key}
                   className={cn(
-                    'rounded-modal border p-cairn-5 grid md:grid-cols-12 gap-cairn-3 items-start',
-                    'transition-all duration-cairn',
+                    'rounded-modal border p-qurtag-5 grid md:grid-cols-12 gap-qurtag-3 items-start',
+                    'transition-all duration-qurtag',
                     tier.featured
                       ? 'border-signal-200 bg-signal-50'
                       : 'border-hairline bg-canvas hover:border-hairline-strong',
@@ -227,7 +227,7 @@ export function Tags() {
       {/* "Bring your own QR" */}
       <section className="border-t border-hairline bg-paper">
         <Container size="md">
-          <div className="py-cairn-8 flex flex-col items-start gap-4">
+          <div className="py-qurtag-8 flex flex-col items-start gap-4">
             <div className="size-10 rounded-pill bg-ink-50 grid place-items-center">
               <Sparkles size={18} strokeWidth={1.5} className="text-ink-900" />
             </div>
@@ -251,8 +251,8 @@ export function Tags() {
       {/* Bulk + B2B */}
       <section className="border-t border-hairline">
         <Container size="xl">
-          <div className="py-cairn-12 md:py-cairn-8 grid lg:grid-cols-2 gap-cairn-8">
-            <div className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-3">
+          <div className="py-qurtag-12 md:py-qurtag-8 grid lg:grid-cols-2 gap-qurtag-8">
+            <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3">
               <Package size={22} strokeWidth={1.25} className="text-verdigris-700" />
               <Eyebrow>Bulk packs</Eyebrow>
               <h3 className="font-display font-semibold text-h4 text-ink-900 tracking-[-0.018em] text-balance">
@@ -266,7 +266,7 @@ export function Tags() {
                 Start a pack →
               </Link>
             </div>
-            <div className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-3">
+            <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3">
               <Printer size={22} strokeWidth={1.25} className="text-verdigris-700" />
               <Eyebrow>For business</Eyebrow>
               <h3 className="font-display font-semibold text-h4 text-ink-900 tracking-[-0.018em] text-balance">
@@ -287,14 +287,14 @@ export function Tags() {
       {/* Outro */}
       <section className="border-t border-hairline">
         <Container size="md">
-          <div className="py-cairn-8 flex flex-col items-start gap-6">
+          <div className="py-qurtag-8 flex flex-col items-start gap-6">
             <h2 className="font-display font-semibold text-ink-900 text-h1 tracking-[-0.038em] leading-[0.95] text-balance">
               Start with a sticker. Upgrade when you fall for it.
             </h2>
             <div className="flex items-center gap-6">
               <Link
                 to="/start"
-                className="inline-flex h-12 items-center gap-2 rounded-pill bg-ink-900 px-6 text-body font-medium text-canvas hover:bg-ink-700 transition-colors duration-cairn"
+                className="inline-flex h-12 items-center gap-2 rounded-pill bg-ink-900 px-6 text-body font-medium text-canvas hover:bg-ink-700 transition-colors duration-qurtag"
               >
                 Start free
                 <ArrowRight size={16} strokeWidth={1.75} />

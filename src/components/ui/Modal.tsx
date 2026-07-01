@@ -80,12 +80,12 @@ export function Modal({
     <div
       role="dialog"
       aria-modal="true"
-      aria-labelledby="cairn-modal-title"
+      aria-labelledby="qurtag-modal-title"
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6"
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-ink-950/40 backdrop-blur-sm animate-cairn-fade-up"
+        className="absolute inset-0 bg-ink-950/40 backdrop-blur-sm animate-qurtag-fade-up"
         onClick={onClose}
         aria-hidden
       />
@@ -94,8 +94,8 @@ export function Modal({
       <div
         ref={dialogRef}
         className={cn(
-          'relative w-full bg-canvas rounded-modal shadow-modal flex flex-col gap-cairn-3 p-cairn-5',
-          'animate-cairn-fade-up',
+          'relative w-full bg-canvas rounded-modal shadow-modal flex flex-col gap-qurtag-3 p-qurtag-5',
+          'animate-qurtag-fade-up',
           size === 'sm' ? 'max-w-md' : 'max-w-xl',
         )}
       >
@@ -103,15 +103,15 @@ export function Modal({
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="absolute top-cairn-2 right-cairn-2 size-8 grid place-items-center rounded-pill text-muted hover:bg-ink-50 transition-colors duration-cairn"
+          className="absolute top-qurtag-2 right-qurtag-2 size-8 grid place-items-center rounded-pill text-muted hover:bg-ink-50 transition-colors duration-qurtag"
         >
           <X size={14} strokeWidth={2} />
         </button>
 
-        <div className="flex flex-col gap-2 pr-cairn-5">
+        <div className="flex flex-col gap-2 pr-qurtag-5">
           {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
           <h2
-            id="cairn-modal-title"
+            id="qurtag-modal-title"
             className="font-display font-semibold text-h4 text-ink-900 tracking-[-0.018em] text-balance"
           >
             {title}
@@ -124,7 +124,7 @@ export function Modal({
         {children && <div className="flex flex-col gap-3">{children}</div>}
 
         {(primaryAction || secondaryAction) && (
-          <div className="flex items-center justify-end gap-3 mt-cairn-2">
+          <div className="flex items-center justify-end gap-3 mt-qurtag-2">
             {secondaryAction && (
               <button
                 type="button"
@@ -141,7 +141,7 @@ export function Modal({
                 disabled={primaryAction.disabled || primaryAction.pending}
                 className={cn(
                   'inline-flex h-11 items-center gap-2 rounded-pill px-5 text-caption font-medium',
-                  'transition-colors duration-cairn',
+                  'transition-colors duration-qurtag',
                   'disabled:opacity-50 disabled:cursor-not-allowed',
                   primaryAction.tone === 'destructive'
                     ? 'bg-signal-500 text-canvas hover:bg-signal-600'

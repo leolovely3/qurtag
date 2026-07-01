@@ -10,7 +10,7 @@
 //
 // Required Edge Function env (Supabase Dashboard → Functions → Secrets):
 //   RESEND_API_KEY
-//   CAIRN_APP_URL                — e.g. https://app.qurtag.com
+//   QURTAG_APP_URL                — e.g. https://app.qurtag.com
 //   SUPABASE_URL                 — provided automatically
 //   SUPABASE_SERVICE_ROLE_KEY    — provided automatically
 
@@ -42,7 +42,7 @@ Deno.serve(async (req: Request) => {
   }
 
   const resendKey = Deno.env.get('RESEND_API_KEY');
-  const appUrl = Deno.env.get('CAIRN_APP_URL') ?? 'https://app.qurtag.com';
+  const appUrl = Deno.env.get('QURTAG_APP_URL') ?? 'https://app.qurtag.com';
   if (!resendKey) return new Response('RESEND_API_KEY missing', { status: 500 });
 
   const supabase = createClient(

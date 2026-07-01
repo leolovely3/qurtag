@@ -321,7 +321,7 @@ export function FinderView() {
 
   if (!tag) {
     return (
-      <div className="flex flex-col gap-cairn-5 py-cairn-8">
+      <div className="flex flex-col gap-qurtag-5 py-qurtag-8">
         <Eyebrow>Tag not found</Eyebrow>
         <Display level={2}>This tag isn't registered.</Display>
         <Lede>
@@ -336,7 +336,7 @@ export function FinderView() {
   }
 
   return (
-    <div className="flex flex-col gap-cairn-5">
+    <div className="flex flex-col gap-qurtag-5">
       {/* Status pill */}
       <div className="flex items-center gap-2">
         <span
@@ -348,7 +348,7 @@ export function FinderView() {
           <span
             className={cn(
               'size-1.5 rounded-full',
-              lostMode ? 'bg-signal-500 animate-cairn-pulse' : 'bg-ink-300',
+              lostMode ? 'bg-signal-500 animate-qurtag-pulse' : 'bg-ink-300',
             )}
           />
           {lostMode ? 'This is missing' : `Tag · ${tag.public_id}`}
@@ -376,7 +376,7 @@ export function FinderView() {
 
       {/* Trip context */}
       {trip && (
-        <div className="rounded-modal border border-hairline bg-canvas p-cairn-3 flex items-start gap-3">
+        <div className="rounded-modal border border-hairline bg-canvas p-qurtag-3 flex items-start gap-3">
           <div className="size-9 rounded-pill bg-ink-50 grid place-items-center shrink-0">
             <Plane size={16} strokeWidth={1.75} className="text-ink-900" />
           </div>
@@ -402,7 +402,7 @@ export function FinderView() {
 
       {/* Item card */}
       {(item?.name || item?.brand) && (
-        <div className="rounded-modal border border-hairline bg-paper p-cairn-5 flex items-start gap-cairn-3">
+        <div className="rounded-modal border border-hairline bg-paper p-qurtag-5 flex items-start gap-qurtag-3">
           {item.hero_photo_url ? (
             <img
               src={item.hero_photo_url}
@@ -437,7 +437,7 @@ export function FinderView() {
 
       {/* Reward */}
       {reward && (
-        <aside className="rounded-modal bg-ink-950 text-ink-50 p-cairn-5 flex items-start gap-cairn-3 overflow-hidden relative">
+        <aside className="rounded-modal bg-ink-950 text-ink-50 p-qurtag-5 flex items-start gap-qurtag-3 overflow-hidden relative">
           <div
             className="absolute -top-12 -right-12 size-48 rounded-full opacity-30 pointer-events-none"
             style={{ background: 'radial-gradient(closest-side, #FF5C2E, transparent)' }}
@@ -464,7 +464,7 @@ export function FinderView() {
 
       {/* Thread view */}
       {messages.length > 0 && (
-        <div className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-3">
+        <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3">
           <Eyebrow>Conversation</Eyebrow>
           <ThreadView messages={messages} viewerKind="finder" />
         </div>
@@ -534,7 +534,7 @@ export function FinderView() {
       )}
 
       {/* Privacy strip */}
-      <div className="rounded-card bg-paper border border-hairline p-cairn-3 flex items-start gap-3">
+      <div className="rounded-card bg-paper border border-hairline p-qurtag-3 flex items-start gap-3">
         <Lock size={16} strokeWidth={1.75} className="mt-0.5 text-ink-900 shrink-0" />
         <p className="text-caption text-ink-700 text-pretty">
           Your number, email, and address stay private. The owner's stay private too. QurTag passes
@@ -587,7 +587,7 @@ function FinderPayoutSetup({ threadId: _threadId, publicId }: FinderPayoutSetupP
   if (done) return null;
 
   return (
-    <div className="rounded-modal border border-hairline bg-paper p-cairn-3 flex flex-col gap-2">
+    <div className="rounded-modal border border-hairline bg-paper p-qurtag-3 flex flex-col gap-2">
       <div className="flex items-start gap-3">
         <div className="size-9 rounded-pill bg-signal-500 grid place-items-center shrink-0">
           <ShieldCheck size={16} strokeWidth={1.75} className="text-canvas" />
@@ -606,12 +606,12 @@ function FinderPayoutSetup({ threadId: _threadId, publicId }: FinderPayoutSetupP
           placeholder="Your email for payout"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="flex-1 h-10 rounded-pill border border-hairline-strong bg-canvas px-4 text-caption text-ink-900 placeholder:text-muted focus:outline-none focus:border-ink-900 transition-colors duration-cairn"
+          className="flex-1 h-10 rounded-pill border border-hairline-strong bg-canvas px-4 text-caption text-ink-900 placeholder:text-muted focus:outline-none focus:border-ink-900 transition-colors duration-qurtag"
         />
         <button
           type="submit"
           disabled={submitting}
-          className="inline-flex h-10 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-4 hover:bg-ink-700 disabled:opacity-50 transition-colors duration-cairn"
+          className="inline-flex h-10 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-4 hover:bg-ink-700 disabled:opacity-50 transition-colors duration-qurtag"
         >
           {submitting ? 'Opening Stripe…' : 'Set up payout'}
         </button>
@@ -638,7 +638,7 @@ function CourierForm({ onClose, onSubmit, disabled }: CourierFormProps) {
   const [submitting, setSubmitting] = useState(false);
 
   return (
-    <div className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-4">
+    <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <Eyebrow>Request a courier</Eyebrow>
@@ -653,7 +653,7 @@ function CourierForm({ onClose, onSubmit, disabled }: CourierFormProps) {
         <button
           type="button"
           onClick={onClose}
-          className="size-8 grid place-items-center rounded-pill text-muted hover:bg-ink-50 transition-colors duration-cairn"
+          className="size-8 grid place-items-center rounded-pill text-muted hover:bg-ink-50 transition-colors duration-qurtag"
           aria-label="Close"
         >
           <X size={14} strokeWidth={2} />
@@ -691,7 +691,7 @@ function CourierForm({ onClose, onSubmit, disabled }: CourierFormProps) {
           <select
             value={pickupWindow}
             onChange={(e) => setPickupWindow(e.target.value)}
-            className="h-12 rounded-card border border-hairline-strong bg-canvas px-4 text-body text-ink-900 focus:outline-none focus:border-ink-900 transition-colors duration-cairn"
+            className="h-12 rounded-card border border-hairline-strong bg-canvas px-4 text-body text-ink-900 focus:outline-none focus:border-ink-900 transition-colors duration-qurtag"
           >
             <option>Today, after 5pm</option>
             <option>Tomorrow morning</option>
@@ -707,7 +707,7 @@ function CourierForm({ onClose, onSubmit, disabled }: CourierFormProps) {
           <button
             type="submit"
             disabled={!addressLine || submitting || disabled}
-            className="inline-flex h-11 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-5 hover:bg-ink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-cairn"
+            className="inline-flex h-11 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-5 hover:bg-ink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-qurtag"
           >
             {submitting ? 'Requesting…' : 'Request pickup'}
           </button>

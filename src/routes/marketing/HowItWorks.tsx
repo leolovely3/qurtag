@@ -65,7 +65,7 @@ export function HowItWorks() {
       {/* Hero */}
       <section className="relative">
         <Container size="xl">
-          <div className="pt-cairn-8 pb-cairn-8 md:pt-16 md:pb-cairn-8 max-w-3xl flex flex-col gap-5">
+          <div className="pt-qurtag-8 pb-qurtag-8 md:pt-16 md:pb-qurtag-8 max-w-3xl flex flex-col gap-5">
             <Eyebrow>How it works</Eyebrow>
             <h1 className="font-display font-semibold text-ink-900 text-h2 sm:text-h1 tracking-[-0.035em] leading-[0.95] text-balance">
               Five small steps. One calm reunion.
@@ -82,11 +82,11 @@ export function HowItWorks() {
       {/* Steps */}
       <section className="border-t border-hairline bg-paper">
         <Container size="xl">
-          <div className="py-cairn-12 md:py-cairn-8 flex flex-col gap-cairn-12">
+          <div className="py-qurtag-12 md:py-qurtag-8 flex flex-col gap-qurtag-12">
             {steps.map((s, idx) => (
               <article
                 key={s.n}
-                className="grid lg:grid-cols-12 gap-cairn-8 items-start"
+                className="grid lg:grid-cols-12 gap-qurtag-8 items-start"
               >
                 <div className="lg:col-span-1">
                   <span className="font-mono text-caption text-muted">{s.n}</span>
@@ -97,7 +97,7 @@ export function HowItWorks() {
                     {s.title}
                   </h2>
                 </div>
-                <div className="lg:col-span-6 lg:pt-cairn-3 flex flex-col gap-3">
+                <div className="lg:col-span-6 lg:pt-qurtag-3 flex flex-col gap-3">
                   <p className="text-lede text-ink-700 text-pretty">{s.body}</p>
                   <p className="text-body text-muted text-pretty">{s.detail}</p>
                 </div>
@@ -113,7 +113,7 @@ export function HowItWorks() {
       {/* Privacy strip */}
       <section className="border-t border-hairline">
         <Container size="md">
-          <div className="py-cairn-12 flex flex-col gap-3 items-start">
+          <div className="py-qurtag-12 flex flex-col gap-3 items-start">
             <div className="size-10 rounded-pill bg-ink-50 grid place-items-center">
               <Lock size={18} strokeWidth={1.5} className="text-ink-900" />
             </div>
@@ -137,14 +137,14 @@ export function HowItWorks() {
       {/* Outro */}
       <section className="border-t border-hairline">
         <Container size="md">
-          <div className="py-cairn-8 flex flex-col items-start gap-6">
+          <div className="py-qurtag-8 flex flex-col items-start gap-6">
             <h2 className="font-display font-semibold text-ink-900 text-h1 tracking-[-0.038em] leading-[0.95] text-balance">
               The thirty seconds between you and never losing a bag again.
             </h2>
             <div className="flex items-center gap-6">
               <Link
                 to="/start"
-                className="inline-flex h-12 items-center gap-2 rounded-pill bg-ink-900 px-6 text-body font-medium text-canvas hover:bg-ink-700 transition-colors duration-cairn"
+                className="inline-flex h-12 items-center gap-2 rounded-pill bg-ink-900 px-6 text-body font-medium text-canvas hover:bg-ink-700 transition-colors duration-qurtag"
               >
                 Start free
                 <ArrowRight size={16} strokeWidth={1.75} />

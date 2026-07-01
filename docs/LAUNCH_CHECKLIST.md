@@ -64,7 +64,7 @@ The suggested 30-day sequence is at the bottom if you want a calendar.
 - [ ] 🔴 Set Edge Function secrets:
   - `STRIPE_SECRET_KEY` (live)
   - `STRIPE_WEBHOOK_SECRET`
-  - `CAIRN_APP_URL=https://app.qurtag.com`
+  - `QURTAG_APP_URL=https://app.qurtag.com`
 - [ ] 🔴 Deploy these Edge Functions:
   - [ ] `supabase functions deploy create-reward-hold`
   - [ ] `supabase functions deploy release-reward`

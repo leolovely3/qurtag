@@ -47,7 +47,7 @@ export function PartnerDashboard() {
 
   if (!partner) {
     return (
-      <div className="px-cairn-5 md:px-cairn-8 py-cairn-8 max-w-3xl flex flex-col gap-5">
+      <div className="px-qurtag-5 md:px-qurtag-8 py-qurtag-8 max-w-3xl flex flex-col gap-5">
         <Eyebrow>Partners</Eyebrow>
         <h1 className="font-display font-semibold text-ink-900 text-h3 sm:text-h2 tracking-[-0.028em] leading-[1.04] text-balance">
           You aren't a QurTag partner yet.
@@ -65,8 +65,8 @@ export function PartnerDashboard() {
   }
 
   return (
-    <div className="px-cairn-5 md:px-cairn-8 py-cairn-8 max-w-4xl">
-      <div className="flex items-end justify-between mb-cairn-8 gap-3 flex-wrap">
+    <div className="px-qurtag-5 md:px-qurtag-8 py-qurtag-8 max-w-4xl">
+      <div className="flex items-end justify-between mb-qurtag-8 gap-3 flex-wrap">
         <div className="flex flex-col gap-2">
           <Eyebrow>{partner.kind[0].toUpperCase() + partner.kind.slice(1)}</Eyebrow>
           <h1 className="font-display font-semibold text-ink-900 text-h3 sm:text-h2 tracking-[-0.028em] leading-[1.04] text-balance">
@@ -76,21 +76,21 @@ export function PartnerDashboard() {
         </div>
         <Link
           to="/partners/scan"
-          className="inline-flex h-11 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-4 hover:bg-ink-700 transition-colors duration-cairn"
+          className="inline-flex h-11 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-4 hover:bg-ink-700 transition-colors duration-qurtag"
         >
           <ScanLine size={14} strokeWidth={1.75} />
           Log a drop-off
         </Link>
       </div>
 
-      <div className="grid sm:grid-cols-3 gap-3 mb-cairn-5">
+      <div className="grid sm:grid-cols-3 gap-3 mb-qurtag-5">
         <Stat label="Total drop-offs" value={dropoffs.length} />
         <Stat label="Received today" value={received} />
         <Stat label="Awaiting pickup" value={awaiting} tone="signal" />
       </div>
 
       {dropoffs.length === 0 ? (
-        <div className="rounded-modal border border-hairline bg-paper p-cairn-8 flex flex-col items-start gap-3">
+        <div className="rounded-modal border border-hairline bg-paper p-qurtag-8 flex flex-col items-start gap-3">
           <div className="size-12 rounded-pill bg-canvas grid place-items-center shadow-card">
             <Package size={20} strokeWidth={1.5} className="text-ink-900" />
           </div>
@@ -104,7 +104,7 @@ export function PartnerDashboard() {
       ) : (
         <ul className="rounded-modal border border-hairline bg-canvas divide-y divide-hairline overflow-hidden">
           {dropoffs.map((d) => (
-            <li key={d.id} className="p-cairn-3 flex items-center justify-between gap-3">
+            <li key={d.id} className="p-qurtag-3 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="size-10 rounded-pill bg-ink-50 grid place-items-center shrink-0">
                   <Package size={16} strokeWidth={1.75} className="text-ink-900" />
@@ -135,7 +135,7 @@ export function PartnerDashboard() {
 
 function Stat({ label, value, tone }: { label: string; value: number; tone?: 'signal' }) {
   return (
-    <div className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-1">
+    <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-1">
       <Eyebrow>{label}</Eyebrow>
       <span
         className={`font-display font-semibold text-h2 tracking-[-0.028em] ${

@@ -1,11 +1,11 @@
 {
   "expo": {
     "name": "QurTag",
-    "slug": "cairn",
+    "slug": "qurtag",
     "version": "0.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "cairn",
+    "scheme": "qurtag",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/splash.png",

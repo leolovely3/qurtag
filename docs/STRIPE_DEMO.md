@@ -27,7 +27,7 @@ Supabase Dashboard → **Project → Edge Functions → Manage secrets**, add:
 
 ```
 STRIPE_SECRET_KEY=sk_test_xxx
-CAIRN_APP_URL=http://localhost:5180          # local for now; flip later
+QURTAG_APP_URL=http://localhost:5180          # local for now; flip later
 STRIPE_WEBHOOK_SECRET=                       # leave blank for now — step 4 fills it
 ```
 
@@ -35,7 +35,7 @@ Or via CLI:
 
 ```bash
 supabase secrets set STRIPE_SECRET_KEY=sk_test_xxx
-supabase secrets set CAIRN_APP_URL=http://localhost:5180
+supabase secrets set QURTAG_APP_URL=http://localhost:5180
 ```
 
 ## 3. Deploy the four functions

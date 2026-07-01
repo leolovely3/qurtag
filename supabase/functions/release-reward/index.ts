@@ -68,7 +68,7 @@ Deno.serve(async (req: Request) => {
       tf.set('amount', String(reward.amount_cents));
       tf.set('currency', reward.currency ?? 'usd');
       tf.set('destination', finder.stripe_account_id);
-      tf.set('metadata[cairn_reward_id]', rewardId);
+      tf.set('metadata[qurtag_reward_id]', rewardId);
       const tfRes = await fetch('https://api.stripe.com/v1/transfers', {
         method: 'POST',
         headers: {

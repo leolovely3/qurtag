@@ -123,7 +123,7 @@ Supabase Dashboard → Edge Functions → Secrets:
 
 ```
 RESEND_API_KEY=re_xxx
-CAIRN_APP_URL=https://app.qurtag.com     # used for deep links in emails
+QURTAG_APP_URL=https://app.qurtag.com     # used for deep links in emails
 ```
 
 ### 7c. Deploy and wire
@@ -191,7 +191,7 @@ Supabase Dashboard → Edge Functions → Secrets:
 ```
 STRIPE_SECRET_KEY=sk_test_xxx
 STRIPE_WEBHOOK_SECRET=whsec_xxx           # filled in after step 9d
-CAIRN_APP_URL=https://app.qurtag.com        # used for Checkout success/cancel URLs
+QURTAG_APP_URL=https://app.qurtag.com        # used for Checkout success/cancel URLs
 ```
 
 ### 9c. Deploy the four Stripe functions
@@ -247,7 +247,7 @@ Supabase Dashboard → **Database → Cron** (pg_cron):
 
 ```sql
 select cron.schedule(
-  'cairn-aero-trip-status',
+  'qurtag-aero-trip-status',
   '*/10 * * * *',
   $$ select net.http_post(
        url := 'https://<project>.supabase.co/functions/v1/aero-trip-status',
@@ -277,7 +277,7 @@ supabase functions deploy issue-google-pass
 
 - Apple Developer Program enrollment ($99/yr).
 - Apple Developer Portal → Certificates, Identifiers & Profiles → Pass Type IDs
-  → register `pass.co.cairn.item`.
+  → register `pass.co.qurtag.item`.
 - Generate a Pass Type ID Certificate, download the .cer.
 - Convert to PEM, extract the private key, base64-encode both.
 - Download the Apple WWDR intermediate certificate, base64-encode it.
@@ -285,7 +285,7 @@ supabase functions deploy issue-google-pass
 Add to Edge Function secrets:
 
 ```
-APPLE_PASS_TYPE_ID=pass.co.cairn.item
+APPLE_PASS_TYPE_ID=pass.co.qurtag.item
 APPLE_TEAM_ID=ABC1234567
 APPLE_PASS_CERTIFICATE_BASE64=...
 APPLE_PASS_KEY_BASE64=...

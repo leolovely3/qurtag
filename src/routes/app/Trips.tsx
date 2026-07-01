@@ -56,8 +56,8 @@ export function Trips() {
   }, [authLoading, user, refresh]);
 
   return (
-    <div className="px-cairn-5 md:px-cairn-8 py-cairn-8 max-w-4xl">
-      <div className="flex items-end justify-between mb-cairn-8 gap-3 flex-wrap">
+    <div className="px-qurtag-5 md:px-qurtag-8 py-qurtag-8 max-w-4xl">
+      <div className="flex items-end justify-between mb-qurtag-8 gap-3 flex-wrap">
         <div className="flex flex-col gap-2">
           <Eyebrow>Trips</Eyebrow>
           <h1 className="font-display font-semibold text-ink-900 text-h3 sm:text-h2 tracking-[-0.028em] leading-[1.04] text-balance">
@@ -70,7 +70,7 @@ export function Trips() {
           <button
             type="button"
             onClick={() => setCreating(true)}
-            className="inline-flex h-11 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-4 hover:bg-ink-700 transition-colors duration-cairn"
+            className="inline-flex h-11 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-4 hover:bg-ink-700 transition-colors duration-qurtag"
           >
             <Plus size={14} strokeWidth={1.75} />
             Add a trip
@@ -91,11 +91,11 @@ export function Trips() {
       )}
 
       {loading ? (
-        <div className="rounded-modal border border-hairline bg-canvas p-cairn-8 flex items-center justify-center">
+        <div className="rounded-modal border border-hairline bg-canvas p-qurtag-8 flex items-center justify-center">
           <div className="size-6 rounded-full border-2 border-ink-100 border-t-ink-900 animate-spin" />
         </div>
       ) : trips.length === 0 ? (
-        <div className="rounded-modal border border-hairline bg-paper p-cairn-8 flex flex-col items-start gap-3">
+        <div className="rounded-modal border border-hairline bg-paper p-qurtag-8 flex flex-col items-start gap-3">
           <div className="size-12 rounded-pill bg-canvas grid place-items-center shadow-card">
             <Plane size={20} strokeWidth={1.5} className="text-ink-900" />
           </div>
@@ -112,7 +112,7 @@ export function Trips() {
           {trips.map((trip) => (
             <li
               key={trip.id}
-              className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex items-start gap-cairn-3"
+              className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex items-start gap-qurtag-3"
             >
               <div className="size-10 rounded-pill bg-ink-50 grid place-items-center shrink-0">
                 <Plane size={16} strokeWidth={1.75} className="text-ink-900" />
@@ -189,7 +189,7 @@ function CreateTripForm({ householdId, items, onClose, onCreated }: CreateTripFo
   return (
     <form
       onSubmit={onSubmit}
-      className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-cairn-3 mb-cairn-5"
+      className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-qurtag-3 mb-qurtag-5"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -246,7 +246,7 @@ function CreateTripForm({ householdId, items, onClose, onCreated }: CreateTripFo
           type="datetime-local"
           value={arrival}
           onChange={(e) => setArrival(e.target.value)}
-          className="h-12 rounded-card border border-hairline-strong bg-canvas px-4 text-body text-ink-900 focus:outline-none focus:border-ink-900 transition-colors duration-cairn"
+          className="h-12 rounded-card border border-hairline-strong bg-canvas px-4 text-body text-ink-900 focus:outline-none focus:border-ink-900 transition-colors duration-qurtag"
         />
       </label>
 
@@ -262,7 +262,7 @@ function CreateTripForm({ householdId, items, onClose, onCreated }: CreateTripFo
                   type="button"
                   onClick={() => toggle(item.id)}
                   className={cn(
-                    'flex items-center gap-3 p-3 rounded-card border text-left transition-colors duration-cairn',
+                    'flex items-center gap-3 p-3 rounded-card border text-left transition-colors duration-qurtag',
                     isOn
                       ? 'bg-ink-900 text-canvas border-ink-900'
                       : 'bg-canvas text-ink-900 border-hairline-strong hover:border-ink-900',
@@ -296,7 +296,7 @@ function CreateTripForm({ householdId, items, onClose, onCreated }: CreateTripFo
         <button
           type="submit"
           disabled={submitting || (!flightNumber.trim() && !name.trim() && !destination.trim())}
-          className="inline-flex h-11 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-5 hover:bg-ink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-cairn"
+          className="inline-flex h-11 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-5 hover:bg-ink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-qurtag"
         >
           {submitting ? 'Saving…' : 'Save trip'}
         </button>

@@ -80,7 +80,7 @@ export function MarketingHome() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10 bg-signal-glow pointer-events-none" aria-hidden />
         <Container size="xl">
-          <div className="grid lg:grid-cols-12 gap-cairn-8 items-start pt-cairn-8 pb-cairn-8 md:pt-16 md:pb-cairn-8">
+          <div className="grid lg:grid-cols-12 gap-qurtag-8 items-start pt-qurtag-8 pb-qurtag-8 md:pt-16 md:pb-qurtag-8">
             <div className="lg:col-span-7 flex flex-col gap-6">
               <span className="inline-flex items-center gap-2 self-start rounded-pill border border-hairline-strong bg-canvas/70 backdrop-blur-sm px-3 py-1 text-caption text-ink-700">
                 <span className="size-1.5 rounded-full bg-signal-500" />
@@ -97,7 +97,7 @@ export function MarketingHome() {
               <div className="flex flex-wrap items-center gap-6 pt-1">
                 <Link
                   to="/start"
-                  className="inline-flex h-12 items-center gap-2 rounded-pill bg-ink-900 px-6 text-body font-medium text-canvas hover:bg-ink-700 transition-colors duration-cairn"
+                  className="inline-flex h-12 items-center gap-2 rounded-pill bg-ink-900 px-6 text-body font-medium text-canvas hover:bg-ink-700 transition-colors duration-qurtag"
                 >
                   Start free
                 </Link>
@@ -113,7 +113,7 @@ export function MarketingHome() {
                 Free forever for two items. No card. No app store required.
               </p>
               {/* Inline brand mentions. Replaces the divider-banded "footer strip" */}
-              <div className="flex flex-wrap items-center gap-x-cairn-3 gap-y-1 mt-cairn-2 text-caption text-muted">
+              <div className="flex flex-wrap items-center gap-x-qurtag-3 gap-y-1 mt-qurtag-2 text-caption text-muted">
                 <span className="text-eyebrow uppercase tracking-[0.14em]">Built for owners of</span>
                 <span className="font-medium text-ink-700">Tumi</span>
                 <span className="text-muted">·</span>
@@ -128,11 +128,11 @@ export function MarketingHome() {
             </div>
             <div className="lg:col-span-5 relative flex justify-center lg:justify-end min-h-[320px] lg:min-h-[420px]">
               {/* Desktop in the back. Hidden on mobile (too cluttered) */}
-              <div className="hidden lg:block absolute top-cairn-5 right-cairn-8 left-auto w-[400px] opacity-95">
+              <div className="hidden lg:block absolute top-qurtag-5 right-qurtag-8 left-auto w-[400px] opacity-95">
                 <DesktopMockup />
               </div>
               {/* Phone in the foreground */}
-              <div className="relative z-10 lg:translate-y-cairn-8 lg:-translate-x-cairn-3">
+              <div className="relative z-10 lg:translate-y-qurtag-8 lg:-translate-x-qurtag-3">
                 <PhoneMockup />
               </div>
             </div>
@@ -143,7 +143,7 @@ export function MarketingHome() {
       {/* ─────────── The membership ─────────── */}
       <section className="border-t border-hairline">
         <Container size="xl">
-          <div className="py-cairn-12 md:py-cairn-8 grid lg:grid-cols-12 gap-cairn-8 items-start">
+          <div className="py-qurtag-12 md:py-qurtag-8 grid lg:grid-cols-12 gap-qurtag-8 items-start">
             <div className="lg:col-span-5 flex flex-col gap-4 lg:sticky lg:top-28">
               <Eyebrow>The membership</Eyebrow>
               <h2 className="font-display font-semibold text-ink-900 text-h2 sm:text-h1 tracking-[-0.032em] leading-[1.02] text-balance">
@@ -180,7 +180,7 @@ export function MarketingHome() {
               ].map((feat) => (
                 <article
                   key={feat.title}
-                  className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-2 hover:border-hairline-strong transition-colors duration-cairn"
+                  className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-2 hover:border-hairline-strong transition-colors duration-qurtag"
                 >
                   <h3 className="font-display font-semibold text-h5 text-ink-900 tracking-[-0.018em]">
                     {feat.title}
@@ -202,7 +202,7 @@ export function MarketingHome() {
           aria-hidden
         />
         <Container size="xl">
-          <div className="relative py-cairn-24 flex flex-col items-center text-center gap-7">
+          <div className="relative py-qurtag-24 flex flex-col items-center text-center gap-7">
             <span className="inline-flex items-center gap-2 rounded-pill border border-hairline-dark px-3 py-1 text-caption text-ink-200">
               <span className="size-1.5 rounded-full bg-signal-500" />
               Privacy by structure
@@ -226,7 +226,7 @@ export function MarketingHome() {
       {/* ─────────── Three ways in ─────────── */}
       <section className="border-t border-hairline">
         <Container size="xl">
-          <div className="py-cairn-12 md:py-cairn-8 flex flex-col gap-cairn-8">
+          <div className="py-qurtag-12 md:py-qurtag-8 flex flex-col gap-qurtag-8">
             <div className="max-w-3xl flex flex-col gap-4">
               <Eyebrow>Three ways in</Eyebrow>
               <h2 className="font-display font-semibold text-ink-900 text-h2 sm:text-h1 tracking-[-0.032em] leading-[1.02] text-balance">
@@ -240,7 +240,7 @@ export function MarketingHome() {
               {entryPoints.map((point) => (
                 <article
                   key={point.title}
-                  className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-3 hover:shadow-elevated hover:border-hairline-strong transition-all duration-cairn"
+                  className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3 hover:shadow-elevated hover:border-hairline-strong transition-all duration-qurtag"
                 >
                   <point.icon size={22} strokeWidth={1.5} className="text-ink-900" />
                   <h3 className="font-display font-semibold text-h5 text-ink-900 tracking-[-0.018em]">
@@ -261,7 +261,7 @@ export function MarketingHome() {
       {/* ─────────── Pricing ─────────── */}
       <section className="border-t border-hairline bg-paper">
         <Container size="xl">
-          <div className="py-cairn-12 md:py-cairn-8 flex flex-col gap-cairn-8">
+          <div className="py-qurtag-12 md:py-qurtag-8 flex flex-col gap-qurtag-8">
             <div className="max-w-3xl flex flex-col gap-4">
               <Eyebrow>Membership</Eyebrow>
               <h2 className="font-display font-semibold text-ink-900 text-h2 sm:text-h1 tracking-[-0.032em] leading-[1.02] text-balance">
@@ -277,14 +277,14 @@ export function MarketingHome() {
                 <article
                   key={tier.name}
                   className={cn(
-                    'relative rounded-modal p-cairn-5 flex flex-col gap-4 transition-all duration-cairn',
+                    'relative rounded-modal p-qurtag-5 flex flex-col gap-4 transition-all duration-qurtag',
                     tier.featured
                       ? 'bg-ink-950 text-ink-50 shadow-elevated'
                       : 'bg-canvas border border-hairline',
                   )}
                 >
                   {tier.featured && (
-                    <span className="absolute -top-3 left-cairn-5 inline-flex items-center gap-1.5 rounded-pill bg-signal-500 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-canvas">
+                    <span className="absolute -top-3 left-qurtag-5 inline-flex items-center gap-1.5 rounded-pill bg-signal-500 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-canvas">
                       Most loved
                     </span>
                   )}
@@ -325,7 +325,7 @@ export function MarketingHome() {
                   <Link
                     to="/start"
                     className={cn(
-                      'inline-flex h-11 items-center justify-center rounded-pill px-5 text-caption font-medium transition-colors duration-cairn',
+                      'inline-flex h-11 items-center justify-center rounded-pill px-5 text-caption font-medium transition-colors duration-qurtag',
                       tier.featured
                         ? 'bg-canvas text-ink-900 hover:bg-ink-50'
                         : 'bg-ink-900 text-canvas hover:bg-ink-700',
@@ -346,7 +346,7 @@ export function MarketingHome() {
       {/* ─────────── Stories ─────────── */}
       <section className="border-t border-hairline">
         <Container size="xl">
-          <div className="py-cairn-12 md:py-cairn-8 flex flex-col gap-cairn-8">
+          <div className="py-qurtag-12 md:py-qurtag-8 flex flex-col gap-qurtag-8">
             <div className="max-w-3xl flex flex-col gap-4">
               <Eyebrow>Stories of return</Eyebrow>
               <h2 className="font-display font-semibold text-ink-900 text-h2 sm:text-h1 tracking-[-0.032em] leading-[1.02] text-balance">
@@ -373,7 +373,7 @@ export function MarketingHome() {
               ].map((s) => (
                 <article
                   key={s.who}
-                  className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-3"
+                  className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3"
                 >
                   <Eyebrow>{s.who}</Eyebrow>
                   <p className="text-body text-ink-700 text-pretty leading-[1.5]">
@@ -393,7 +393,7 @@ export function MarketingHome() {
       {/* ─────────── Outro ─────────── */}
       <section className="border-t border-hairline">
         <Container size="md">
-          <div className="py-cairn-12 md:py-cairn-8 flex flex-col items-start gap-6">
+          <div className="py-qurtag-12 md:py-qurtag-8 flex flex-col items-start gap-6">
             <Eyebrow>Start tonight</Eyebrow>
             <h2 className="font-display font-semibold text-ink-900 text-h1 sm:text-display tracking-[-0.038em] leading-[0.95] text-balance">
               The thirty seconds between you and never losing a bag again.
@@ -401,7 +401,7 @@ export function MarketingHome() {
             <div className="flex items-center gap-6">
               <Link
                 to="/start"
-                className="inline-flex h-12 items-center gap-2 rounded-pill bg-ink-900 px-6 text-body font-medium text-canvas hover:bg-ink-700 transition-colors duration-cairn"
+                className="inline-flex h-12 items-center gap-2 rounded-pill bg-ink-900 px-6 text-body font-medium text-canvas hover:bg-ink-700 transition-colors duration-qurtag"
               >
                 Start free
                 <ArrowRight size={16} strokeWidth={1.75} />

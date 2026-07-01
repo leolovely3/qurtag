@@ -42,7 +42,7 @@ export function MarketingLayout() {
       <a href="#main-content" className="skip-link">Skip to content</a>
       <header
         className={cn(
-          'sticky top-0 z-40 transition-all duration-cairn ease-cairn',
+          'sticky top-0 z-40 transition-all duration-qurtag ease-qurtag',
           scrolled
             ? 'bg-canvas/85 backdrop-blur-xl border-b border-hairline'
             : 'bg-transparent border-b border-transparent',
@@ -60,7 +60,7 @@ export function MarketingLayout() {
                   to={item.to}
                   className={({ isActive }) =>
                     cn(
-                      'text-caption font-sans font-medium transition-opacity duration-cairn',
+                      'text-caption font-sans font-medium transition-opacity duration-qurtag',
                       isActive ? 'text-ink-900 opacity-100' : 'text-ink-700 hover:opacity-70',
                     )
                   }
@@ -72,13 +72,13 @@ export function MarketingLayout() {
             <div className="flex items-center gap-3 md:gap-5">
               <Link
                 to="/app"
-                className="hidden md:inline-flex text-caption font-medium text-ink-700 hover:opacity-70 transition-opacity duration-cairn"
+                className="hidden md:inline-flex text-caption font-medium text-ink-700 hover:opacity-70 transition-opacity duration-qurtag"
               >
                 Sign in
               </Link>
               <Link
                 to="/start"
-                className="inline-flex h-9 items-center rounded-pill bg-ink-900 px-4 text-caption font-medium text-canvas hover:bg-ink-700 transition-colors duration-cairn"
+                className="inline-flex h-9 items-center rounded-pill bg-ink-900 px-4 text-caption font-medium text-canvas hover:bg-ink-700 transition-colors duration-qurtag"
               >
                 Start free
               </Link>
@@ -86,7 +86,7 @@ export function MarketingLayout() {
                 type="button"
                 onClick={() => setDrawerOpen(true)}
                 aria-label="Open menu"
-                className="md:hidden size-9 grid place-items-center rounded-pill text-ink-900 hover:bg-ink-50 transition-colors duration-cairn"
+                className="md:hidden size-9 grid place-items-center rounded-pill text-ink-900 hover:bg-ink-50 transition-colors duration-qurtag"
               >
                 <Menu size={20} strokeWidth={1.75} />
               </button>
@@ -103,7 +103,7 @@ export function MarketingLayout() {
             aria-hidden
           />
           <aside className="relative ml-auto w-72 max-w-[85vw] bg-canvas border-l border-hairline shadow-modal flex flex-col">
-            <div className="flex items-center justify-between px-cairn-3 h-16 border-b border-hairline">
+            <div className="flex items-center justify-between px-qurtag-3 h-16 border-b border-hairline">
               <Link to="/" className="flex items-center gap-2 px-2">
                 <Wordmark />
               </Link>
@@ -111,19 +111,19 @@ export function MarketingLayout() {
                 type="button"
                 onClick={() => setDrawerOpen(false)}
                 aria-label="Close menu"
-                className="size-9 grid place-items-center rounded-pill text-muted hover:bg-ink-50 transition-colors duration-cairn"
+                className="size-9 grid place-items-center rounded-pill text-muted hover:bg-ink-50 transition-colors duration-qurtag"
               >
                 <X size={18} strokeWidth={1.75} />
               </button>
             </div>
-            <nav className="flex flex-col gap-1 px-cairn-3 py-cairn-3">
+            <nav className="flex flex-col gap-1 px-qurtag-3 py-qurtag-3">
               {nav.map((item) => (
                 <NavLink
                   key={item.to}
                   to={item.to}
                   className={({ isActive }) =>
                     cn(
-                      'px-3 h-11 flex items-center rounded-card text-body font-medium transition-colors duration-cairn',
+                      'px-3 h-11 flex items-center rounded-card text-body font-medium transition-colors duration-qurtag',
                       isActive
                         ? 'bg-ink-50 text-ink-900'
                         : 'text-ink-700 hover:bg-ink-50 hover:text-ink-900',
@@ -133,16 +133,16 @@ export function MarketingLayout() {
                   {item.label}
                 </NavLink>
               ))}
-              <div className="border-t border-hairline my-cairn-2" />
+              <div className="border-t border-hairline my-qurtag-2" />
               <Link
                 to="/app"
-                className="px-3 h-11 flex items-center rounded-card text-body font-medium text-ink-700 hover:bg-ink-50 hover:text-ink-900 transition-colors duration-cairn"
+                className="px-3 h-11 flex items-center rounded-card text-body font-medium text-ink-700 hover:bg-ink-50 hover:text-ink-900 transition-colors duration-qurtag"
               >
                 Sign in
               </Link>
               <Link
                 to="/help"
-                className="px-3 h-11 flex items-center rounded-card text-body font-medium text-ink-700 hover:bg-ink-50 hover:text-ink-900 transition-colors duration-cairn"
+                className="px-3 h-11 flex items-center rounded-card text-body font-medium text-ink-700 hover:bg-ink-50 hover:text-ink-900 transition-colors duration-qurtag"
               >
                 Help
               </Link>
@@ -157,7 +157,7 @@ export function MarketingLayout() {
 
       <footer className="border-t border-hairline bg-canvas">
         <Container size="xl">
-          <div className="py-cairn-12 grid gap-cairn-8 md:grid-cols-4">
+          <div className="py-qurtag-12 grid gap-qurtag-8 md:grid-cols-4">
             <div className="flex flex-col gap-3 max-w-xs">
               <Wordmark />
               <p className="text-caption text-muted text-pretty">

@@ -8,7 +8,7 @@
 //
 // Required Edge Function env:
 //   GOOGLE_WALLET_ISSUER_ID              from Google Pay & Wallet Console
-//   GOOGLE_WALLET_CLASS_SUFFIX           e.g. cairn_item_v1
+//   GOOGLE_WALLET_CLASS_SUFFIX           e.g. qurtag_item_v1
 //   GOOGLE_WALLET_SA_EMAIL               service account email
 //   GOOGLE_WALLET_SA_PRIVATE_KEY         PEM private key (PKCS#8)
 //   SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY
@@ -24,7 +24,7 @@ Deno.serve(async (req: Request) => {
   if (!itemId) return new Response('missing itemId', { status: 400 });
 
   const issuerId = Deno.env.get('GOOGLE_WALLET_ISSUER_ID');
-  const classSuffix = Deno.env.get('GOOGLE_WALLET_CLASS_SUFFIX') ?? 'cairn_item_v1';
+  const classSuffix = Deno.env.get('GOOGLE_WALLET_CLASS_SUFFIX') ?? 'qurtag_item_v1';
   const saEmail = Deno.env.get('GOOGLE_WALLET_SA_EMAIL');
   const saKey = Deno.env.get('GOOGLE_WALLET_SA_PRIVATE_KEY');
   if (!issuerId || !saEmail || !saKey) {
@@ -50,9 +50,9 @@ Deno.serve(async (req: Request) => {
   if (!item) return new Response('item not found', { status: 404 });
 
   const tag = (item as any).tags?.[0];
-  const finderUrl = `${Deno.env.get('CAIRN_APP_URL') ?? 'https://app.qurtag.com'}/find/${tag?.public_id ?? ''}`;
+  const finderUrl = `${Deno.env.get('QURTAG_APP_URL') ?? 'https://app.qurtag.com'}/find/${tag?.public_id ?? ''}`;
 
-  const objectId = `${issuerId}.cairn_item_${itemId}`;
+  const objectId = `${issuerId}.qurtag_item_${itemId}`;
   const classId = `${issuerId}.${classSuffix}`;
 
   const genericObject = {

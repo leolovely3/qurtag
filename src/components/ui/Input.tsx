@@ -23,7 +23,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         className={cn(
           'h-12 w-full rounded-card border border-hairline-strong bg-canvas px-4',
           'text-body text-ink-900 placeholder:text-ink-300',
-          'transition-colors duration-cairn ease-cairn',
+          'transition-colors duration-qurtag ease-qurtag',
           'focus:outline-none focus:border-ink-900 focus:ring-0',
           'dark:bg-ink-900 dark:text-ink-50 dark:border-hairline-dark dark:placeholder:text-ink-500 dark:focus:border-ink-50',
           error && 'border-signal-500 focus:border-signal-500',

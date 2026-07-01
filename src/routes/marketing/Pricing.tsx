@@ -138,7 +138,7 @@ export function Pricing() {
       {/* Hero */}
       <section>
         <Container size="xl">
-          <div className="pt-cairn-8 pb-cairn-8 md:pt-16 md:pb-cairn-8 max-w-3xl flex flex-col gap-5">
+          <div className="pt-qurtag-8 pb-qurtag-8 md:pt-16 md:pb-qurtag-8 max-w-3xl flex flex-col gap-5">
             <Eyebrow>Pricing</Eyebrow>
             <h1 className="font-display font-semibold text-ink-900 text-h2 sm:text-h1 tracking-[-0.035em] leading-[0.95] text-balance">
               Free is a real plan. Plus is when you travel.
@@ -154,7 +154,7 @@ export function Pricing() {
       {/* Hardware */}
       <section className="border-t border-hairline">
         <Container size="xl">
-          <div className="py-cairn-8 flex flex-col gap-cairn-5">
+          <div className="py-qurtag-8 flex flex-col gap-qurtag-5">
             <div className="max-w-2xl flex flex-col gap-3">
               <Eyebrow>Hardware (one-time)</Eyebrow>
               <h2 className="font-display font-semibold text-ink-900 text-h2 tracking-[-0.028em] leading-[1.05] text-balance">
@@ -176,7 +176,7 @@ export function Pricing() {
               ].map((h) => (
                 <article
                   key={h.name}
-                  className="rounded-card border border-hairline bg-canvas p-cairn-3 flex items-center justify-between gap-3"
+                  className="rounded-card border border-hairline bg-canvas p-qurtag-3 flex items-center justify-between gap-3"
                 >
                   <div className="flex flex-col">
                     <span className="text-body font-medium text-ink-900">{h.name}</span>
@@ -197,19 +197,19 @@ export function Pricing() {
       {/* Plan cards */}
       <section className="border-t border-hairline bg-paper">
         <Container size="xl">
-          <div className="py-cairn-8 grid md:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="py-qurtag-8 grid md:grid-cols-2 lg:grid-cols-4 gap-3">
             {plans.map((p) => (
               <article
                 key={p.key}
                 className={cn(
-                  'relative rounded-modal p-cairn-5 flex flex-col gap-4 transition-all duration-cairn',
+                  'relative rounded-modal p-qurtag-5 flex flex-col gap-4 transition-all duration-qurtag',
                   p.featured
                     ? 'bg-ink-950 text-ink-50 shadow-elevated'
                     : 'bg-canvas border border-hairline',
                 )}
               >
                 {p.featured && (
-                  <span className="absolute -top-3 left-cairn-5 inline-flex items-center rounded-pill bg-signal-500 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-canvas">
+                  <span className="absolute -top-3 left-qurtag-5 inline-flex items-center rounded-pill bg-signal-500 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-canvas">
                     Most loved
                   </span>
                 )}
@@ -252,7 +252,7 @@ export function Pricing() {
                 <Link
                   to={p.key === 'business' ? '/business' : '/start'}
                   className={cn(
-                    'mt-auto inline-flex h-11 items-center justify-center rounded-pill px-5 text-caption font-medium transition-colors duration-cairn',
+                    'mt-auto inline-flex h-11 items-center justify-center rounded-pill px-5 text-caption font-medium transition-colors duration-qurtag',
                     p.featured
                       ? 'bg-canvas text-ink-900 hover:bg-ink-50'
                       : 'bg-ink-900 text-canvas hover:bg-ink-700',
@@ -269,7 +269,7 @@ export function Pricing() {
       {/* Feature comparison */}
       <section className="border-t border-hairline">
         <Container size="xl">
-          <div className="py-cairn-12 md:py-cairn-8 flex flex-col gap-cairn-5">
+          <div className="py-qurtag-12 md:py-qurtag-8 flex flex-col gap-qurtag-5">
             <div className="flex flex-col gap-3 max-w-2xl">
               <Eyebrow>What's in each</Eyebrow>
               <h2 className="font-display font-semibold text-ink-900 text-h2 tracking-[-0.028em] leading-[1.05] text-balance">
@@ -288,16 +288,16 @@ export function Pricing() {
       {/* FAQ */}
       <section className="border-t border-hairline bg-paper">
         <Container size="md">
-          <div className="py-cairn-12 md:py-cairn-8 flex flex-col gap-cairn-8">
+          <div className="py-qurtag-12 md:py-qurtag-8 flex flex-col gap-qurtag-8">
             <div className="flex flex-col gap-3">
               <Eyebrow>Questions worth answering</Eyebrow>
               <h2 className="font-display font-semibold text-ink-900 text-h2 tracking-[-0.028em] leading-[1.05] text-balance">
                 Frequently, and honestly. Asked.
               </h2>
             </div>
-            <div className="flex flex-col gap-cairn-5">
+            <div className="flex flex-col gap-qurtag-5">
               {faqs.map((faq) => (
-                <div key={faq.q} className="flex flex-col gap-2 border-t border-hairline pt-cairn-3 first:border-t-0 first:pt-0">
+                <div key={faq.q} className="flex flex-col gap-2 border-t border-hairline pt-qurtag-3 first:border-t-0 first:pt-0">
                   <h3 className="font-display font-semibold text-h5 text-ink-900 tracking-[-0.018em] text-balance">
                     {faq.q}
                   </h3>
@@ -312,14 +312,14 @@ export function Pricing() {
       {/* Outro */}
       <section className="border-t border-hairline">
         <Container size="md">
-          <div className="py-cairn-8 flex flex-col items-start gap-6">
+          <div className="py-qurtag-8 flex flex-col items-start gap-6">
             <h2 className="font-display font-semibold text-ink-900 text-h1 tracking-[-0.038em] leading-[0.95] text-balance">
               Start free. Upgrade when a trip is on the calendar.
             </h2>
             <div className="flex items-center gap-6">
               <Link
                 to="/start"
-                className="inline-flex h-12 items-center gap-2 rounded-pill bg-ink-900 px-6 text-body font-medium text-canvas hover:bg-ink-700 transition-colors duration-cairn"
+                className="inline-flex h-12 items-center gap-2 rounded-pill bg-ink-900 px-6 text-body font-medium text-canvas hover:bg-ink-700 transition-colors duration-qurtag"
               >
                 Start free
                 <ArrowRight size={16} strokeWidth={1.75} />
@@ -364,7 +364,7 @@ function ComparisonTable() {
       <div
         className={cn(
           'md:hidden inline-flex items-center gap-1.5 self-start text-caption text-muted',
-          'transition-opacity duration-cairn',
+          'transition-opacity duration-qurtag',
           atEnd ? 'opacity-0' : 'opacity-100',
         )}
         aria-hidden
@@ -377,11 +377,11 @@ function ComparisonTable() {
           <table className="w-full text-body min-w-[720px]">
             <thead>
               <tr className="bg-paper text-caption text-muted">
-                <th className="text-left px-cairn-5 py-3 font-medium" />
+                <th className="text-left px-qurtag-5 py-3 font-medium" />
                 {plans.map((p) => (
                   <th
                     key={p.key}
-                    className="text-left px-cairn-5 py-3 font-medium text-ink-900"
+                    className="text-left px-qurtag-5 py-3 font-medium text-ink-900"
                   >
                     {p.name}
                   </th>
@@ -394,14 +394,14 @@ function ComparisonTable() {
                   <tr key={`${section.section}-header`} className="border-t border-hairline">
                     <td
                       colSpan={5}
-                      className="px-cairn-5 pt-cairn-3 pb-2 text-eyebrow uppercase tracking-[0.14em] text-muted"
+                      className="px-qurtag-5 pt-qurtag-3 pb-2 text-eyebrow uppercase tracking-[0.14em] text-muted"
                     >
                       {section.section}
                     </td>
                   </tr>
                   {section.rows.map((row) => (
                     <tr key={row.label} className="border-t border-hairline">
-                      <td className="px-cairn-5 py-3 text-ink-700">{row.label}</td>
+                      <td className="px-qurtag-5 py-3 text-ink-700">{row.label}</td>
                       <Cell value={row.free} />
                       <Cell value={row.plus} />
                       <Cell value={row.family} />
@@ -417,7 +417,7 @@ function ComparisonTable() {
         <div
           className={cn(
             'md:hidden pointer-events-none absolute inset-y-0 left-0 w-8 rounded-l-modal',
-            'bg-gradient-to-r from-canvas to-transparent transition-opacity duration-cairn',
+            'bg-gradient-to-r from-canvas to-transparent transition-opacity duration-qurtag',
             atStart ? 'opacity-0' : 'opacity-100',
           )}
           aria-hidden
@@ -425,7 +425,7 @@ function ComparisonTable() {
         <div
           className={cn(
             'md:hidden pointer-events-none absolute inset-y-0 right-0 w-8 rounded-r-modal',
-            'bg-gradient-to-l from-canvas to-transparent transition-opacity duration-cairn',
+            'bg-gradient-to-l from-canvas to-transparent transition-opacity duration-qurtag',
             atEnd ? 'opacity-0' : 'opacity-100',
           )}
           aria-hidden
@@ -438,19 +438,19 @@ function ComparisonTable() {
 function Cell({ value }: { value: boolean | string }) {
   if (value === true) {
     return (
-      <td className="px-cairn-5 py-3">
+      <td className="px-qurtag-5 py-3">
         <Check size={16} strokeWidth={2} className="text-verdigris-700" />
       </td>
     );
   }
   if (value === false) {
     return (
-      <td className="px-cairn-5 py-3">
+      <td className="px-qurtag-5 py-3">
         <Minus size={16} strokeWidth={1.5} className="text-ink-200" />
       </td>
     );
   }
   return (
-    <td className="px-cairn-5 py-3 text-caption text-ink-700 font-medium">{value}</td>
+    <td className="px-qurtag-5 py-3 text-caption text-ink-700 font-medium">{value}</td>
   );
 }

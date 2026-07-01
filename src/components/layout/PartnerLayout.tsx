@@ -23,13 +23,13 @@ export function PartnerLayout() {
     <div className="min-h-screen bg-canvas text-ink-900 antialiased">
       <div className="flex">
         <aside className="hidden md:flex w-60 lg:w-64 flex-col border-r border-hairline min-h-screen sticky top-0">
-          <div className="px-cairn-3 pt-cairn-5 pb-cairn-3 border-b border-hairline">
+          <div className="px-qurtag-3 pt-qurtag-5 pb-qurtag-3 border-b border-hairline">
             <Link to="/" className="flex items-center gap-2 px-2">
               <Wordmark />
               <span className="text-eyebrow uppercase tracking-[0.14em] text-muted">Partners</span>
             </Link>
           </div>
-          <nav className="flex-1 flex flex-col gap-0.5 px-cairn-3 py-cairn-3">
+          <nav className="flex-1 flex flex-col gap-0.5 px-qurtag-3 py-qurtag-3">
             {nav.map((item) => (
               <NavLink
                 key={item.to}
@@ -38,7 +38,7 @@ export function PartnerLayout() {
                 className={({ isActive }) =>
                   cn(
                     'flex items-center gap-3 px-3 h-9 rounded-card text-caption font-medium',
-                    'transition-colors duration-cairn',
+                    'transition-colors duration-qurtag',
                     isActive
                       ? 'bg-ink-50 text-ink-900'
                       : 'text-muted hover:text-ink-900 hover:bg-ink-50',

@@ -87,8 +87,8 @@ export function Items() {
   const armedCount = items.filter((i) => i.lost_mode).length;
 
   return (
-    <div className="px-cairn-5 md:px-cairn-8 py-cairn-8 max-w-5xl">
-      <div className="flex items-end justify-between mb-cairn-5 gap-cairn-3 flex-wrap">
+    <div className="px-qurtag-5 md:px-qurtag-8 py-qurtag-8 max-w-5xl">
+      <div className="flex items-end justify-between mb-qurtag-5 gap-qurtag-3 flex-wrap">
         <div className="flex flex-col gap-2">
           <Eyebrow>Items</Eyebrow>
           <h1 className="font-display font-semibold text-ink-900 text-h3 sm:text-h2 tracking-[-0.028em] leading-[1.04] text-balance">
@@ -101,7 +101,7 @@ export function Items() {
         </div>
         <Link
           to="/start/setup"
-          className="inline-flex h-11 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-4 hover:bg-ink-700 transition-colors duration-cairn"
+          className="inline-flex h-11 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-4 hover:bg-ink-700 transition-colors duration-qurtag"
         >
           <Plus size={14} strokeWidth={1.75} />
           Add item
@@ -109,7 +109,7 @@ export function Items() {
       </div>
 
       {/* Search */}
-      <div className="relative mb-cairn-3">
+      <div className="relative mb-qurtag-3">
         <Search
           size={16}
           strokeWidth={1.75}
@@ -120,12 +120,12 @@ export function Items() {
           placeholder="Search by name, brand, model…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="h-11 w-full rounded-pill border border-hairline-strong bg-canvas pl-11 pr-4 text-body text-ink-900 placeholder:text-muted focus:outline-none focus:border-ink-900 transition-colors duration-cairn"
+          className="h-11 w-full rounded-pill border border-hairline-strong bg-canvas pl-11 pr-4 text-body text-ink-900 placeholder:text-muted focus:outline-none focus:border-ink-900 transition-colors duration-qurtag"
         />
       </div>
 
       {/* Filter row */}
-      <div className="flex items-center gap-2 mb-cairn-5 flex-wrap">
+      <div className="flex items-center gap-2 mb-qurtag-5 flex-wrap">
         <Chip active={status === 'all'} onClick={() => setStatus('all')}>
           All
         </Chip>
@@ -166,7 +166,7 @@ export function Items() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-modal border border-hairline bg-paper p-cairn-8 flex flex-col items-start gap-3">
+        <div className="rounded-modal border border-hairline bg-paper p-qurtag-8 flex flex-col items-start gap-3">
           <div className="size-12 rounded-pill bg-canvas grid place-items-center shadow-card">
             <Package size={20} strokeWidth={1.5} className="text-ink-900" />
           </div>
@@ -181,7 +181,7 @@ export function Items() {
           {items.length === 0 && (
             <Link
               to="/start/setup"
-              className="inline-flex h-11 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-5 hover:bg-ink-700 transition-colors duration-cairn"
+              className="inline-flex h-11 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-5 hover:bg-ink-700 transition-colors duration-qurtag"
             >
               <Plus size={14} strokeWidth={1.75} />
               Add an item
@@ -198,8 +198,8 @@ export function Items() {
                 key={item.id}
                 to={`/app/items/${item.id}`}
                 className={cn(
-                  'rounded-modal border border-hairline bg-canvas p-cairn-5 flex gap-cairn-3',
-                  'hover:border-hairline-strong hover:shadow-card transition-all duration-cairn',
+                  'rounded-modal border border-hairline bg-canvas p-qurtag-5 flex gap-qurtag-3',
+                  'hover:border-hairline-strong hover:shadow-card transition-all duration-qurtag',
                 )}
               >
                 {item.hero_photo_url ? (
@@ -218,7 +218,7 @@ export function Items() {
                     <Eyebrow>{tag?.hardware_tier ?? 'No tag'}</Eyebrow>
                     {item.lost_mode ? (
                       <span className="inline-flex items-center gap-1 text-caption px-2 py-0.5 rounded-pill bg-signal-50 text-signal-700 shrink-0">
-                        <span className="size-1.5 rounded-full bg-signal-500 animate-cairn-pulse" />
+                        <span className="size-1.5 rounded-full bg-signal-500 animate-qurtag-pulse" />
                         Armed
                       </span>
                     ) : (
@@ -263,7 +263,7 @@ function Chip({ active, onClick, tone = 'default', children }: ChipProps) {
       onClick={onClick}
       className={cn(
         'inline-flex h-8 items-center rounded-pill border px-3 text-caption font-medium',
-        'transition-colors duration-cairn ease-cairn',
+        'transition-colors duration-qurtag ease-qurtag',
         active
           ? tone === 'signal'
             ? 'bg-signal-500 text-canvas border-signal-500'

@@ -43,8 +43,8 @@ export function PartnerScan() {
   }
 
   return (
-    <div className="px-cairn-5 md:px-cairn-8 py-cairn-8 max-w-2xl">
-      <div className="flex flex-col gap-2 mb-cairn-8">
+    <div className="px-qurtag-5 md:px-qurtag-8 py-qurtag-8 max-w-2xl">
+      <div className="flex flex-col gap-2 mb-qurtag-8">
         <Eyebrow>Log a drop-off</Eyebrow>
         <h1 className="font-display font-semibold text-ink-900 text-h3 sm:text-h2 tracking-[-0.028em] leading-[1.04] text-balance">
           Scan the tag. We'll tell the owner.
@@ -53,7 +53,7 @@ export function PartnerScan() {
 
       <form
         onSubmit={onSubmit}
-        className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-cairn-3"
+        className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-qurtag-3"
       >
         <div className="flex items-center gap-3">
           <div className="size-10 rounded-pill bg-ink-50 grid place-items-center shrink-0">
@@ -79,7 +79,7 @@ export function PartnerScan() {
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
             placeholder="Where you found it, condition, the shelf you put it on."
-            className="w-full rounded-card border border-hairline-strong bg-canvas p-3 text-body text-ink-900 placeholder:text-muted focus:outline-none focus:border-ink-900 transition-colors duration-cairn resize-none"
+            className="w-full rounded-card border border-hairline-strong bg-canvas p-3 text-body text-ink-900 placeholder:text-muted focus:outline-none focus:border-ink-900 transition-colors duration-qurtag resize-none"
           />
         </label>
         {error && (
@@ -88,7 +88,7 @@ export function PartnerScan() {
         <button
           type="submit"
           disabled={submitting || !tagPublicId.trim() || !partnerId}
-          className="self-start inline-flex h-11 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-5 hover:bg-ink-700 disabled:opacity-50 transition-colors duration-cairn"
+          className="self-start inline-flex h-11 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-5 hover:bg-ink-700 disabled:opacity-50 transition-colors duration-qurtag"
         >
           {submitting ? 'Logging…' : 'Log drop-off'}
         </button>

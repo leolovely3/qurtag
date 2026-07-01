@@ -62,7 +62,7 @@ export function PhotoUploader({ householdId, value, onChange, className }: Photo
           <button
             type="button"
             onClick={() => onChange(null)}
-            className="absolute top-2 right-2 size-8 grid place-items-center rounded-pill bg-ink-900/85 text-canvas hover:bg-ink-900 transition-colors duration-cairn opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+            className="absolute top-2 right-2 size-8 grid place-items-center rounded-pill bg-ink-900/85 text-canvas hover:bg-ink-900 transition-colors duration-qurtag opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
             aria-label="Remove photo"
           >
             <X size={14} strokeWidth={2} />
@@ -70,7 +70,7 @@ export function PhotoUploader({ householdId, value, onChange, className }: Photo
         </div>
       ) : (
         <label
-          htmlFor="cairn-photo"
+          htmlFor="qurtag-photo"
           onDragOver={(e) => {
             e.preventDefault();
             setDragOver(true);
@@ -79,7 +79,7 @@ export function PhotoUploader({ householdId, value, onChange, className }: Photo
           onDrop={onDrop}
           className={cn(
             'flex flex-col items-center justify-center gap-2 aspect-[4/3] rounded-card border border-dashed cursor-pointer',
-            'transition-colors duration-cairn ease-cairn',
+            'transition-colors duration-qurtag ease-qurtag',
             dragOver
               ? 'border-ink-900 bg-ink-50'
               : 'border-hairline-strong bg-paper hover:bg-ink-50 hover:border-ink-900/40',
@@ -106,7 +106,7 @@ export function PhotoUploader({ householdId, value, onChange, className }: Photo
 
       <input
         ref={inputRef}
-        id="cairn-photo"
+        id="qurtag-photo"
         type="file"
         accept={ACCEPTED}
         className="sr-only"

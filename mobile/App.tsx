@@ -7,12 +7,12 @@ import * as Notifications from 'expo-notifications';
 const APP_URL = 'https://app.qurtag.com';
 
 /**
- * Injected before content loads — exposes window.cairnBridge to the web app.
- * The web detects it via `if (window.cairnBridge)` and routes capability
+ * Injected before content loads — exposes window.qurtagBridge to the web app.
+ * The web detects it via `if (window.qurtagBridge)` and routes capability
  * calls through here.
  */
 const BRIDGE_JS = `
-  window.cairnBridge = {
+  window.qurtagBridge = {
     isNative: true,
     platform: ${Platform.OS === 'ios' ? '"ios"' : '"android"'},
     registerPushToken(token) {
@@ -47,7 +47,7 @@ export default function App() {
       if (status === 'granted') {
         const token = await Notifications.getExpoPushTokenAsync();
         webRef.current?.injectJavaScript(
-          `window.cairnBridge && window.cairnBridge.__onPushToken && window.cairnBridge.__onPushToken(${JSON.stringify(token.data)}); true;`,
+          `window.qurtagBridge && window.qurtagBridge.__onPushToken && window.qurtagBridge.__onPushToken(${JSON.stringify(token.data)}); true;`,
         );
       }
     })();

@@ -19,7 +19,7 @@ export type SystemPayload =
   | { type: 'reward_offered'; amount_cents: number }
   | { type: 'reunited'; at: string };
 
-const MARKER = 'cairn:json:';
+const MARKER = 'qurtag:json:';
 
 export function encodeSystemPayload(payload: SystemPayload): string {
   return MARKER + JSON.stringify(payload);

@@ -84,7 +84,7 @@ export function Stories() {
       {/* Hero */}
       <section>
         <Container size="xl">
-          <div className="pt-cairn-8 pb-cairn-8 md:pt-16 md:pb-cairn-8 max-w-3xl flex flex-col gap-5">
+          <div className="pt-qurtag-8 pb-qurtag-8 md:pt-16 md:pb-qurtag-8 max-w-3xl flex flex-col gap-5">
             <Eyebrow>Stories of return</Eyebrow>
             <h1 className="font-display font-semibold text-ink-900 text-h2 sm:text-h1 tracking-[-0.035em] leading-[0.95] text-balance">
               Quiet wins, one bag at a time.
@@ -101,13 +101,13 @@ export function Stories() {
       {/* Stories */}
       <section className="border-t border-hairline bg-paper">
         <Container size="xl">
-          <div className="py-cairn-12 md:py-cairn-8 flex flex-col gap-cairn-3">
+          <div className="py-qurtag-12 md:py-qurtag-8 flex flex-col gap-qurtag-3">
             {stories.map((s, idx) => (
               <article
                 key={s.who}
                 className={cn(
-                  'rounded-modal border p-cairn-5 grid lg:grid-cols-12 gap-cairn-5 items-start',
-                  'transition-colors duration-cairn',
+                  'rounded-modal border p-qurtag-5 grid lg:grid-cols-12 gap-qurtag-5 items-start',
+                  'transition-colors duration-qurtag',
                   s.featured
                     ? 'border-signal-200 bg-canvas shadow-card'
                     : 'border-hairline bg-canvas hover:border-hairline-strong',
@@ -149,7 +149,7 @@ export function Stories() {
       {/* Transparency footnote */}
       <section className="border-t border-hairline">
         <Container size="md">
-          <div className="py-cairn-8 flex flex-col gap-2">
+          <div className="py-qurtag-8 flex flex-col gap-2">
             <p className="text-caption text-muted text-pretty">
               <strong className="text-ink-900">A note on these stories.</strong> They're composite
              . Assembled from the patterns we see in early QurTag testing and from conversations
@@ -163,7 +163,7 @@ export function Stories() {
       {/* Share your story */}
       <section className="border-t border-hairline bg-paper">
         <Container size="md">
-          <div className="py-cairn-8 flex flex-col items-start gap-6">
+          <div className="py-qurtag-8 flex flex-col items-start gap-6">
             <Eyebrow>Your turn</Eyebrow>
             <h2 className="font-display font-semibold text-ink-900 text-h1 tracking-[-0.038em] leading-[0.95] text-balance">
               Share yours.
@@ -182,7 +182,7 @@ export function Stories() {
             <div className="flex items-center gap-6">
               <Link
                 to="/start"
-                className="inline-flex h-12 items-center gap-2 rounded-pill bg-ink-900 px-6 text-body font-medium text-canvas hover:bg-ink-700 transition-colors duration-cairn"
+                className="inline-flex h-12 items-center gap-2 rounded-pill bg-ink-900 px-6 text-body font-medium text-canvas hover:bg-ink-700 transition-colors duration-qurtag"
               >
                 Start free
                 <ArrowRight size={16} strokeWidth={1.75} />

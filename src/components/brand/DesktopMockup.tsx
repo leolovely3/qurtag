@@ -72,7 +72,7 @@ export function DesktopMockup({ className }: DesktopMockupProps) {
         {/* App body */}
         <div className="flex">
           {/* Left rail. Matches the real AppLayout */}
-          <aside className="w-40 border-r border-hairline bg-paper py-cairn-3 px-2 flex flex-col">
+          <aside className="w-40 border-r border-hairline bg-paper py-qurtag-3 px-2 flex flex-col">
             <div className="px-3 pb-2 border-b border-hairline mb-2">
               <span className="font-display font-semibold text-h6 tracking-[-0.011em] text-ink-900">
                 QurTag
@@ -106,7 +106,7 @@ export function DesktopMockup({ className }: DesktopMockupProps) {
             </nav>
 
             {/* Bottom of rail: Free plan upsell + Sign out. Matches real AppLayout */}
-            <div className="mt-auto pt-cairn-2 flex flex-col gap-1.5">
+            <div className="mt-auto pt-qurtag-2 flex flex-col gap-1.5">
               <div className="rounded-card bg-canvas border border-hairline px-2 py-1.5 flex flex-col gap-1">
                 <span className="text-[7px] uppercase tracking-[0.14em] text-muted font-medium">
                   Free plan
@@ -124,7 +124,7 @@ export function DesktopMockup({ className }: DesktopMockupProps) {
           </aside>
 
           {/* Main content. Inbox view */}
-          <main className="flex-1 p-cairn-3 flex flex-col gap-cairn-2 min-h-[260px]">
+          <main className="flex-1 p-qurtag-3 flex flex-col gap-qurtag-2 min-h-[260px]">
             <div className="flex items-baseline justify-between">
               <div>
                 <span className="text-[9px] uppercase tracking-[0.14em] text-muted font-medium">

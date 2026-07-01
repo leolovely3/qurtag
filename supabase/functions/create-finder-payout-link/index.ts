@@ -9,7 +9,7 @@
 //
 // Required env:
 //   STRIPE_SECRET_KEY
-//   CAIRN_APP_URL
+//   QURTAG_APP_URL
 //   SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY
 //
 // Inputs: { finderSessionId, email, country }
@@ -29,7 +29,7 @@ Deno.serve(async (req: Request) => {
   if (!finderSessionId) return new Response('missing finderSessionId', { status: 400 });
 
   const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
-  const appUrl = Deno.env.get('CAIRN_APP_URL') ?? 'https://app.qurtag.com';
+  const appUrl = Deno.env.get('QURTAG_APP_URL') ?? 'https://app.qurtag.com';
   if (!stripeKey) return new Response('STRIPE_SECRET_KEY missing', { status: 500 });
 
   const supabase = createClient(
@@ -52,7 +52,7 @@ Deno.serve(async (req: Request) => {
     form.set('country', country ?? (session as any).payout_country ?? 'US');
     if (email) form.set('email', email);
     form.set('capabilities[transfers][requested]', 'true');
-    form.set('metadata[cairn_finder_session_id]', finderSessionId);
+    form.set('metadata[qurtag_finder_session_id]', finderSessionId);
     const res = await fetch('https://api.stripe.com/v1/accounts', {
       method: 'POST',
       headers: {

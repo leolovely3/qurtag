@@ -17,18 +17,18 @@ export function LostModeToggle({ value, onChange, pending, className }: LostMode
   return (
     <div
       className={cn(
-        'rounded-modal border p-cairn-5 transition-colors duration-cairn ease-cairn',
+        'rounded-modal border p-qurtag-5 transition-colors duration-qurtag ease-qurtag',
         value
           ? 'border-signal-200 bg-signal-50'
           : 'border-hairline bg-canvas',
         className,
       )}
     >
-      <div className="flex items-start justify-between gap-cairn-3">
+      <div className="flex items-start justify-between gap-qurtag-3">
         <div className="flex items-start gap-3 min-w-0">
           <div
             className={cn(
-              'size-10 rounded-pill grid place-items-center shrink-0 transition-colors duration-cairn',
+              'size-10 rounded-pill grid place-items-center shrink-0 transition-colors duration-qurtag',
               value ? 'bg-signal-500 text-canvas' : 'bg-ink-50 text-ink-900',
             )}
           >
@@ -59,7 +59,7 @@ export function LostModeToggle({ value, onChange, pending, className }: LostMode
           aria-busy={pending}
           onClick={() => !pending && onChange(!value)}
           className={cn(
-            'relative inline-flex h-7 w-12 shrink-0 items-center rounded-pill transition-colors duration-cairn ease-cairn',
+            'relative inline-flex h-7 w-12 shrink-0 items-center rounded-pill transition-colors duration-qurtag ease-qurtag',
             value ? 'bg-signal-500' : 'bg-ink-200',
             pending && 'opacity-60 cursor-progress',
           )}
@@ -67,7 +67,7 @@ export function LostModeToggle({ value, onChange, pending, className }: LostMode
           <span className="sr-only">Toggle lost mode</span>
           <span
             className={cn(
-              'inline-block size-5 rounded-full bg-canvas shadow-card transition-transform duration-cairn ease-cairn',
+              'inline-block size-5 rounded-full bg-canvas shadow-card transition-transform duration-qurtag ease-qurtag',
               value ? 'translate-x-6' : 'translate-x-1',
             )}
           >

@@ -74,7 +74,7 @@ export function PhoneMockup({ className }: PhoneMockupProps) {
                     Signature
                   </span>
                   <span className="inline-flex items-center gap-0.5 rounded-pill bg-signal-50 text-signal-700 px-1.5 py-px text-[8px] font-medium">
-                    <span className="size-1 rounded-full bg-signal-500 animate-cairn-pulse" />
+                    <span className="size-1 rounded-full bg-signal-500 animate-qurtag-pulse" />
                     Armed
                   </span>
                 </div>

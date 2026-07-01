@@ -10,7 +10,7 @@
 //
 // Required Edge Function env (Supabase Dashboard → Functions → Secrets):
 //   STRIPE_SECRET_KEY            — sk_live_... (or sk_test_... for testing)
-//   CAIRN_APP_URL                — https://app.qurtag.com
+//   QURTAG_APP_URL                — https://app.qurtag.com
 //   SUPABASE_URL                 — provided automatically
 //   SUPABASE_SERVICE_ROLE_KEY    — provided automatically
 
@@ -28,7 +28,7 @@ Deno.serve(async (req: Request) => {
   if (!rewardId || !itemId || !amountCents) return new Response('missing fields', { status: 400 });
 
   const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
-  const appUrl = Deno.env.get('CAIRN_APP_URL') ?? 'https://app.qurtag.com';
+  const appUrl = Deno.env.get('QURTAG_APP_URL') ?? 'https://app.qurtag.com';
   if (!stripeKey) return new Response('STRIPE_SECRET_KEY missing', { status: 500 });
 
   const supabase = createClient(
@@ -40,7 +40,7 @@ Deno.serve(async (req: Request) => {
   const form = new URLSearchParams();
   form.set('mode', 'payment');
   form.set('payment_intent_data[capture_method]', 'manual');
-  form.set('payment_intent_data[metadata][cairn_reward_id]', rewardId);
+  form.set('payment_intent_data[metadata][qurtag_reward_id]', rewardId);
   form.set('line_items[0][price_data][currency]', 'usd');
   form.set('line_items[0][price_data][unit_amount]', String(amountCents));
   form.set('line_items[0][price_data][product_data][name]', 'QurTag reward — held in escrow');

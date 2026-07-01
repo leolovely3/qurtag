@@ -49,7 +49,7 @@ export function Business() {
       {/* Hero */}
       <section>
         <Container size="xl">
-          <div className="pt-cairn-8 pb-cairn-8 md:pt-16 md:pb-cairn-8 grid md:grid-cols-12 gap-cairn-8 items-end">
+          <div className="pt-qurtag-8 pb-qurtag-8 md:pt-16 md:pb-qurtag-8 grid md:grid-cols-12 gap-qurtag-8 items-end">
             <div className="md:col-span-7 flex flex-col gap-5">
               <Eyebrow>For business</Eyebrow>
               <h1 className="font-display font-semibold text-ink-900 text-h2 sm:text-h1 tracking-[-0.035em] leading-[0.95] text-balance">
@@ -63,7 +63,7 @@ export function Business() {
               <div className="flex flex-wrap items-center gap-6 pt-1">
                 <a
                   href="mailto:partners@qurtag.com"
-                  className="inline-flex h-12 items-center gap-2 rounded-pill bg-ink-900 px-6 text-body font-medium text-canvas hover:bg-ink-700 transition-colors duration-cairn"
+                  className="inline-flex h-12 items-center gap-2 rounded-pill bg-ink-900 px-6 text-body font-medium text-canvas hover:bg-ink-700 transition-colors duration-qurtag"
                 >
                   Talk to us
                   <ArrowRight size={16} strokeWidth={1.75} />
@@ -75,7 +75,7 @@ export function Business() {
               </div>
             </div>
             <div className="md:col-span-5">
-              <div className="rounded-modal border border-hairline bg-paper p-cairn-5 flex flex-col gap-3">
+              <div className="rounded-modal border border-hairline bg-paper p-qurtag-5 flex flex-col gap-3">
                 <Eyebrow>Pilot terms</Eyebrow>
                 <p className="text-body text-ink-900 font-medium">
                   Free for the first 90 days at one location.
@@ -94,7 +94,7 @@ export function Business() {
       {/* Verticals */}
       <section className="border-t border-hairline bg-paper">
         <Container size="xl">
-          <div className="py-cairn-12 md:py-cairn-8 flex flex-col gap-cairn-8">
+          <div className="py-qurtag-12 md:py-qurtag-8 flex flex-col gap-qurtag-8">
             <div className="max-w-2xl flex flex-col gap-3">
               <Eyebrow>Who it's for</Eyebrow>
               <h2 className="font-display font-semibold text-ink-900 text-h2 sm:text-h1 tracking-[-0.032em] leading-[1.02] text-balance">
@@ -105,7 +105,7 @@ export function Business() {
               {verticals.map((v) => (
                 <article
                   key={v.title}
-                  className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-3"
+                  className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3"
                 >
                   <v.icon size={22} strokeWidth={1.25} className="text-verdigris-700" />
                   <h3 className="font-display font-semibold text-h5 text-ink-900 tracking-[-0.018em] text-balance">
@@ -122,7 +122,7 @@ export function Business() {
       {/* How it works for partners */}
       <section className="border-t border-hairline">
         <Container size="xl">
-          <div className="py-cairn-12 md:py-cairn-8 grid lg:grid-cols-2 gap-cairn-8 items-start">
+          <div className="py-qurtag-12 md:py-qurtag-8 grid lg:grid-cols-2 gap-qurtag-8 items-start">
             <div className="flex flex-col gap-4">
               <Eyebrow>How it works for staff</Eyebrow>
               <h2 className="font-display font-semibold text-ink-900 text-h2 tracking-[-0.028em] leading-[1.05] text-balance">
@@ -147,7 +147,7 @@ export function Business() {
                 </li>
               </ol>
             </div>
-            <div className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-3">
+            <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3">
               <div className="flex items-center gap-3">
                 <div className="size-10 rounded-pill bg-ink-50 grid place-items-center shrink-0">
                   <ScanLine size={18} strokeWidth={1.75} className="text-ink-900" />
@@ -174,7 +174,7 @@ export function Business() {
       {/* What's included */}
       <section className="border-t border-hairline bg-paper">
         <Container size="xl">
-          <div className="py-cairn-12 md:py-cairn-8 grid lg:grid-cols-12 gap-cairn-8 items-start">
+          <div className="py-qurtag-12 md:py-qurtag-8 grid lg:grid-cols-12 gap-qurtag-8 items-start">
             <div className="lg:col-span-5 flex flex-col gap-4 lg:sticky lg:top-28">
               <Eyebrow>What's included</Eyebrow>
               <h2 className="font-display font-semibold text-ink-900 text-h2 tracking-[-0.028em] leading-[1.05] text-balance">
@@ -189,7 +189,7 @@ export function Business() {
               {features.map((f) => (
                 <li
                   key={f}
-                  className="flex items-start gap-3 rounded-card border border-hairline bg-canvas p-cairn-3"
+                  className="flex items-start gap-3 rounded-card border border-hairline bg-canvas p-qurtag-3"
                 >
                   <ShieldCheck size={14} strokeWidth={1.75} className="mt-1 text-verdigris-700 shrink-0" />
                   <span className="text-body text-ink-700 text-pretty">{f}</span>
@@ -203,7 +203,7 @@ export function Business() {
       {/* Outro */}
       <section className="border-t border-hairline">
         <Container size="md">
-          <div className="py-cairn-8 flex flex-col items-start gap-6">
+          <div className="py-qurtag-8 flex flex-col items-start gap-6">
             <Building2 size={28} strokeWidth={1.25} className="text-verdigris-700" />
             <h2 className="font-display font-semibold text-ink-900 text-h1 tracking-[-0.038em] leading-[0.95] text-balance">
               A pilot in one location. Decide from there.
@@ -215,7 +215,7 @@ export function Business() {
             </p>
             <a
               href="mailto:partners@qurtag.com"
-              className="inline-flex h-12 items-center gap-2 rounded-pill bg-ink-900 px-6 text-body font-medium text-canvas hover:bg-ink-700 transition-colors duration-cairn"
+              className="inline-flex h-12 items-center gap-2 rounded-pill bg-ink-900 px-6 text-body font-medium text-canvas hover:bg-ink-700 transition-colors duration-qurtag"
             >
               Email partners@qurtag.com
               <ArrowRight size={16} strokeWidth={1.75} />

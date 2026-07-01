@@ -18,7 +18,7 @@ export function FinderLayout() {
           </Link>
           <button
             type="button"
-            className="inline-flex items-center gap-1.5 text-caption text-muted hover:text-ink-900 transition-colors duration-cairn"
+            className="inline-flex items-center gap-1.5 text-caption text-muted hover:text-ink-900 transition-colors duration-qurtag"
           >
             <Languages size={14} strokeWidth={1.75} />
             English
@@ -26,7 +26,7 @@ export function FinderLayout() {
         </div>
       </header>
       <main id="main-content" className="flex-1 flex">
-        <div className="mx-auto max-w-2xl w-full px-6 py-cairn-8">
+        <div className="mx-auto max-w-2xl w-full px-6 py-qurtag-8">
           <Outlet />
         </div>
       </main>

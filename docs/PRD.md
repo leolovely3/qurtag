@@ -1,7 +1,5 @@
 # Product Requirements Document
-## Working name: QurTag — Premium Recovery Network for Things That Matter
-
-*QurTag is a placeholder — a stone marker travelers leave so others can find their way. Swap once branding is locked.*
+## QurTag — Premium Recovery Network for Things That Matter
 
 ---
 

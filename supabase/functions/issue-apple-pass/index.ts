@@ -5,7 +5,7 @@
 // next-steps. With the cert, we produce the standard pkpass zip.
 //
 // Required Edge Function env (when ready to sign):
-//   APPLE_PASS_TYPE_ID                  e.g. pass.co.cairn.item
+//   APPLE_PASS_TYPE_ID                  e.g. pass.co.qurtag.item
 //   APPLE_TEAM_ID                       Apple Developer Team ID
 //   APPLE_PASS_CERTIFICATE_BASE64       PEM-encoded cert, base64'd
 //   APPLE_PASS_KEY_BASE64               Private key matching cert, base64'd
@@ -48,7 +48,7 @@ Deno.serve(async (req: Request) => {
   if (!item) return new Response('item not found', { status: 404 });
 
   const tag = (item as any).tags?.[0];
-  const finderUrl = `${Deno.env.get('CAIRN_APP_URL') ?? 'https://app.qurtag.com'}/find/${tag?.public_id ?? ''}`;
+  const finderUrl = `${Deno.env.get('QURTAG_APP_URL') ?? 'https://app.qurtag.com'}/find/${tag?.public_id ?? ''}`;
 
   // The pass.json content. Layout matches a generic "back of a luggage tag."
   const passJson = {

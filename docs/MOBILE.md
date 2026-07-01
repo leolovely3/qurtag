@@ -42,7 +42,7 @@ those calls through the bridge instead of the browser equivalents.
 A scaffolded Expo project lives at [`/mobile`](../mobile/) (sibling to the
 web `src/`). It is intentionally minimal:
 
-- `app.json` — Expo config, QurTag name + icon, scheme `cairn://`, bundle id
+- `app.json` — Expo config, QurTag name + icon, scheme `qurtag://`, bundle id
   `co.qurtag.com`.
 - `eas.json` — EAS Build profiles (development / preview / production).
 - `App.tsx` — WebView shell with the bridge.
@@ -102,14 +102,14 @@ eas build -p android --profile preview
 In the web (when running inside the wrapper), call:
 
 ```ts
-if (window.cairnBridge) {
-  window.cairnBridge.addToWallet(passUrl);
-  window.cairnBridge.registerPushToken(token);
-  window.cairnBridge.startLiveActivity({ itemId, kind: 'armed' });
+if (window.qurtagBridge) {
+  window.qurtagBridge.addToWallet(passUrl);
+  window.qurtagBridge.registerPushToken(token);
+  window.qurtagBridge.startLiveActivity({ itemId, kind: 'armed' });
 }
 ```
 
-The wrapper injects `cairnBridge` via WebView's `injectedJavaScriptBefore
+The wrapper injects `qurtagBridge` via WebView's `injectedJavaScriptBefore
 ContentLoaded`. Each method is just `window.ReactNativeWebView.postMessage`
 with a typed envelope, and the React Native side switches on the envelope.
 

@@ -26,7 +26,7 @@ self.addEventListener('push', (event) => {
     body: payload.body || '',
     icon: payload.icon || '/favicon.svg',
     badge: payload.badge || '/favicon.svg',
-    tag: payload.tag || 'cairn-message',
+    tag: payload.tag || 'qurtag-message',
     data: {
       url: payload.url || '/app/inbox',
       threadId: payload.threadId || null,

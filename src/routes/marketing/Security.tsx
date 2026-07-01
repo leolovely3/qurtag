@@ -52,7 +52,7 @@ export function SecurityPage() {
       {/* Hero */}
       <section>
         <Container size="xl">
-          <div className="pt-cairn-8 pb-cairn-8 md:pt-16 md:pb-cairn-8 max-w-3xl flex flex-col gap-5">
+          <div className="pt-qurtag-8 pb-qurtag-8 md:pt-16 md:pb-qurtag-8 max-w-3xl flex flex-col gap-5">
             <Eyebrow>Security &amp; privacy</Eyebrow>
             <h1 className="font-display font-semibold text-ink-900 text-h2 sm:text-h1 tracking-[-0.035em] leading-[0.95] text-balance">
               The quiet promise behind every tag.
@@ -69,7 +69,7 @@ export function SecurityPage() {
       {/* Principles */}
       <section className="border-t border-hairline bg-paper">
         <Container size="xl">
-          <div className="py-cairn-12 md:py-cairn-8 flex flex-col gap-cairn-8">
+          <div className="py-qurtag-12 md:py-qurtag-8 flex flex-col gap-qurtag-8">
             <div className="max-w-2xl flex flex-col gap-4">
               <Eyebrow>Principles</Eyebrow>
               <h2 className="font-display font-semibold text-ink-900 text-h2 sm:text-h1 tracking-[-0.032em] leading-[1.02] text-balance">
@@ -80,7 +80,7 @@ export function SecurityPage() {
               {principles.map((p) => (
                 <article
                   key={p.title}
-                  className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-3"
+                  className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3"
                 >
                   <p.icon size={22} strokeWidth={1.25} className="text-verdigris-700" />
                   <h3 className="font-display font-semibold text-h5 text-ink-900 tracking-[-0.018em] text-balance">
@@ -97,7 +97,7 @@ export function SecurityPage() {
       {/* Bridge architecture diagram */}
       <section className="border-t border-hairline">
         <Container size="xl">
-          <div className="py-cairn-12 md:py-cairn-8 grid lg:grid-cols-12 gap-cairn-8 items-start">
+          <div className="py-qurtag-12 md:py-qurtag-8 grid lg:grid-cols-12 gap-qurtag-8 items-start">
             <div className="lg:col-span-5 flex flex-col gap-4">
               <Eyebrow>The bridge</Eyebrow>
               <h2 className="font-display font-semibold text-ink-900 text-h2 tracking-[-0.028em] leading-[1.05] text-balance">
@@ -119,7 +119,7 @@ export function SecurityPage() {
               </Link>
             </div>
             <div className="lg:col-span-7">
-              <pre className="rounded-modal border border-hairline bg-ink-950 text-ink-100 p-cairn-5 text-caption font-mono leading-relaxed overflow-x-auto">
+              <pre className="rounded-modal border border-hairline bg-ink-950 text-ink-100 p-qurtag-5 text-caption font-mono leading-relaxed overflow-x-auto">
 {`         finder's browser            owner's browser
                 │                          │
                 │  scan / message          │  inbox / reply
@@ -149,7 +149,7 @@ export function SecurityPage() {
       {/* Retention table */}
       <section className="border-t border-hairline bg-paper">
         <Container size="xl">
-          <div className="py-cairn-12 md:py-cairn-8 flex flex-col gap-cairn-5">
+          <div className="py-qurtag-12 md:py-qurtag-8 flex flex-col gap-qurtag-5">
             <div className="max-w-2xl flex flex-col gap-3">
               <Eyebrow>Retention</Eyebrow>
               <h2 className="font-display font-semibold text-ink-900 text-h2 tracking-[-0.028em] leading-[1.05] text-balance">
@@ -161,10 +161,10 @@ export function SecurityPage() {
                 <tbody className="divide-y divide-hairline">
                   {retentions.map(([what, when]) => (
                     <tr key={what} className="grid grid-cols-3">
-                      <td className="px-cairn-5 py-4 font-medium text-ink-900 col-span-1">
+                      <td className="px-qurtag-5 py-4 font-medium text-ink-900 col-span-1">
                         {what}
                       </td>
-                      <td className="px-cairn-5 py-4 text-muted col-span-2">{when}</td>
+                      <td className="px-qurtag-5 py-4 text-muted col-span-2">{when}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -177,8 +177,8 @@ export function SecurityPage() {
       {/* Disclosure + transparency */}
       <section className="border-t border-hairline">
         <Container size="xl">
-          <div className="py-cairn-12 md:py-cairn-8 grid md:grid-cols-2 gap-cairn-5">
-            <div className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-3">
+          <div className="py-qurtag-12 md:py-qurtag-8 grid md:grid-cols-2 gap-qurtag-5">
+            <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3">
               <Eyebrow>Responsible disclosure</Eyebrow>
               <h3 className="font-display font-semibold text-h4 text-ink-900 tracking-[-0.018em] text-balance">
                 Found a vulnerability?
@@ -211,7 +211,7 @@ export function SecurityPage() {
                 .
               </p>
             </div>
-            <div className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-3">
+            <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3">
               <Eyebrow>Transparency report</Eyebrow>
               <h3 className="font-display font-semibold text-h4 text-ink-900 tracking-[-0.018em] text-balance">
                 Quarterly, in full.
@@ -230,7 +230,7 @@ export function SecurityPage() {
       {/* Outro */}
       <section className="border-t border-hairline">
         <Container size="md">
-          <div className="py-cairn-8 flex flex-col items-start gap-6">
+          <div className="py-qurtag-8 flex flex-col items-start gap-6">
             <Lock size={28} strokeWidth={1.25} className="text-verdigris-700" />
             <h2 className="font-display font-semibold text-ink-900 text-h1 tracking-[-0.038em] leading-[0.95] text-balance">
               Trust, but verify.

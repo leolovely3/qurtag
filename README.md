@@ -1,4 +1,4 @@
-# Cairn
+# QurTag
 
 > Your things find their way home.
 
@@ -79,9 +79,9 @@ Tokenized in [`tailwind.config.ts`](tailwind.config.ts). The brand-essential pie
   (e.g. GT America). The fallbacks ship by default; license the real faces before launch.
 - **Palette**: `ink` (primary text + dark surface), `bone` (light surface), `verdigris`
   (quiet accent), `coral` (reserved exclusively for lost-mode signal), `slate` (secondary text).
-- **Motion**: `duration-cairn` (220 ms), `ease-cairn`. The `cairn-pulse` animation is the
+- **Motion**: `duration-qurtag` (220 ms), `ease-qurtag`. The `qurtag-pulse` animation is the
   only animation used on lost-mode UI — it is slow and intentional, never frantic.
-- **Spacing scale**: `cairn`, `cairn-2`, `cairn-3`, `cairn-5`, `cairn-8`, `cairn-12`, `cairn-16`
+- **Spacing scale**: `qurtag`, `qurtag-2`, `qurtag-3`, `qurtag-5`, `qurtag-8`, `qurtag-12`, `qurtag-16`
   (8 / 16 / 24 / 40 / 64 / 96 / 128 px). Whitespace is the luxury.
 - **Corners**: `rounded-card` (8 px), `rounded-modal` (12 px), `rounded-pill`.
 - **Shadows**: `shadow-card`, `shadow-elevated`, `shadow-modal` — quiet and layered, not floaty.

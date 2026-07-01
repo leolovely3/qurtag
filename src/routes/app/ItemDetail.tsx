@@ -285,7 +285,7 @@ export function ItemDetail() {
 
   if (!item) {
     return (
-      <div className="px-cairn-5 md:px-cairn-8 py-cairn-8 max-w-3xl flex flex-col gap-5">
+      <div className="px-qurtag-5 md:px-qurtag-8 py-qurtag-8 max-w-3xl flex flex-col gap-5">
         <Link
           to="/app"
           className="inline-flex items-center gap-2 text-caption text-muted hover:text-ink-900 transition-colors"
@@ -305,9 +305,9 @@ export function ItemDetail() {
   }
 
   return (
-    <div className="px-cairn-5 md:px-cairn-8 py-cairn-8 max-w-5xl">
+    <div className="px-qurtag-5 md:px-qurtag-8 py-qurtag-8 max-w-5xl">
       {/* Top bar */}
-      <div className="flex items-center justify-between mb-cairn-5">
+      <div className="flex items-center justify-between mb-qurtag-5">
         <Link
           to="/app"
           className="inline-flex items-center gap-2 text-caption text-muted hover:text-ink-900 transition-colors"
@@ -319,19 +319,19 @@ export function ItemDetail() {
       </div>
 
       {/* Header */}
-      <div className="flex flex-col gap-2 mb-cairn-8">
+      <div className="flex flex-col gap-2 mb-qurtag-8">
         <Eyebrow>{tag?.hardware_tier ?? 'No tag'}</Eyebrow>
         <input
           aria-label="Item name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="font-display font-semibold text-ink-900 text-h2 sm:text-h1 tracking-[-0.032em] leading-[1.02] bg-transparent border-0 outline-none w-full text-balance focus:outline-none focus-visible:bg-ink-50 rounded-card px-1 -mx-1 transition-colors duration-cairn"
+          className="font-display font-semibold text-ink-900 text-h2 sm:text-h1 tracking-[-0.032em] leading-[1.02] bg-transparent border-0 outline-none w-full text-balance focus:outline-none focus-visible:bg-ink-50 rounded-card px-1 -mx-1 transition-colors duration-qurtag"
         />
       </div>
 
-      <div className="grid lg:grid-cols-12 gap-cairn-5">
+      <div className="grid lg:grid-cols-12 gap-qurtag-5">
         {/* Left column */}
-        <div className="lg:col-span-7 flex flex-col gap-cairn-5">
+        <div className="lg:col-span-7 flex flex-col gap-qurtag-5">
           {/* Lost mode + reward */}
           <LostModeToggle
             value={lostMode}
@@ -340,7 +340,7 @@ export function ItemDetail() {
           />
 
           {lostMode && (
-            <div className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-3">
+            <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3">
               <div className="flex items-start justify-between gap-3">
                 <Eyebrow>Reward (optional)</Eyebrow>
                 {reward && (
@@ -357,7 +357,7 @@ export function ItemDetail() {
                   type="button"
                   onClick={onActivateEscrow}
                   disabled={escrowPending}
-                  className="self-start inline-flex h-11 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-5 hover:bg-ink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-cairn"
+                  className="self-start inline-flex h-11 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-5 hover:bg-ink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-qurtag"
                 >
                   {escrowPending ? 'Opening Stripe…' : `Place ${centsToUSDDisplay(item.reward_amount_cents)} in escrow`}
                 </button>
@@ -379,7 +379,7 @@ export function ItemDetail() {
           )}
 
           {/* Tag card */}
-          <div className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex items-start gap-cairn-3">
+          <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex items-start gap-qurtag-3">
             <div className="size-10 rounded-pill bg-ink-50 grid place-items-center shrink-0">
               <TagIcon size={18} strokeWidth={1.75} className="text-ink-900" />
             </div>
@@ -397,7 +397,7 @@ export function ItemDetail() {
             {tag && (
               <Link
                 to={`/app/tags/${tag.id}/print`}
-                className="inline-flex items-center gap-1.5 h-9 px-4 rounded-pill bg-ink-900 text-canvas text-caption font-medium hover:bg-ink-700 transition-colors duration-cairn shrink-0"
+                className="inline-flex items-center gap-1.5 h-9 px-4 rounded-pill bg-ink-900 text-canvas text-caption font-medium hover:bg-ink-700 transition-colors duration-qurtag shrink-0"
               >
                 <Printer size={14} strokeWidth={1.75} />
                 Print
@@ -406,13 +406,13 @@ export function ItemDetail() {
           </div>
 
           {/* Scan history */}
-          <div className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-3">
+          <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <Eyebrow>Recent scans</Eyebrow>
               <span className="text-caption text-muted">{scans.length} total</span>
             </div>
             {scans.length === 0 ? (
-              <div className="flex items-center gap-3 py-cairn-3 text-caption text-muted">
+              <div className="flex items-center gap-3 py-qurtag-3 text-caption text-muted">
                 <Clock size={14} strokeWidth={1.75} />
                 Nobody's scanned this yet. That's good. Quiet means nothing's wandered.
               </div>
@@ -447,8 +447,8 @@ export function ItemDetail() {
         </div>
 
         {/* Right column */}
-        <div className="lg:col-span-5 flex flex-col gap-cairn-5">
-          <div className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-4">
+        <div className="lg:col-span-5 flex flex-col gap-qurtag-5">
+          <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-4">
             <PhotoUploader
               householdId={householdId}
               value={item.hero_photo_url}
@@ -472,7 +472,7 @@ export function ItemDetail() {
             />
           </div>
 
-          <div className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-3">
+          <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3">
             <Eyebrow>Wallet</Eyebrow>
             <p className="text-caption text-muted text-pretty">
               Carry this item in Apple Wallet or Google Wallet. Useful at customs and on insurance
@@ -495,7 +495,7 @@ export function ItemDetail() {
                     });
                   }
                 }}
-                className="inline-flex h-10 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-4 hover:bg-ink-700 transition-colors duration-cairn"
+                className="inline-flex h-10 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-4 hover:bg-ink-700 transition-colors duration-qurtag"
               >
                 Add to Google Wallet
               </button>
@@ -508,14 +508,14 @@ export function ItemDetail() {
                     body: 'Requires an Apple Pass Type ID + signing certificate. See docs/SETUP.md §11b.',
                   })
                 }
-                className="inline-flex h-10 items-center gap-2 rounded-pill border border-hairline-strong text-ink-900 text-caption font-medium px-4 hover:border-ink-900 transition-colors duration-cairn"
+                className="inline-flex h-10 items-center gap-2 rounded-pill border border-hairline-strong text-ink-900 text-caption font-medium px-4 hover:border-ink-900 transition-colors duration-qurtag"
               >
                 Add to Apple Wallet
               </button>
             </div>
           </div>
 
-          <div className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-3">
+          <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3">
             <Eyebrow>Insurance packet</Eyebrow>
             <p className="text-caption text-muted text-pretty">
               A signed, timestamped PDF with the item profile, scan history, recovery thread, and
@@ -523,13 +523,13 @@ export function ItemDetail() {
             </p>
             <Link
               to={`/app/items/${itemId}/insurance-packet`}
-              className="self-start inline-flex h-10 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-4 hover:bg-ink-700 transition-colors duration-cairn"
+              className="self-start inline-flex h-10 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-4 hover:bg-ink-700 transition-colors duration-qurtag"
             >
               Generate packet
             </Link>
           </div>
 
-          <div className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-3">
+          <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3">
             <Eyebrow>Danger</Eyebrow>
             <p className="text-caption text-muted text-pretty">
               Deleting this item frees any tag assigned to it and removes all scan history, notes,
@@ -538,20 +538,20 @@ export function ItemDetail() {
             <button
               type="button"
               onClick={() => setDeleteOpen(true)}
-              className="self-start inline-flex h-10 items-center gap-2 rounded-pill border border-hairline-strong text-signal-700 text-caption font-medium px-4 hover:border-signal-500 transition-colors duration-cairn"
+              className="self-start inline-flex h-10 items-center gap-2 rounded-pill border border-hairline-strong text-signal-700 text-caption font-medium px-4 hover:border-signal-500 transition-colors duration-qurtag"
             >
               Delete item
             </button>
           </div>
 
-          <div className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-2">
+          <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-2">
             <Eyebrow>Notes</Eyebrow>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={4}
               placeholder="A detail only you would know, useful for proving you're the owner."
-              className="w-full rounded-card border border-hairline-strong bg-canvas p-3 text-body text-ink-900 placeholder:text-ink-300 focus:outline-none focus:border-ink-900 transition-colors duration-cairn resize-none"
+              className="w-full rounded-card border border-hairline-strong bg-canvas p-3 text-body text-ink-900 placeholder:text-ink-300 focus:outline-none focus:border-ink-900 transition-colors duration-qurtag resize-none"
             />
             <p className="text-caption text-muted">
               Private to you. Never shown to a finder.
@@ -590,7 +590,7 @@ function SaveBadge({ state }: { state: SaveState }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 text-caption text-muted transition-opacity duration-cairn',
+        'inline-flex items-center gap-1.5 text-caption text-muted transition-opacity duration-qurtag',
         state === 'saved' ? 'opacity-100' : 'opacity-80',
       )}
     >

@@ -73,7 +73,7 @@ function Toaster({ toasts, onDismiss }: ToasterProps) {
   return createPortal(
     <div
       aria-live="polite"
-      className="fixed bottom-cairn-3 right-cairn-3 z-50 flex flex-col gap-2 pointer-events-none max-w-[380px] w-[calc(100vw-2rem)]"
+      className="fixed bottom-qurtag-3 right-qurtag-3 z-50 flex flex-col gap-2 pointer-events-none max-w-[380px] w-[calc(100vw-2rem)]"
     >
       {toasts.map((t) => (
         <ToastCard key={t.id} toast={t} onDismiss={onDismiss} />
@@ -102,8 +102,8 @@ function ToastCard({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string)
     <div
       role={toast.kind === 'error' ? 'alert' : 'status'}
       className={cn(
-        'pointer-events-auto rounded-modal bg-canvas border border-hairline shadow-elevated p-cairn-3',
-        'flex items-start gap-3 animate-cairn-fade-up',
+        'pointer-events-auto rounded-modal bg-canvas border border-hairline shadow-elevated p-qurtag-3',
+        'flex items-start gap-3 animate-qurtag-fade-up',
       )}
     >
       <Icon size={18} strokeWidth={1.75} className={cn('mt-0.5 shrink-0', iconClass)} />
@@ -117,7 +117,7 @@ function ToastCard({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string)
         type="button"
         onClick={() => onDismiss(toast.id)}
         aria-label="Dismiss"
-        className="size-6 grid place-items-center rounded-pill text-muted hover:bg-ink-50 transition-colors duration-cairn -mr-1 -mt-0.5 shrink-0"
+        className="size-6 grid place-items-center rounded-pill text-muted hover:bg-ink-50 transition-colors duration-qurtag -mr-1 -mt-0.5 shrink-0"
       >
         <X size={12} strokeWidth={2} />
       </button>

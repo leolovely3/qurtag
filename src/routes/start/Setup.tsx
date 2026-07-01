@@ -73,7 +73,7 @@ export function StartSetup() {
 
   return (
     <Container size="md">
-      <div className="min-h-[70vh] py-cairn-12 grid lg:grid-cols-12 gap-cairn-12 items-start">
+      <div className="min-h-[70vh] py-qurtag-12 grid lg:grid-cols-12 gap-qurtag-12 items-start">
         <div className="lg:col-span-5 flex flex-col gap-5 lg:sticky lg:top-28">
           <Eyebrow>Add your first thing</Eyebrow>
           <h1 className="font-display font-semibold text-ink-900 text-h2 sm:text-h1 tracking-[-0.032em] leading-[1.02] text-balance">
@@ -83,7 +83,7 @@ export function StartSetup() {
             We'll mint a tag for you on the next screen. Print it on plain paper, slip it into a
             luggage sleeve, and you're done.
           </p>
-          <div className="rounded-card bg-paper border border-hairline p-cairn-3 flex items-start gap-3 mt-2">
+          <div className="rounded-card bg-paper border border-hairline p-qurtag-3 flex items-start gap-3 mt-2">
             <Lock size={16} strokeWidth={1.75} className="mt-0.5 text-ink-900 shrink-0" />
             <p className="text-caption text-ink-700 text-pretty">
               Anyone who scans the tag sees only what you choose to show. Never your name, number,
@@ -93,7 +93,7 @@ export function StartSetup() {
         </div>
 
         <form onSubmit={onSubmit} className="lg:col-span-7 flex flex-col gap-5">
-          <div className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-5">
+          <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-5">
             <Input
               name="name"
               label="What is it?"
@@ -140,7 +140,7 @@ export function StartSetup() {
             <button
               type="submit"
               disabled={submitting || !name.trim()}
-              className="inline-flex h-12 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-body font-medium px-6 hover:bg-ink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-cairn"
+              className="inline-flex h-12 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-body font-medium px-6 hover:bg-ink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-qurtag"
             >
               {submitting ? 'Saving…' : 'Mint my tag'}
               <ArrowRight size={16} strokeWidth={1.75} />

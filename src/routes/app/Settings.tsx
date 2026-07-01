@@ -110,8 +110,8 @@ export function Settings() {
   }
 
   return (
-    <div className="px-cairn-5 md:px-cairn-8 py-cairn-8 max-w-3xl">
-      <div className="flex items-end justify-between mb-cairn-8 gap-3">
+    <div className="px-qurtag-5 md:px-qurtag-8 py-qurtag-8 max-w-3xl">
+      <div className="flex items-end justify-between mb-qurtag-8 gap-3">
         <div className="flex flex-col gap-2">
           <Eyebrow>Settings</Eyebrow>
           <h1 className="font-display font-semibold text-ink-900 text-h3 sm:text-h2 tracking-[-0.028em] leading-[1.04] text-balance">
@@ -127,7 +127,7 @@ export function Settings() {
       </div>
 
       {/* Return address */}
-      <section className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-cairn-3 mb-cairn-3">
+      <section className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-qurtag-3 mb-qurtag-3">
         <div className="flex items-start gap-3">
           <div className="size-9 rounded-pill bg-ink-50 grid place-items-center shrink-0">
             <Home size={16} strokeWidth={1.75} className="text-ink-900" />
@@ -184,7 +184,7 @@ export function Settings() {
       </section>
 
       {/* Notifications */}
-      <section className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-cairn-3 mb-cairn-3">
+      <section className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-qurtag-3 mb-qurtag-3">
         <Eyebrow>Notifications</Eyebrow>
 
         <Row
@@ -220,7 +220,7 @@ export function Settings() {
                 toast.show({ kind: 'success', title: 'Push notifications on', body: 'Your device will buzz the moment a finder writes.' });
               }}
               disabled={pending}
-              className="inline-flex h-10 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-4 hover:bg-ink-700 disabled:opacity-60 transition-colors duration-cairn"
+              className="inline-flex h-10 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-4 hover:bg-ink-700 disabled:opacity-60 transition-colors duration-qurtag"
             >
               {pending ? 'Working…' : 'Turn on'}
             </button>
@@ -245,7 +245,7 @@ export function Settings() {
       </section>
 
       {/* Appearance */}
-      <section className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-cairn-3 mb-cairn-3">
+      <section className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-qurtag-3 mb-qurtag-3">
         <Eyebrow>Appearance</Eyebrow>
         <Row
           icon={theme.resolved === 'dark' ? Moon : Sun}
@@ -271,7 +271,7 @@ export function Settings() {
                 type="button"
                 onClick={() => theme.setPreference(opt.v)}
                 className={cn(
-                  'inline-flex items-center gap-1.5 px-3 h-8 text-[11px] font-medium transition-colors duration-cairn',
+                  'inline-flex items-center gap-1.5 px-3 h-8 text-[11px] font-medium transition-colors duration-qurtag',
                   theme.preference === opt.v
                     ? 'bg-ink-900 text-canvas'
                     : 'text-muted hover:text-ink-900',
@@ -286,7 +286,7 @@ export function Settings() {
       </section>
 
       {/* Account */}
-      <section className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-cairn-3">
+      <section className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-qurtag-3">
         <Eyebrow>Account</Eyebrow>
         <Row icon={Mail} title={user?.email ?? 'Signed in'} body="Where your magic link lands." />
         <Row icon={LogOut} title="Sign out" body="You can sign back in with the same email anytime.">
@@ -301,7 +301,7 @@ export function Settings() {
       </section>
 
       {!isPushSupported && (
-        <p className="mt-cairn-5 text-caption text-muted">
+        <p className="mt-qurtag-5 text-caption text-muted">
           This browser doesn't support Web Push. iOS Safari requires installing QurTag as a home-screen
           app first.
         </p>
@@ -332,7 +332,7 @@ function Row({ icon: Icon, title, body, children }: RowProps) {
   return (
     <div
       className={cn(
-        'flex items-start justify-between gap-cairn-3 py-cairn-2 border-t border-hairline first:border-t-0 first:pt-0',
+        'flex items-start justify-between gap-qurtag-3 py-qurtag-2 border-t border-hairline first:border-t-0 first:pt-0',
       )}
     >
       <div className="flex items-start gap-3 min-w-0">

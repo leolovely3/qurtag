@@ -18,13 +18,13 @@ export function Skeleton({ className, count = 1, gap = 'gap-3' }: SkeletonProps)
         {Array.from({ length: count }).map((_, i) => (
           <div
             key={i}
-            className={cn('animate-cairn-pulse rounded-card bg-ink-50', className)}
+            className={cn('animate-qurtag-pulse rounded-card bg-ink-50', className)}
           />
         ))}
       </div>
     );
   }
-  return <div className={cn('animate-cairn-pulse rounded-card bg-ink-50', className)} />;
+  return <div className={cn('animate-qurtag-pulse rounded-card bg-ink-50', className)} />;
 }
 
 /**
@@ -32,7 +32,7 @@ export function Skeleton({ className, count = 1, gap = 'gap-3' }: SkeletonProps)
  */
 export function ItemCardSkeleton() {
   return (
-    <div className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex gap-cairn-3">
+    <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex gap-qurtag-3">
       <Skeleton className="size-16 rounded-card" />
       <div className="flex-1 min-w-0 flex flex-col gap-2">
         <div className="flex items-start justify-between gap-2">
@@ -51,7 +51,7 @@ export function ItemCardSkeleton() {
  */
 export function ThreadRowSkeleton() {
   return (
-    <div className="flex items-start gap-cairn-3 p-cairn-3 border-b border-hairline last:border-b-0">
+    <div className="flex items-start gap-qurtag-3 p-qurtag-3 border-b border-hairline last:border-b-0">
       <Skeleton className="size-12 rounded-card" />
       <div className="flex-1 min-w-0 flex flex-col gap-2">
         <div className="flex items-center justify-between gap-3">

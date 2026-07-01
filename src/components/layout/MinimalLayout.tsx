@@ -14,7 +14,7 @@ export function MinimalLayout() {
           </Link>
           <Link
             to="/help"
-            className="text-caption text-muted hover:text-ink-900 transition-colors duration-cairn"
+            className="text-caption text-muted hover:text-ink-900 transition-colors duration-qurtag"
           >
             Help
           </Link>

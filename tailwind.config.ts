@@ -94,14 +94,14 @@ const config: Config = {
         'display-xl': ['8.5rem', { lineHeight: '0.92', letterSpacing: '-0.045em' }],
       },
       spacing: {
-        cairn: '0.5rem',
-        'cairn-2': '1rem',
-        'cairn-3': '1.5rem',
-        'cairn-5': '2.5rem',
-        'cairn-8': '4rem',
-        'cairn-12': '6rem',
-        'cairn-16': '8rem',
-        'cairn-24': '12rem',
+        qurtag: '0.5rem',
+        'qurtag-2': '1rem',
+        'qurtag-3': '1.5rem',
+        'qurtag-5': '2.5rem',
+        'qurtag-8': '4rem',
+        'qurtag-12': '6rem',
+        'qurtag-16': '8rem',
+        'qurtag-24': '12rem',
       },
       borderRadius: {
         sm: '0.375rem',
@@ -121,14 +121,14 @@ const config: Config = {
         'inset-hairline-dark': 'inset 0 0 0 1px rgba(255, 255, 255, 0.10)',
       },
       transitionTimingFunction: {
-        cairn: 'cubic-bezier(0.32, 0.72, 0, 1)',
-        'cairn-in': 'cubic-bezier(0.4, 0.0, 1, 1)',
-        'cairn-out': 'cubic-bezier(0.0, 0.0, 0.2, 1)',
+        qurtag: 'cubic-bezier(0.32, 0.72, 0, 1)',
+        'qurtag-in': 'cubic-bezier(0.4, 0.0, 1, 1)',
+        'qurtag-out': 'cubic-bezier(0.0, 0.0, 0.2, 1)',
       },
       transitionDuration: {
-        cairn: '320ms',
-        'cairn-slow': '560ms',
-        'cairn-deliberate': '800ms',
+        qurtag: '320ms',
+        'qurtag-slow': '560ms',
+        'qurtag-deliberate': '800ms',
       },
       backgroundImage: {
         'signal-glow':
@@ -137,22 +137,22 @@ const config: Config = {
           'radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 60%)',
       },
       keyframes: {
-        'cairn-pulse': {
+        'qurtag-pulse': {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.65' },
         },
-        'cairn-fade-up': {
+        'qurtag-fade-up': {
           '0%': { opacity: '0', transform: 'translateY(8px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
-        'cairn-shimmer': {
+        'qurtag-shimmer': {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
         },
       },
       animation: {
-        'cairn-pulse': 'cairn-pulse 2.8s cubic-bezier(0.4, 0.0, 0.2, 1) infinite',
-        'cairn-fade-up': 'cairn-fade-up 560ms cubic-bezier(0.32, 0.72, 0, 1) both',
+        'qurtag-pulse': 'qurtag-pulse 2.8s cubic-bezier(0.4, 0.0, 0.2, 1) infinite',
+        'qurtag-fade-up': 'qurtag-fade-up 560ms cubic-bezier(0.32, 0.72, 0, 1) both',
       },
     },
   },

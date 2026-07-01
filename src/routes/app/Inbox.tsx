@@ -57,8 +57,8 @@ export function Inbox() {
   );
 
   return (
-    <div className="px-cairn-5 md:px-cairn-8 py-cairn-8 max-w-4xl">
-      <div className="flex flex-col gap-2 mb-cairn-8">
+    <div className="px-qurtag-5 md:px-qurtag-8 py-qurtag-8 max-w-4xl">
+      <div className="flex flex-col gap-2 mb-qurtag-8">
         <Eyebrow>Inbox</Eyebrow>
         <h1 className="font-display font-semibold text-ink-900 text-h3 sm:text-h2 tracking-[-0.028em] leading-[1.04] text-balance">
           {unreadTotal > 0
@@ -76,7 +76,7 @@ export function Inbox() {
       )}
 
       {!loading && threads.length === 0 && (
-        <div className="rounded-modal border border-hairline bg-paper p-cairn-8 flex flex-col items-start gap-3">
+        <div className="rounded-modal border border-hairline bg-paper p-qurtag-8 flex flex-col items-start gap-3">
           <div className="size-12 rounded-pill bg-canvas grid place-items-center shadow-card">
             <InboxIcon size={20} strokeWidth={1.5} className="text-ink-900" />
           </div>
@@ -96,7 +96,7 @@ export function Inbox() {
             <li key={thread.id}>
               <Link
                 to={`/app/inbox/${thread.id}`}
-                className="flex items-start gap-cairn-3 p-cairn-3 hover:bg-paper transition-colors duration-cairn"
+                className="flex items-start gap-qurtag-3 p-qurtag-3 hover:bg-paper transition-colors duration-qurtag"
               >
                 {thread.item?.hero_photo_url ? (
                   <img

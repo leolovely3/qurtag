@@ -8,7 +8,7 @@ export function Privacy() {
     <>
       <section>
         <Container size="md">
-          <div className="pt-cairn-8 pb-cairn-8 md:pt-16 md:pb-cairn-8 flex flex-col gap-5">
+          <div className="pt-qurtag-8 pb-qurtag-8 md:pt-16 md:pb-qurtag-8 flex flex-col gap-5">
             <Eyebrow>Privacy</Eyebrow>
             <h1 className="font-display font-semibold text-ink-900 text-h2 sm:text-h1 tracking-[-0.035em] leading-[0.95] text-balance">
               What we collect, what we don't, and what we do with the rest.
@@ -18,7 +18,7 @@ export function Privacy() {
               we can get away with, and that the people who scan your tags know nothing at all.
               This page is the long version of that promise.
             </Lede>
-            <div className="rounded-card border border-signal-200 bg-signal-50 p-cairn-3 flex items-start gap-3">
+            <div className="rounded-card border border-signal-200 bg-signal-50 p-qurtag-3 flex items-start gap-3">
               <AlertTriangle size={18} strokeWidth={1.75} className="text-signal-700 mt-0.5 shrink-0" />
               <div className="flex flex-col gap-1">
                 <p className="text-caption font-medium text-signal-700">
@@ -37,7 +37,7 @@ export function Privacy() {
 
       <section className="border-t border-hairline bg-paper">
         <Container size="md">
-          <div className="py-cairn-12 md:py-cairn-16 flex flex-col gap-cairn-8 text-ink-700">
+          <div className="py-qurtag-12 md:py-qurtag-16 flex flex-col gap-qurtag-8 text-ink-700">
             <Section title="1. What we collect about you (the owner)">
               <Body>
                 When you sign up, we collect your email address. That's it. There is no name field,
@@ -183,7 +183,7 @@ export function Privacy() {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-3 border-t border-hairline pt-cairn-5 first:border-t-0 first:pt-0">
+    <div className="flex flex-col gap-3 border-t border-hairline pt-qurtag-5 first:border-t-0 first:pt-0">
       <h2 className="font-display font-semibold text-h5 text-ink-900 tracking-[-0.018em] text-balance">
         {title}
       </h2>

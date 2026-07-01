@@ -93,7 +93,7 @@ export function Help() {
       {/* Hero */}
       <section>
         <Container size="xl">
-          <div className="pt-cairn-8 pb-cairn-8 md:pt-16 md:pb-cairn-8 max-w-3xl flex flex-col gap-5">
+          <div className="pt-qurtag-8 pb-qurtag-8 md:pt-16 md:pb-qurtag-8 max-w-3xl flex flex-col gap-5">
             <Eyebrow>Help</Eyebrow>
             <h1 className="font-display font-semibold text-ink-900 text-h2 sm:text-h1 tracking-[-0.035em] leading-[0.95] text-balance">
               We're calm so you don't have to be.
@@ -113,14 +113,14 @@ export function Help() {
       {/* Owner FAQ */}
       <section className="border-t border-hairline bg-paper">
         <Container size="md">
-          <div className="py-cairn-12 md:py-cairn-8 flex flex-col gap-cairn-8">
+          <div className="py-qurtag-12 md:py-qurtag-8 flex flex-col gap-qurtag-8">
             <div className="flex flex-col gap-3">
               <Eyebrow>If you own the item</Eyebrow>
               <h2 className="font-display font-semibold text-ink-900 text-h2 tracking-[-0.028em] leading-[1.05] text-balance">
                 Owner FAQ.
               </h2>
             </div>
-            <div className="flex flex-col gap-cairn-5">
+            <div className="flex flex-col gap-qurtag-5">
               {ownerFaqs.map((f) => (
                 <Q key={f.q} q={f.q} a={f.a} />
               ))}
@@ -132,14 +132,14 @@ export function Help() {
       {/* Finder FAQ */}
       <section className="border-t border-hairline">
         <Container size="md">
-          <div className="py-cairn-12 md:py-cairn-8 flex flex-col gap-cairn-8">
+          <div className="py-qurtag-12 md:py-qurtag-8 flex flex-col gap-qurtag-8">
             <div className="flex flex-col gap-3">
               <Eyebrow>If you found one</Eyebrow>
               <h2 className="font-display font-semibold text-ink-900 text-h2 tracking-[-0.028em] leading-[1.05] text-balance">
                 Finder FAQ.
               </h2>
             </div>
-            <div className="flex flex-col gap-cairn-5">
+            <div className="flex flex-col gap-qurtag-5">
               {finderFaqs.map((f) => (
                 <Q key={f.q} q={f.q} a={f.a} />
               ))}
@@ -151,7 +151,7 @@ export function Help() {
       {/* Playbooks */}
       <section className="border-t border-hairline bg-paper">
         <Container size="xl">
-          <div className="py-cairn-12 md:py-cairn-8 flex flex-col gap-cairn-8">
+          <div className="py-qurtag-12 md:py-qurtag-8 flex flex-col gap-qurtag-8">
             <div className="max-w-2xl flex flex-col gap-3">
               <Eyebrow>Recovery playbooks</Eyebrow>
               <h2 className="font-display font-semibold text-ink-900 text-h2 sm:text-h1 tracking-[-0.032em] leading-[1.02] text-balance">
@@ -162,7 +162,7 @@ export function Help() {
               {playbooks.map((p) => (
                 <article
                   key={p.title}
-                  className="rounded-modal border border-hairline bg-canvas p-cairn-5 flex flex-col gap-3"
+                  className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3"
                 >
                   <p.icon size={22} strokeWidth={1.25} className="text-verdigris-700" />
                   <h3 className="font-display font-semibold text-h5 text-ink-900 tracking-[-0.018em] text-balance">
@@ -188,7 +188,7 @@ export function Help() {
       {/* Talk to a human */}
       <section className="border-t border-hairline">
         <Container size="md">
-          <div className="py-cairn-8 flex flex-col items-start gap-6">
+          <div className="py-qurtag-8 flex flex-col items-start gap-6">
             <MessageCircle size={28} strokeWidth={1.25} className="text-verdigris-700" />
             <h2 className="font-display font-semibold text-ink-900 text-h1 tracking-[-0.038em] leading-[0.95] text-balance">
               Still stuck?
@@ -201,7 +201,7 @@ export function Help() {
             <div className="flex items-center gap-6">
               <a
                 href="mailto:hello@qurtag.com"
-                className="inline-flex h-12 items-center gap-2 rounded-pill bg-ink-900 px-6 text-body font-medium text-canvas hover:bg-ink-700 transition-colors duration-cairn"
+                className="inline-flex h-12 items-center gap-2 rounded-pill bg-ink-900 px-6 text-body font-medium text-canvas hover:bg-ink-700 transition-colors duration-qurtag"
               >
                 Talk to a human
                 <ArrowRight size={16} strokeWidth={1.75} />
@@ -220,7 +220,7 @@ export function Help() {
 
 function Q({ q, a }: { q: string; a: string }) {
   return (
-    <div className="flex flex-col gap-2 border-t border-hairline pt-cairn-3 first:border-t-0 first:pt-0">
+    <div className="flex flex-col gap-2 border-t border-hairline pt-qurtag-3 first:border-t-0 first:pt-0">
       <h3 className="font-display font-semibold text-h5 text-ink-900 tracking-[-0.018em] text-balance">
         {q}
       </h3>

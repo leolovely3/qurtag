@@ -62,8 +62,8 @@ export function AppHome() {
   const loading = authLoading || fetching;
 
   return (
-    <div className="px-cairn-5 md:px-cairn-8 py-cairn-8 max-w-5xl">
-      <div className="flex flex-col gap-2 mb-cairn-8">
+    <div className="px-qurtag-5 md:px-qurtag-8 py-qurtag-8 max-w-5xl">
+      <div className="flex flex-col gap-2 mb-qurtag-8">
         <Eyebrow>{greeting}</Eyebrow>
         <h1 className="font-display font-semibold text-ink-900 text-h3 sm:text-h2 tracking-[-0.028em] leading-[1.04] text-balance">
           {items.length === 0 ? "Let's protect your first thing." : 'Everything is where it should be.'}
@@ -72,7 +72,7 @@ export function AppHome() {
 
       {/* Setup state (no items yet) */}
       {!loading && items.length === 0 && (
-        <section className="rounded-modal border border-hairline bg-paper p-cairn-8 flex flex-col md:flex-row md:items-center gap-cairn-5">
+        <section className="rounded-modal border border-hairline bg-paper p-qurtag-8 flex flex-col md:flex-row md:items-center gap-qurtag-5">
           <div className="flex-1 flex flex-col gap-2">
             <Eyebrow>Two minutes</Eyebrow>
             <h2 className="font-display font-semibold text-h4 text-ink-900 tracking-[-0.018em] text-balance">
@@ -85,7 +85,7 @@ export function AppHome() {
           </div>
           <Link
             to="/start/setup"
-            className="inline-flex h-12 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-body font-medium px-6 hover:bg-ink-700 transition-colors duration-cairn self-start"
+            className="inline-flex h-12 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-body font-medium px-6 hover:bg-ink-700 transition-colors duration-qurtag self-start"
           >
             <Plus size={16} strokeWidth={1.75} />
             Add your first item
@@ -96,13 +96,13 @@ export function AppHome() {
       {/* Items grid */}
       {!loading && items.length > 0 && (
         <>
-          <div className="flex items-end justify-between mb-cairn-3">
+          <div className="flex items-end justify-between mb-qurtag-3">
             <h2 className="font-display font-semibold text-h5 text-ink-900 tracking-[-0.018em]">
               Your items
             </h2>
             <Link
               to="/start/setup"
-              className="text-caption text-muted hover:text-ink-900 transition-colors duration-cairn inline-flex items-center gap-1"
+              className="text-caption text-muted hover:text-ink-900 transition-colors duration-qurtag inline-flex items-center gap-1"
             >
               <Plus size={14} strokeWidth={1.75} />
               Add item
@@ -117,8 +117,8 @@ export function AppHome() {
                   key={item.id}
                   to={`/app/items/${item.id}`}
                   className={cn(
-                    'rounded-modal border border-hairline bg-canvas p-cairn-5 flex gap-cairn-3',
-                    'hover:border-hairline-strong hover:shadow-card transition-all duration-cairn',
+                    'rounded-modal border border-hairline bg-canvas p-qurtag-5 flex gap-qurtag-3',
+                    'hover:border-hairline-strong hover:shadow-card transition-all duration-qurtag',
                   )}
                 >
                   {item.hero_photo_url ? (
@@ -137,7 +137,7 @@ export function AppHome() {
                       <Eyebrow>{tag?.hardware_tier ?? 'No tag'}</Eyebrow>
                       {item.lost_mode ? (
                         <span className="inline-flex items-center gap-1 text-caption px-2 py-0.5 rounded-pill bg-signal-50 text-signal-700 shrink-0">
-                          <span className="size-1.5 rounded-full bg-signal-500 animate-cairn-pulse" />
+                          <span className="size-1.5 rounded-full bg-signal-500 animate-qurtag-pulse" />
                           Armed
                         </span>
                       ) : (
@@ -178,14 +178,14 @@ export function AppHome() {
       )}
 
       {!isSupabaseConfigured && (
-        <div className="mt-cairn-5 rounded-card bg-signal-50 px-3 py-2 text-caption text-signal-700">
+        <div className="mt-qurtag-5 rounded-card bg-signal-50 px-3 py-2 text-caption text-signal-700">
           Supabase isn't configured. See docs/SETUP.md to wire it up. The dashboard will populate
           as soon as you do.
         </div>
       )}
 
       {householdId && import.meta.env.DEV && (
-        <p className="mt-cairn-5 text-caption text-muted">
+        <p className="mt-qurtag-5 text-caption text-muted">
           Household: <span className="font-mono">{householdId}</span>
         </p>
       )}

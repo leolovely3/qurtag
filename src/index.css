@@ -10,7 +10,7 @@
 @layer base {
   :root {
     color-scheme: light;
-    --cairn-ease: cubic-bezier(0.32, 0.72, 0, 1);
+    --qurtag-ease: cubic-bezier(0.32, 0.72, 0, 1);
   }
 
   .dark {
@@ -84,7 +84,7 @@
   .skip-link {
     @apply absolute left-2 top-2 z-[100] inline-flex h-10 items-center rounded-pill bg-ink-900 text-canvas px-4 text-caption font-medium;
     @apply transform -translate-y-[200%] focus-visible:translate-y-0;
-    @apply transition-transform duration-cairn ease-cairn;
+    @apply transition-transform duration-qurtag ease-qurtag;
   }
 }
 
@@ -110,7 +110,7 @@
    * Replaces button chrome everywhere except primary CTAs. */
   .link-arrow {
     @apply inline-flex items-center gap-1.5 font-sans font-medium text-ink-900 dark:text-ink-50;
-    @apply transition-all duration-cairn ease-cairn;
+    @apply transition-all duration-qurtag ease-qurtag;
   }
   .link-arrow:hover {
     @apply gap-2.5;

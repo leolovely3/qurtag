@@ -6,7 +6,7 @@
 //
 // Required Edge Function env:
 //   STRIPE_SECRET_KEY
-//   CAIRN_APP_URL
+//   QURTAG_APP_URL
 //   SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY
 
 // deno-lint-ignore-file no-explicit-any
@@ -22,7 +22,7 @@ Deno.serve(async (req: Request) => {
   if (!courierOrderId || !amountCents) return new Response('missing fields', { status: 400 });
 
   const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
-  const appUrl = Deno.env.get('CAIRN_APP_URL') ?? 'https://app.qurtag.com';
+  const appUrl = Deno.env.get('QURTAG_APP_URL') ?? 'https://app.qurtag.com';
   if (!stripeKey) return new Response('STRIPE_SECRET_KEY missing', { status: 500 });
 
   const supabase = createClient(
@@ -39,7 +39,7 @@ Deno.serve(async (req: Request) => {
 
   const form = new URLSearchParams();
   form.set('mode', 'payment');
-  form.set('payment_intent_data[metadata][cairn_courier_order_id]', courierOrderId);
+  form.set('payment_intent_data[metadata][qurtag_courier_order_id]', courierOrderId);
   form.set('line_items[0][price_data][currency]', 'usd');
   form.set('line_items[0][price_data][unit_amount]', String(amountCents));
   form.set('line_items[0][price_data][product_data][name]', 'QurTag courier label (prepaid)');

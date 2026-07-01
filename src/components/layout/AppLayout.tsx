@@ -78,7 +78,7 @@ export function AppLayout() {
   }
 
   const navItems = (
-    <nav className="flex flex-col gap-0.5 px-cairn-3 py-cairn-3">
+    <nav className="flex flex-col gap-0.5 px-qurtag-3 py-qurtag-3">
       {nav.map((item) => (
         <NavLink
           key={item.to}
@@ -87,7 +87,7 @@ export function AppLayout() {
           className={({ isActive }) =>
             cn(
               'flex items-center gap-3 px-3 h-10 md:h-9 rounded-card text-body md:text-caption font-medium',
-              'transition-colors duration-cairn',
+              'transition-colors duration-qurtag',
               isActive
                 ? 'bg-ink-50 text-ink-900'
                 : 'text-muted hover:text-ink-900 hover:bg-ink-50',
@@ -107,7 +107,7 @@ export function AppLayout() {
   );
 
   const railFooter = (
-    <div className="px-cairn-3 py-cairn-3 border-t border-hairline flex flex-col gap-2">
+    <div className="px-qurtag-3 py-qurtag-3 border-t border-hairline flex flex-col gap-2">
       <div className="rounded-card bg-paper px-3 py-3 flex flex-col gap-1.5">
         <span className="text-eyebrow uppercase tracking-[0.14em] text-muted">Free plan</span>
         <p className="text-caption text-ink-700 text-pretty">
@@ -135,7 +135,7 @@ export function AppLayout() {
     <div className="min-h-screen bg-canvas text-ink-900 antialiased">
       <a href="#main-content" className="skip-link">Skip to content</a>
       {/* Mobile top bar */}
-      <header className="md:hidden sticky top-0 z-30 bg-canvas/90 backdrop-blur border-b border-hairline px-cairn-3 h-14 flex items-center justify-between gap-3">
+      <header className="md:hidden sticky top-0 z-30 bg-canvas/90 backdrop-blur border-b border-hairline px-qurtag-3 h-14 flex items-center justify-between gap-3">
         <Link to="/app" className="flex items-center gap-2">
           <Wordmark />
         </Link>
@@ -143,7 +143,7 @@ export function AppLayout() {
           type="button"
           onClick={() => setDrawerOpen(true)}
           aria-label="Open menu"
-          className="size-10 grid place-items-center rounded-pill text-ink-900 hover:bg-ink-50 transition-colors duration-cairn relative"
+          className="size-10 grid place-items-center rounded-pill text-ink-900 hover:bg-ink-50 transition-colors duration-qurtag relative"
         >
           <Menu size={20} strokeWidth={1.75} />
           {unread > 0 && (
@@ -155,7 +155,7 @@ export function AppLayout() {
       <div className="flex">
         {/* Desktop left rail */}
         <aside className="hidden md:flex w-60 lg:w-64 flex-col border-r border-hairline min-h-screen sticky top-0">
-          <div className="px-cairn-3 pt-cairn-5 pb-cairn-3 border-b border-hairline">
+          <div className="px-qurtag-3 pt-qurtag-5 pb-qurtag-3 border-b border-hairline">
             <Link to="/" className="flex items-center gap-2 px-2">
               <Wordmark />
             </Link>
@@ -175,12 +175,12 @@ export function AppLayout() {
       {drawerOpen && (
         <div className="md:hidden fixed inset-0 z-40 flex">
           <div
-            className="absolute inset-0 bg-ink-950/40 animate-cairn-fade-up"
+            className="absolute inset-0 bg-ink-950/40 animate-qurtag-fade-up"
             onClick={() => setDrawerOpen(false)}
             aria-hidden
           />
-          <aside className="relative w-72 max-w-[85vw] bg-canvas border-r border-hairline shadow-modal flex flex-col animate-cairn-fade-up">
-            <div className="flex items-center justify-between px-cairn-3 h-14 border-b border-hairline">
+          <aside className="relative w-72 max-w-[85vw] bg-canvas border-r border-hairline shadow-modal flex flex-col animate-qurtag-fade-up">
+            <div className="flex items-center justify-between px-qurtag-3 h-14 border-b border-hairline">
               <Link to="/" className="flex items-center gap-2 px-2">
                 <Wordmark />
               </Link>
@@ -188,7 +188,7 @@ export function AppLayout() {
                 type="button"
                 onClick={() => setDrawerOpen(false)}
                 aria-label="Close menu"
-                className="size-9 grid place-items-center rounded-pill text-muted hover:bg-ink-50 transition-colors duration-cairn"
+                className="size-9 grid place-items-center rounded-pill text-muted hover:bg-ink-50 transition-colors duration-qurtag"
               >
                 <X size={18} strokeWidth={1.75} />
               </button>

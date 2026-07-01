@@ -10,7 +10,7 @@ interface PlaceholderProps {
 export function Placeholder({ eyebrow, title, body }: PlaceholderProps) {
   return (
     <Container size="md">
-      <div className="py-cairn-16 flex flex-col gap-cairn-3">
+      <div className="py-qurtag-16 flex flex-col gap-qurtag-3">
         <Eyebrow>{eyebrow}</Eyebrow>
         <Display level={2}>{title}</Display>
         <Lede className="max-w-2xl">{body}</Lede>

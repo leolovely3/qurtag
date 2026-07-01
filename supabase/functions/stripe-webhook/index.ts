@@ -73,7 +73,7 @@ Deno.serve(async (req: Request) => {
   switch (event.type) {
     case 'payment_intent.requires_capture': {
       const intent = event.data.object as Stripe.PaymentIntent;
-      const rewardId = intent.metadata?.cairn_reward_id;
+      const rewardId = intent.metadata?.qurtag_reward_id;
       if (rewardId) {
         await supabase
           .from('rewards')
@@ -85,7 +85,7 @@ Deno.serve(async (req: Request) => {
 
     case 'payment_intent.succeeded': {
       const intent = event.data.object as Stripe.PaymentIntent;
-      const courierOrderId = intent.metadata?.cairn_courier_order_id;
+      const courierOrderId = intent.metadata?.qurtag_courier_order_id;
       if (courierOrderId) {
         await supabase.from('courier_orders').update({ state: 'paid' }).eq('id', courierOrderId);
 
@@ -109,7 +109,7 @@ Deno.serve(async (req: Request) => {
     case 'account.updated': {
       // Connect Express onboarding completion — mark the finder as payout-enabled.
       const account = event.data.object as Stripe.Account;
-      const finderSessionId = account.metadata?.cairn_finder_session_id;
+      const finderSessionId = account.metadata?.qurtag_finder_session_id;
       if (finderSessionId && account.payouts_enabled && account.charges_enabled) {
         await supabase
           .from('finder_sessions')
