@@ -7,4 +7,4 @@ Disallow: /find/*
 Disallow: /partners
 Disallow: /partners/*
 
-Sitemap: https://qurtag.com/sitemap.xml
+Sitemap: https://www.qurtag.com/sitemap.xml

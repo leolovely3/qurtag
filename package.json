@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:server": "tsx scripts/qurtag/local-server.ts",
-    "build": "tsc -p tsconfig.app.json --noEmit && vite build",
+    "build": "tsc -p tsconfig.app.json --noEmit && vite build && npm run build:pages",
     "lint": "eslint .",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.server.json",
@@ -14,8 +14,9 @@
     "test:e2e": "bash scripts/qurtag/run-local.sh",
     "dev:local": "QURTAG_LOCAL_SERVE=1 bash scripts/qurtag/run-local.sh",
     "brand": "node scripts/brand/build-brand.mjs",
-    "cap:sync": "npm run build && npx cap sync ios",
-    "cap:ios": "npm run cap:sync && npx cap open ios"
+    "cap:sync": "npm run build && node scripts/seo/native-shell.mjs && npx cap sync ios",
+    "cap:ios": "npm run cap:sync && npx cap open ios",
+    "build:pages": "VITE_QURTAG_API_URL=https://www.qurtag.com vite build --ssr src/seo/entry-server.tsx --outDir .seo-build --logLevel warn && node scripts/seo/prerender.mjs"
   },
   "dependencies": {
     "@capacitor/app": "^8.1.2",

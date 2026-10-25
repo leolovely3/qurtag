@@ -4,13 +4,25 @@
   "installCommand": "npm install",
   "outputDirectory": "dist",
   "framework": "vite",
+  "cleanUrls": true,
   "rewrites": [
     { "source": "/api/auth/(.*)", "destination": "/api/auth" },
     { "source": "/api/data/(.*)", "destination": "/api/data" },
     { "source": "/api/fn/(.*)", "destination": "/api/fn" },
     { "source": "/api/jobs/(.*)", "destination": "/api/jobs" },
     { "source": "/((?=[A-Za-z2-9]*[2-9])[2-9A-HJ-KM-NP-Za-hj-km-np-z]{5,6})", "destination": "/api/fn?go=$1" },
-    { "source": "/((?!api/|assets/|.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
+    { "source": "/app", "destination": "/app-shell" },
+    { "source": "/app/(.*)", "destination": "/app-shell" },
+    { "source": "/start", "destination": "/app-shell" },
+    { "source": "/start/(.*)", "destination": "/app-shell" },
+    { "source": "/forgot-password", "destination": "/app-shell" },
+    { "source": "/reset-password", "destination": "/app-shell" },
+    { "source": "/auth/callback", "destination": "/app-shell" },
+    { "source": "/join/(.*)", "destination": "/app-shell" },
+    { "source": "/find", "destination": "/app-shell" },
+    { "source": "/find/(.*)", "destination": "/app-shell" },
+    { "source": "/partners", "destination": "/app-shell" },
+    { "source": "/partners/(.*)", "destination": "/app-shell" }
   ],
   "functions": {
     "api/jobs/index.ts": { "maxDuration": 60 }

@@ -1,4 +1,4 @@
-import { useTheme } from '@/lib/theme';
+import { ThemedImage } from '@/components/brand/ThemedImage';
 import { cn } from '@/lib/cn';
 
 /**
@@ -40,32 +40,27 @@ const steps = [
 ];
 
 export function HowVisuals({ className }: { className?: string }) {
-  const mode = useTheme().resolved === 'dark' ? 'dark' : 'light';
   return (
     <ol className={cn('grid gap-8 md:grid-cols-3 md:gap-6', className)}>
       {steps.map((s, i) => (
         <li key={s.title} className="flex flex-col gap-5">
           <div className="flex items-center justify-center md:min-h-[26rem]">
             {s.kind === 'tags' ? (
-              <img
-                src={`/how/${s.file}-${mode}.webp`}
+              <ThemedImage
+                base={s.file}
                 width={s.width}
                 height={s.height}
-                loading="lazy"
-                decoding="async"
                 alt={s.alt}
-                className="block h-auto w-full rounded-modal ring-1 ring-hairline-strong"
+                className="h-auto w-full rounded-modal ring-1 ring-hairline-strong"
               />
             ) : (
               <div className="w-[14rem] rounded-[2.25rem] bg-[#050608] p-2 shadow-device ring-1 ring-hairline-strong">
-                <img
-                  src={`/how/${s.file}-${mode}.webp`}
+                <ThemedImage
+                  base={s.file}
                   width={s.width}
                   height={s.height}
-                  loading="lazy"
-                  decoding="async"
                   alt={s.alt}
-                  className="block h-auto w-full rounded-[1.75rem]"
+                  className="h-auto w-full rounded-[1.75rem]"
                 />
               </div>
             )}

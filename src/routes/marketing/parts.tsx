@@ -6,6 +6,7 @@ import { Container } from '@/components/ui/Container';
 import { Lede } from '@/components/brand/Typography';
 import { buttonClasses } from '@/components/ui/Button';
 import { cn } from '@/lib/cn';
+import { CONTACT } from '@/lib/contact';
 
 /** Shared building blocks for the plain marketing pages. */
 
@@ -172,7 +173,7 @@ export function CtaBand({ title, body, wide = false }: { title: string; body?: s
   );
 }
 
-export const CONTACT = 'info@impactconsulting.ai';
+export { CONTACT };
 
 export function ContactLink() {
   return (
