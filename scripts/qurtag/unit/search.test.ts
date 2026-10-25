@@ -60,12 +60,12 @@ test('vercel.json: real pages and files stay served, the app and finder routes r
   assert.match(dest('/k7m2p4') ?? '', /^\/api\/fn\?go=/);
   assert.equal(dest('/help'), null, 'a public page is a file, not a rewrite');
   for (const p of ['/app', '/app/items/x', '/start', '/start/setup', '/find/AbCdEfGhJkMn', '/join/x', '/forgot-password', '/reset-password', '/auth/callback', '/partners']) {
-    assert.equal(dest(p), '/app-shell.html', p);
+    assert.equal(dest(p), '/app-shell', p);
   }
   for (const p of ['/nope', '/factory-search-check-no-such-page-1', '/appx', '/wp-login.php', '/helps']) assert.equal(dest(p), null, `${p} falls through to 404`);
   // Every screen route that is not a public page has a rewrite.
   const routes = read('src/routes.tsx');
   const paths = [...routes.matchAll(/path: '([^']+)'/g)].map((m) => m[1]).filter((p) => p !== '*' && !PUBLIC_PAGES.some((x) => x.path === p) && p !== '/find');
   assert.ok(paths.length > 20);
-  for (const p of paths) assert.equal(dest(p.replace(/:[A-Za-z]+/g, 'x')), '/app-shell.html', p);
+  for (const p of paths) assert.equal(dest(p.replace(/:[A-Za-z]+/g, 'x')), '/app-shell', p);
 });
