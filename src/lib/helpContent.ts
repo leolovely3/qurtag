@@ -43,7 +43,7 @@ export const HELP: HelpSection[] = [
       {
         id: 'test-tag',
         q: 'How do I test my tag?',
-        a: 'Scan the printed tag with your phone camera once it is on. If your item\'s page opens, the tag works at the size it printed. A scan from a browser where you are signed in to QuR Tag is not counted as a finder\'s; from any other browser it shows in your scan history. With no tag yet, Test on the Tags screen shows the page a finder sees without counting anything, but it does not check the paper tag.',
+        a: 'Scan the printed tag with your phone camera once it is on. If your item\'s page opens, the tag works at the size it printed. Your own scan shows in your scan history, like a finder\'s. With no tag yet, Test on the Tags screen shows the page a finder sees without counting anything, but it does not check the paper tag.',
         action: { label: 'Your tags', to: '/app/tags' },
       },
       {

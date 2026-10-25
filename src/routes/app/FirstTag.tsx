@@ -46,12 +46,12 @@ import { recordStep } from '@/lib/useGettingStarted';
  */
 
 /**
- * What the walkthrough says about the owner's own camera scan. The finder routes do not count a
- * scan from a browser signed in to the tag's account (server/routes/finder.ts), but a phone's
- * camera opens its default browser, which may not be signed in, so the words say exactly that.
+ * What the walkthrough says about the owner's own camera scan: today the finder routes count it
+ * like any scan (they cannot tell the owner from a stranger), so the words say so. When the routes
+ * skip scans from a browser signed in to the tag's account, this line and the Help answer
+ * "How do I test my tag?" change with them.
  */
-const OWN_SCAN_NOTE =
-  'If you are signed in to QuR Tag in that phone’s browser, your scan is not counted as a finder’s. If not, it shows in your scan history like any scan.';
+const OWN_SCAN_NOTE = 'Your own scan shows in your scan history, like a finder’s.';
 
 const ICONS = { GlassWater, Laptop, Backpack, KeyRound, Glasses, Guitar, Sparkles } as const;
 
