@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Inbox as InboxIcon } from 'lucide-react';
 import { AppPage } from '@/components/layout/AppPage';
+import { HelpLink } from '@/components/account/Account';
 import { ItemThumb, LostChip } from './Home';
 import { ThreadRowSkeleton } from '@/components/ui/Skeleton';
 import { useAuth } from '@/lib/auth';
@@ -64,7 +65,7 @@ export function Inbox() {
   );
 
   return (
-    <AppPage title="Inbox" subtitle={loading ? '\u00a0' : unreadTotal > 0 ? `${unreadTotal} new note${unreadTotal === 1 ? '' : 's'}` : 'Notes from people who scan your tags'}>
+    <AppPage title="Inbox" help="found" subtitle={loading ? '\u00a0' : unreadTotal > 0 ? `${unreadTotal} new note${unreadTotal === 1 ? '' : 's'}` : 'Notes from people who scan your tags'}>
       {loading && (
         <div className="overflow-hidden rounded-modal border border-hairline bg-canvas divide-y divide-hairline" aria-busy="true" aria-label="Loading your inbox">
           <ThreadRowSkeleton />
@@ -83,6 +84,7 @@ export function Inbox() {
             When someone scans one of your tags and writes to you, the note shows up here. Turn on
             alerts in Settings to hear about it the moment it arrives.
           </p>
+          <HelpLink section="finder-sees" label="Need help? See what a finder sees" />
         </section>
       )}
 
@@ -140,6 +142,11 @@ export function Inbox() {
             );
           })}
         </ul>
+      )}
+      {!loading && threads.length > 0 && (
+        <div className="mt-3 px-1">
+          <HelpLink section="finder-sees" label="What does a finder see?" />
+        </div>
       )}
     </AppPage>
   );

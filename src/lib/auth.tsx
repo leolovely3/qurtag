@@ -11,6 +11,7 @@ import { authClient, clearDataPass, forgetSession } from './authClient';
 import { db } from './db';
 import { iapSignOut } from './iap';
 import { forgetPushDevice } from './nativePush';
+import { SKIP_KEY } from './gettingStarted';
 
 /**
  * Who is signed in, for every screen. Owners sign up and in with email and password
@@ -30,6 +31,10 @@ interface AuthContextValue {
   signUp: (input: { email: string; password: string; name: string }) => Promise<(Result & { needsConfirmation?: boolean })>;
   signIn: (email: string, password: string) => Promise<Result>;
   signOut: () => Promise<void>;
+  /** Changes the name shown on the account card. Finders never see it. */
+  updateName: (name: string) => Promise<Result>;
+  /** Changes the password; the account's other sessions are signed out. */
+  changePassword: (current: string, next: string) => Promise<Result>;
   deleteAccount: () => Promise<Result>;
 }
 
@@ -51,6 +56,8 @@ function words(error: { code?: string; message?: string; status?: number } | nul
       return 'That password is too long.';
     case 'INVALID_EMAIL':
       return 'Enter a valid email address.';
+    case 'INVALID_PASSWORD':
+      return 'That is not your current password. Check it and try again.';
     case 'EMAIL_NOT_VERIFIED':
       return 'Confirm your email first: open the link we sent you.';
   }
@@ -92,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: e,
         password,
         name: name.trim() || e.split('@')[0],
-        callbackURL: '/start/setup',
+        callbackURL: '/app/first-tag',
       });
       if (error) return { ok: false, error: words(error, 'Could not create the account. Try again.') };
       await refresh();
@@ -120,9 +127,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await authClient.signOut();
     } finally {
+      try {
+        window.sessionStorage.removeItem(SKIP_KEY);
+      } catch {
+        /* nothing kept */
+      }
       forgetSession();
       setUser(null);
     }
+  }, []);
+
+  const updateName = useCallback<AuthContextValue['updateName']>(
+    async (name) => {
+      const n = name.trim();
+      if (!n) return { ok: false, error: 'Enter a name.' };
+      if (n.length > 60) return { ok: false, error: 'Use 60 characters or fewer.' };
+      const { error } = await authClient.updateUser({ name: n });
+      if (error) return { ok: false, error: 'Could not save your name. Try again.' };
+      await refresh();
+      return { ok: true };
+    },
+    [refresh],
+  );
+
+  const changePassword = useCallback<AuthContextValue['changePassword']>(async (current, next) => {
+    if (next.length < 8) return { ok: false, error: 'Use at least 8 characters for your new password.' };
+    const { error } = await authClient.changePassword({ currentPassword: current, newPassword: next, revokeOtherSessions: true });
+    if (error) return { ok: false, error: words(error, 'Could not change your password. Try again.') };
+    return { ok: true };
   }, []);
 
   const deleteAccount = useCallback<AuthContextValue['deleteAccount']>(async () => {
@@ -145,8 +177,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, loading, signUp, signIn, signOut, deleteAccount }),
-    [user, loading, signUp, signIn, signOut, deleteAccount],
+    () => ({ user, loading, signUp, signIn, signOut, updateName, changePassword, deleteAccount }),
+    [user, loading, signUp, signIn, signOut, updateName, changePassword, deleteAccount],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

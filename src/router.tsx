@@ -13,6 +13,9 @@ import { PartnerScan } from '@/routes/partners/Scan';
 
 import { InAppDoc } from '@/routes/marketing/parts';
 import { Help } from '@/routes/marketing/Help';
+import { HelpCenter } from '@/routes/app/HelpCenter';
+import { FirstTag } from '@/routes/app/FirstTag';
+import { Account } from '@/routes/app/Account';
 import { MarketingHome } from '@/routes/marketing/Home';
 import { HowItWorks } from '@/routes/marketing/HowItWorks';
 import { Pricing } from '@/routes/marketing/Pricing';
@@ -82,7 +85,9 @@ export const router = createBrowserRouter([
       { path: '/app/membership', element: <MembershipPage /> },
       { path: '/app/settings', element: <Settings /> },
       // The shared pages, read inside the app frame (src/routes/marketing/parts.tsx, InAppDoc).
-      { path: '/app/help', element: <InAppDoc title="Help" back={{ to: '/app/settings', label: 'Settings' }}><Help /></InAppDoc> },
+      { path: '/app/help', element: <HelpCenter /> },
+      { path: '/app/first-tag', element: <FirstTag /> },
+      { path: '/app/account', element: <Account /> },
       { path: '/app/terms', element: <InAppDoc title="Terms" back={{ to: '/app/settings', label: 'Settings' }}><Terms /></InAppDoc> },
       { path: '/app/privacy', element: <InAppDoc title="Privacy" back={{ to: '/app/settings', label: 'Settings' }}><Privacy /></InAppDoc> },
       { path: '/app/make-it-last', element: <InAppDoc title="Make it last" back={{ to: '/app/help', label: 'Help' }}><MakeItLast /></InAppDoc> },

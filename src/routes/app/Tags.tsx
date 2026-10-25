@@ -111,6 +111,11 @@ export function Tags() {
                       Print
                     </Link>
                   )}
+                  {tag.status === 'active' && (
+                    <Link to={`/find/${tag.public_id}#test=1`} className={buttonClasses({ variant: 'secondary', className: 'flex-1 sm:flex-none' })}>
+                      Test
+                    </Link>
+                  )}
                   {tag.status !== 'replaced' && (
                     <button
                       type="button"
