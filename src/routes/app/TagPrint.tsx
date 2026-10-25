@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Download, ImageDown, Printer } from 'lucide-react';
+import { Download, ImageDown, Layers, Printer } from 'lucide-react';
 import { AppPage } from '@/components/layout/AppPage';
 import { HelpLink } from '@/components/account/Account';
 import { recordStep } from '@/lib/useGettingStarted';
@@ -11,6 +11,8 @@ import { isNative, publicUrl } from '@/lib/platform';
 import { cn } from '@/lib/cn';
 import { saveTagPdf, saveTagPng } from '@/lib/tagExport';
 import { recordTagPrint, type PrintAction } from '@/lib/measures';
+import { PrintArea, PrintChoices } from '@/components/print/PrintChoices';
+import { rememberLookAndPaper, rememberTagStyle, rememberedLook, rememberedPaper, styleForTag } from '@/lib/printPrefs';
 import {
   BLEED_IN,
   LOOKS,
@@ -18,6 +20,7 @@ import {
   STYLES,
   copiesOnPage,
   copyChoices,
+  defaultCopies,
   defaultPaper,
   gridFor,
   printReadySize,
@@ -31,25 +34,11 @@ import { buildPreview, buildPrintReady, buildSheet } from '@/lib/tagStyles';
 import { fetchItemById, fetchTagById } from '@/lib/queries';
 import type { Item, Tag } from '@/lib/database.types';
 
-const STORE = 'qurtag.tagstyle';
-
-function remembered<T extends string>(key: string, allowed: T[], fallback: T): T {
-  try {
-    const v = (JSON.parse(localStorage.getItem(STORE) ?? '{}') as Record<string, string>)[key];
-    return allowed.includes(v as T) ? (v as T) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function remember(values: Record<string, string>): void {
-  try {
-    localStorage.setItem(STORE, JSON.stringify(values));
-  } catch {
-    /* private window: nothing to remember */
-  }
-}
-
+/**
+ * One tag's print page. It opens on the style the tag was last printed in or, for a tag never
+ * printed, the style its item suits (src/lib/printPrefs.ts), with a few copies rather than a full
+ * sheet. "Print several items on one page" (TagSheet.tsx) shares one sheet between items.
+ */
 export function TagPrint() {
   const { tagId } = useParams();
   const { user, loading } = useAuth();
@@ -60,13 +49,15 @@ export function TagPrint() {
   const [fetching, setFetching] = useState(true);
   const [busy, setBusy] = useState<'pdf' | 'png' | 'pdf2' | null>(null);
   const [error, setError] = useState('');
-  const [styleId, setStyleId] = useState<StyleId>(() => remembered('style', STYLES.map((s) => s.id), 'wallet'));
-  const [look, setLook] = useState<LookId>(() => remembered('look', LOOKS.map((l) => l.id), 'clean'));
+  const [styleId, setStyleId] = useState<StyleId>('sticker');
+  const [look, setLook] = useState<LookId>(() => rememberedLook());
   const [paperId, setPaperId] = useState<PaperId>(() =>
-    remembered('paper', ['letter', 'a4'], defaultPaper(typeof navigator === 'undefined' ? undefined : navigator.language)),
+    rememberedPaper(defaultPaper(typeof navigator === 'undefined' ? undefined : navigator.language)),
   );
-  const [copies, setCopies] = useState(0);
+  /** null: the style's default number of copies. */
+  const [copies, setCopies] = useState<number | null>(null);
   const [mirror, setMirror] = useState(false);
+  const [showName, setShowName] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -81,11 +72,14 @@ export function TagPrint() {
       const t = await fetchTagById(tagId);
       if (cancelled) return;
       setTag(t && t.status === 'active' ? t : null);
+      let name: string | null = null;
       if (t?.current_item_id) {
         const i = await fetchItemById(t.current_item_id);
         if (cancelled) return;
         setItem(i);
+        name = i?.name ?? null;
       }
+      setStyleId(styleForTag(tagId, name));
       setFetching(false);
     })();
     return () => {
@@ -102,15 +96,15 @@ export function TagPrint() {
   const paper = PAPERS[paperId];
   const capacity = gridFor(spec, paperId).count;
   const choices = copyChoices(spec, paperId);
-  // 0 means "a full page"; a choice that no longer fits (another style or paper) is cut back.
-  const count = copies === 0 ? capacity : copiesOnPage(spec, paperId, copies);
+  // Unchosen, the style's few copies; a choice that no longer fits (another style or paper) is cut back.
+  const count = copies === null ? defaultCopies(spec, paperId) : copiesOnPage(spec, paperId, copies);
 
-  useEffect(() => remember({ style: styleId, look, paper: paperId }), [styleId, look, paperId]);
-  useEffect(() => setCopies(0), [styleId, paperId]);
+  useEffect(() => rememberLookAndPaper(look, paperId), [look, paperId]);
+  useEffect(() => setCopies(null), [styleId, paperId]);
 
   const data = useMemo(
-    () => ({ finderUrl, shortCode: tag?.short_code ?? null, itemName: item?.name ?? null }),
-    [finderUrl, tag?.short_code, item?.name],
+    () => ({ finderUrl, shortCode: tag?.short_code ?? null, itemName: item?.name ?? null, showName: spec.showsName && showName }),
+    [finderUrl, tag?.short_code, item?.name, spec.showsName, showName],
   );
   const { preview, sheet, printReady } = useMemo(() => {
     if (!finderUrl) return { preview: null, sheet: null, printReady: null };
@@ -134,6 +128,7 @@ export function TagPrint() {
   /** Counts the print or download (db/measures.sql): style, look and paper only, once the file was made. */
   function counted(action: PrintAction) {
     recordTagPrint({ style: styleId, look, paper: paperId, action });
+    if (tag) rememberTagStyle(tag.id, styleId);
   }
 
   async function run(kind: 'pdf' | 'png' | 'pdf2', work: () => Promise<void>, action: PrintAction) {
@@ -156,7 +151,7 @@ export function TagPrint() {
 
   if (loading || fetching) {
     return (
-      <AppPage title="Tag" back={{ to: '/app', label: 'Items' }} width="normal">
+      <AppPage title="Print a tag" back={{ to: '/app', label: 'Items' }} width="normal">
         <Skeleton className="mx-auto h-[26rem] w-full max-w-2xl rounded-modal" />
       </AppPage>
     );
@@ -164,7 +159,7 @@ export function TagPrint() {
 
   if (!tag) {
     return (
-      <AppPage title="Tag" back={{ to: '/app', label: 'Items' }} width="normal">
+      <AppPage title="Print a tag" back={{ to: '/app', label: 'Items' }} width="normal">
         <section className="flex flex-col items-center gap-3 rounded-modal border border-hairline bg-paper px-6 py-10 text-center">
           <h2 className="text-xl font-semibold text-ink-900">Tag not found</h2>
           <p className="max-w-sm text-base text-muted">That tag isn't in your account, or it is switched off.</p>
@@ -202,23 +197,9 @@ export function TagPrint() {
     );
 
   return (
-    <AppPage title="Tag" back={back} action={printButton} width="normal">
-      <style>{`
-        @media print {
-          body { background: white !important; }
-          @page { size: ${paper.w}in ${paper.h}in; margin: 0; }
-        }
-      `}</style>
-
+    <AppPage title={item?.name ? `Print: ${item.name}` : 'Print a tag'} back={back} action={printButton} width="normal">
       {/* What the printer gets: the page itself, at true size. Hidden on screen. */}
-      {sheet && (
-        <div
-          aria-hidden
-          className="hidden bg-white print:fixed print:left-0 print:top-0 print:z-[200] print:block print:overflow-hidden"
-          style={{ width: `${paper.w}in`, height: `${paper.h}in` }}
-          dangerouslySetInnerHTML={{ __html: pageToSvg(sheet) }}
-        />
-      )}
+      <PrintArea sheet={sheet} paper={paperId} />
 
       <div className="no-print flex flex-col gap-6">
         {error && (
@@ -242,6 +223,18 @@ export function TagPrint() {
               </label>
             ))}
           </div>
+          <p className="text-sm text-ink-700 text-pretty">
+            <span className="font-medium text-ink-900">You will need:</span> {spec.needs} {spec.noHolder}
+          </p>
+          {spec.showsName && (
+            <label className="flex items-start gap-3 text-sm text-ink-900">
+              <input type="checkbox" checked={showName} onChange={(e) => setShowName(e.target.checked)} className="mt-1 size-4" />
+              <span>
+                <span className="font-medium">Print the item's name on the tag.</span> Leave this off for a child's things:
+                anyone who finds it can read it.
+              </span>
+            </label>
+          )}
         </section>
 
         <section aria-labelledby="look-h" className="flex flex-col gap-3">
@@ -280,7 +273,7 @@ export function TagPrint() {
               >
                 {choices.map((n) => (
                   <option key={n} value={n}>
-                    {n === capacity ? `${n} (a full page)` : n}
+                    {n === capacity ? `${n} (a full page)` : n === defaultCopies(spec, paperId) ? `${n} (suggested)` : n}
                   </option>
                 ))}
               </select>
@@ -329,25 +322,20 @@ export function TagPrint() {
               </figure>
             )}
           </div>
-          {!isNative() && (
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                disabled={busy !== null || !sheet}
-                onClick={() => void run('pdf', () => saveTagPdf(sheet!, fileBase + '.pdf', 'Save your tags'), 'download_pdf')}
-                className={buttonClasses({ variant: 'secondary' })}
-              >
-                <Download size={16} strokeWidth={1.75} aria-hidden />
-                {busy === 'pdf' ? 'Preparing…' : 'Download PDF'}
-              </button>
-            </div>
-          )}
-          <p className="text-sm text-muted text-pretty">
-            {isNative()
-              ? 'Print or share opens the share sheet: print it, save it to Files or AirDrop it to a computer. '
-              : 'Print at 100% (actual size), with no scaling or "fit to page", or the tags will not be the size shown. '}
-            You can print tags again at any time.
-          </p>
+          <PrintChoices
+            sheet={sheet}
+            fileName={fileBase + '.pdf'}
+            linkPath={`/app/tags/${tag.id}/print`}
+            onDone={(choice) => {
+              if (user) recordStep(user.id, 'print');
+              counted(choice);
+            }}
+          />
+          <p className="text-sm text-muted text-pretty">You can print tags again at any time.</p>
+          <Link to={`/app/tags/sheet?with=${tag.id}`} className="inline-flex min-h-11 items-center gap-2 self-start text-sm font-medium text-ink-900 underline underline-offset-4">
+            <Layers size={16} strokeWidth={1.75} aria-hidden />
+            Print several items on one page
+          </Link>
         </section>
 
         <section aria-labelledby="order-h" className="flex flex-col gap-3 rounded-card border border-hairline bg-paper p-4">

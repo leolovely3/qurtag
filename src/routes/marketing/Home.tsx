@@ -63,6 +63,12 @@ export function MarketingHome() {
                 <PrimaryLink to="/start">Make a free tag</PrimaryLink>
                 <SecondaryLink to="/how-it-works">How it works</SecondaryLink>
               </div>
+              <p className="inline-flex items-start gap-2 text-base text-ink-700 text-pretty">
+                <Printer size={18} strokeWidth={1.75} className="mt-0.5 shrink-0" aria-hidden />
+                <span>
+                  What you need: a printer and ordinary paper. Sticker paper or clear tape makes it last.
+                </span>
+              </p>
               {/* Apple's "Download on the App Store" badge may only link to a live listing, so
                   until the app is approved this is plain text; swap in the badge on launch day. */}
               <p className="inline-flex items-center gap-2 rounded-pill border border-hairline bg-paper px-3 py-1.5 text-caption font-medium text-ink-700">
@@ -173,7 +179,7 @@ export function MarketingHome() {
         </Container>
       </section>
 
-      <CtaBand wide title="Make your first tag in a few minutes." body="It is free for up to three items. You need an email address and a printer." />
+      <CtaBand wide title="Make your first tag in a few minutes." body="It is free for up to three items. You need an email address, a printer and ordinary paper. Sticker paper or clear tape makes it last." />
     </>
   );
 }

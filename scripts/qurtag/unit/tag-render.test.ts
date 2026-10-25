@@ -15,7 +15,7 @@ import { parsePath, qrModules } from '../../../src/lib/tagScene.ts';
 import { textWidth } from '../../../src/lib/tagFont.ts';
 import { pngWithDpi } from '../../../src/lib/tagExport.ts';
 
-const data = { finderUrl: 'https://www.qurtag.com/find/Hk3vX9mRtB2q', shortCode: 'k7m2p', itemName: 'Blue water bottle' };
+const data = { finderUrl: 'https://www.qurtag.com/find/Hk3vX9mRtB2q', shortCode: 'k7m2p4', itemName: 'Blue water bottle' };
 
 function raster(svg: string, dpi: number, inches: number): { data: Uint8ClampedArray; width: number; height: number } {
   const r = new Resvg(svg, { fitTo: { mode: 'width', value: Math.round(inches * dpi) }, background: '#ffffff' }).render();
@@ -63,7 +63,7 @@ test('a PDF has the right page size, one page, valid offsets and the short code'
     const w = Math.round(PAPERS[paper].w * 72 * 10000) / 10000;
     assert.ok(text.includes(`/MediaBox [0 0 ${w} `), paper);
     assert.equal((text.match(/\/Type \/Page /g) ?? []).length, 1);
-    assert.ok(text.includes('(qurtag.com/k7m2p)'));
+    assert.ok(text.includes('(qurtag.com/k7m2p4)'));
     const xrefAt = Number(/startxref\n(\d+)/.exec(text)![1]);
     assert.equal(text.slice(xrefAt, xrefAt + 4), 'xref');
     const count = Number(/xref\n0 (\d+)/.exec(text)![1]);
@@ -143,7 +143,7 @@ test('the PNG gets its dots per inch, so a printer knows the size', () => {
 });
 
 test('a long item name wraps or is cut, and no text overlaps other text or leaves its piece', () => {
-  const long = { ...data, itemName: "Grandma's blue walking stick with the red handle" };
+  const long = { ...data, itemName: "Grandma's blue walking stick with the red handle", showName: true };
   const walk = (items: ReturnType<typeof buildPiece>['items'], m = [1, 0, 0, 1, 0, 0]): { x0: number; x1: number; y0: number; y1: number; t: string }[] =>
     items.flatMap((i) => {
       if (i.t === 'group') {

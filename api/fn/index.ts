@@ -4,7 +4,7 @@
  *
  *   POST /api/fn/finder-view   the finder-safe item card and the finder's own conversation
  *   POST /api/fn/finder-send   a finder's note (opens a conversation, or adds to theirs)
- *   GET  /api/fn?go=<code>     a short code (qurtag.com/k7m2p) sent on to the finder page
+ *   GET  /api/fn?go=<code>     a short code (qurtag.com/k7m2p4) sent on to the finder page
  *
  * Both are in server/routes/finder.ts. The iPhone app's push routes (push-register, push-unregister,
  * push-reply) are in server/routes/push.ts. The membership routes (billing-config, billing-checkout,

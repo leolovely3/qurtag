@@ -9,7 +9,7 @@ them send a note. The owner reads it in the inbox at /app and replies; the finde
 reply on the same tag page. Neither side sees the other's email or phone number.
 
 The landing page is at `/`, the app at `/app`, a tag's page at `/find/<tag code>`, and a tag's short address at
-`/<short code>` (for example qurtag.com/k7m2p), which sends the visitor to the same page.
+`/<short code>` (for example qurtag.com/k7m2p4), which sends the visitor to the same page.
 
 Run by Impact Consulting AI LLC, a Florida limited liability company. Contact:
 info@impactconsulting.ai.
@@ -84,7 +84,7 @@ A scan counts as followed by a note when a conversation was opened on the same t
 no visitor id by design). Print events count button presses (Print, a PDF or print-ready download), not copies.
 
 In the app: `src/lib/measures.ts` keeps `?ch=<channel>` (else `utm_source`) in the tab's `sessionStorage` (no cookie), sends it
-with the sign-up (the iPhone app uses `ios-app` when it has none), records prints and downloads from `TagPrint.tsx`, and
+with the sign-up (the iPhone app uses `ios-app` when it has none), records prints and downloads from the tag page, the several-items page and the first-tag walkthrough, and
 records the platform after sign-in. Every call is fire and forget. Deploy order: run rollout step 12 first, then merge: the
 new site writes `signup_channel` at sign-up.
 
@@ -300,12 +300,28 @@ Letter or A4 with several copies a page.
 
 | Style | One piece | Copies on Letter / A4 | Notes |
 | --- | --- | --- | --- |
-| Small sticker | 1.25 x 1.25 in | 35 / 35 | cut marks; bold "LOST? SCAN ME" line above the code (1 in leaves no room for a line a person can read) |
+| Small sticker | 1.25 x 1.25 in | 35 / 35 | cut marks; bold "LOST? SCAN ME" line above the code (1 in leaves no room for a line a person can read), the QuR mark beside the code and the short address under it, horizontal, at about 8 pt |
 | Label strip | 2.625 x 1 in | 30 / 18 | on Letter the standard 30 per sheet address label sheet (3 across, 10 down), no marks |
 | Key fob insert | 1 x 1.4 in, two sides | 18 / 18 | front "IF FOUND, SCAN ME" and QR, back short code and address; fold line; the back is printed upside down so it reads upright once folded |
 | Wallet card | 3.375 x 2.125 in | 8 / 8 | cut marks |
 | Bag tag | 2.4 x 3.5 in folded | 3 / 3 | "If found" large; fold line |
 | Clothing strip | 2.5 x 1 in | 16 / 18 | "IF FOUND, SCAN ME" in large capitals; iron-on transfer paper; "Print mirrored" flips the whole page |
+
+The page prints a few copies unless the person chooses more (`defaultCopies` in `src/lib/tagLayout.ts`: 4 small stickers,
+3 label strips, 2 key fob inserts, 2 wallet cards, 1 bag tag, 4 clothing strips), so the rest of a sheet is left for the
+next thing. "Print several items on one page" (`/app/tags/sheet`, `src/routes/app/TagSheet.tsx`, linked from Tags and from
+each tag page) puts the tags of several items on one sheet in one style, with the number of copies of each; the top margin
+of every sheet names each item with its short address (`sheetLabel`), which is also printed on each piece. A tag's page
+opens on the style the tag was last printed in or, for a tag never printed, the style its item's name suits
+(`src/lib/printPrefs.ts`, kept on the device); the look and paper are remembered for all tags. The item's name is printed on
+a tag ("On: ..." on the wallet card and the bag tag) only when the owner ticks "Print the item's name on the tag"; it is
+off by default because a name on a child's bag tells any stranger the child's name. Each style says what it needs (a
+clear holder for the key fob, wallet card and bag tag) and a way to do without.
+
+On the web, Print and Save the PDF are two equal choices (`src/components/print/PrintChoices.tsx`), with a line for people
+without a printer (a library or a print shop). Inside another app's browser (Facebook, Instagram, Messenger, TikTok,
+LinkedIn and others, `src/lib/inAppBrowser.ts`) the screen first says to open the page in Safari or Chrome, with Copy the
+link and, on Android, Open in Chrome.
 
 Every style has a thin orange QuR Tag frame (with a black keyline on the yellow Playful plate). Heavy lines are set in
 Helvetica-Bold; the PDF names that face, but `pdftoppm` without a Helvetica Bold substitute draws it regular, so check
@@ -398,7 +414,7 @@ shell (`capacitor.config.ts`, `ios/`). The old Expo stub in `mobile/` is not use
   no preferences table. Help at `/app/help` is grouped by task with search (`src/lib/helpContent.ts`), and each main screen has a
   "?" in its top bar that opens the matching group. Each top-level screen has a phone top bar (the QuR Tag brand at the left; Add item on Items, Help and the account
   avatar at the right) over a large title that collapses into it (`AppPage`); the account card in Settings opens `/app/account` (name, password, data, deleting, signing out).
-  The How it works pictures are in `public/how` (tags drawn by `src/lib/tagStyles.ts`, two real screenshots, light and dark).
+  The How it works pictures are in `public/how` (tags drawn by `src/lib/tagStyles.ts`, written by `npx tsx scripts/qurtag/how-tags.mjs`; two real screenshots; light and dark).
 - The app follows the phone's light or dark setting, and Settings lets the owner pick Light, Auto or Dark.
 - The app asks for notification permission once, right after the first item is saved, behind a short
   explanation (`src/components/push/PushPrimer.tsx`), never at launch. See "iPhone push notifications".

@@ -30,7 +30,7 @@ export function Tags() {
           <Bullets
             items={[
               "A QR code that opens your item's page when a finder scans it with their phone camera. It is never printed smaller than about 0.75 inch (2 cm), and it keeps a clear border so phones read it first time.",
-              'A short code printed beside it, such as qurtag.com/k7m2p. Anyone can type it, so the tag still works if the QR code gets scuffed.',
+              'A short code printed beside it, such as qurtag.com/k7m2p4. Anyone can type it, so the tag still works if the QR code gets scuffed.',
               'A bold line such as "LOST? SCAN ME" and an orange QuR Tag frame, so a stranger knows what to do from arm\'s length.',
             ]}
           />

@@ -67,7 +67,7 @@ const faqs: { q: string; a: ReactNode; paid?: boolean }[] = [
   },
   {
     q: 'What is the short code on my tag?',
-    a: 'A few letters and numbers printed beside the QR code, for example qurtag.com/k7m2p. Typing it into a browser opens the same page as scanning the code, so a scuffed tag can still be used. It is not case sensitive.',
+    a: 'A few letters and numbers printed beside the QR code, for example qurtag.com/k7m2p4. Typing it into a browser opens the same page as scanning the code, so a scuffed tag can still be used. It is not case sensitive.',
   },
   {
     q: 'How do I make my tag last?',
