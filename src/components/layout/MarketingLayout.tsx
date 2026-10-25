@@ -25,6 +25,11 @@ function AppLegalShell() {
   const location = useLocation();
   const title = location.pathname.startsWith('/privacy') ? 'Privacy' : 'Terms';
 
+  // Each page opens at its top, not where the sign-in page was scrolled to.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   function goBack() {
     // react-router keeps the position in its history entry; at the first entry there is nowhere to go back to.
     const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0;
