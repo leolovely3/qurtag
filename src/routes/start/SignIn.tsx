@@ -164,10 +164,13 @@ export function StartSignIn() {
                       <Link to="/privacy" className="underline underline-offset-4">Privacy notice</Link>. You must be 18 or over.
                     </p>
                   ) : (
-                    <p className="text-caption">
+                    <p className="text-caption text-muted">
                       <Link to="/forgot-password" className="inline-flex min-h-11 items-center underline underline-offset-4 text-ink-700 hover:text-ink-900">
                         Forgot password?
                       </Link>
+                      <br />
+                      Read our <Link to="/terms" className="underline underline-offset-4">Terms</Link> and{' '}
+                      <Link to="/privacy" className="underline underline-offset-4">Privacy notice</Link>.
                     </p>
                   )}
                 </form>
