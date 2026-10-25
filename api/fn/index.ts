@@ -5,7 +5,8 @@
  *   POST /api/fn/finder-view   the finder-safe item card and the finder's own conversation
  *   POST /api/fn/finder-send   a finder's note (opens a conversation, or adds to theirs)
  *
- * Both are in server/routes/finder.ts. The membership routes (billing-config, billing-checkout,
+ * Both are in server/routes/finder.ts. The iPhone app's push routes (push-register, push-unregister,
+ * push-reply) are in server/routes/push.ts. The membership routes (billing-config, billing-checkout,
  * billing-portal, family-invite, stripe-webhook, revenuecat-webhook) are in server/routes/billing.ts. Errors become a plain 500; nothing internal
  * reaches the caller.
  */
@@ -13,11 +14,13 @@ import { withPhoneAppCors } from '../../server/auth/phoneCors.js';
 import { json } from '../../server/routes/core.js';
 import { createBillingRoutes } from '../../server/routes/billing.js';
 import { createFinderRoutes } from '../../server/routes/finder.js';
+import { createPushRoutes } from '../../server/routes/push.js';
 
 export const config = { runtime: 'nodejs' };
 
 const finder = createFinderRoutes();
 const billing = createBillingRoutes();
+const push = createPushRoutes();
 
 const ROUTES: Record<string, (request: Request) => Promise<Response>> = {
   'finder-view': finder.view,
@@ -29,6 +32,9 @@ const ROUTES: Record<string, (request: Request) => Promise<Response>> = {
   'support': billing.support,
   'stripe-webhook': billing.stripeWebhook,
   'revenuecat-webhook': billing.revenueCatWebhook,
+  'push-register': push.register,
+  'push-unregister': push.unregister,
+  'push-reply': push.reply,
 };
 
 const handle = withPhoneAppCors(async (request: Request): Promise<Response> => {

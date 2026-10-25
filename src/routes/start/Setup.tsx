@@ -11,6 +11,8 @@ import { createItemWithPrintableTag, fetchPrimaryHouseholdId } from '@/lib/queri
 import { Link } from 'react-router-dom';
 import { clearPendingItem, getPendingItem } from '@/lib/pendingItem';
 import { useToast } from '@/components/ui/Toast';
+import { PushPrimer } from '@/components/push/PushPrimer';
+import { shouldExplainPush } from '@/lib/nativePush';
 
 export function StartSetup() {
   const { user, loading } = useAuth();
@@ -25,6 +27,8 @@ export function StartSetup() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const toast = useToast();
+  // After the first item is saved, the iPhone app explains alerts before asking (components/push/PushPrimer.tsx).
+  const [primerFor, setPrimerFor] = useState<{ item: string; next: string } | null>(null);
 
   useEffect(() => {
     if (loading) return;
@@ -72,11 +76,22 @@ export function StartSetup() {
       title: 'Item saved',
       body: `Tag ${result.publicId} is ready. Print it next.`,
     });
-    navigate(`/app/tags/${result.tagId}/print`);
+    const next = `/app/tags/${result.tagId}/print`;
+    if (await shouldExplainPush()) setPrimerFor({ item: name.trim(), next });
+    else navigate(next);
   }
 
   return (
     <AppPage title="Add item" back={{ to: '/app', label: 'Items' }} width="narrow">
+      <PushPrimer
+        open={primerFor !== null}
+        itemName={primerFor?.item ?? ''}
+        onDone={() => {
+          const next = primerFor?.next;
+          setPrimerFor(null);
+          if (next) navigate(next);
+        }}
+      />
       <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
         <p className="px-1 text-base text-muted text-pretty">
           Name the thing you would hate to lose. Its tag is ready to print on the next screen.

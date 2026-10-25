@@ -15,7 +15,8 @@
     "api/jobs/index.ts": { "maxDuration": 60 }
   },
   "crons": [
-    { "path": "/api/jobs/daily", "schedule": "0 5 * * *" }
+    { "path": "/api/jobs/daily", "schedule": "0 5 * * *" },
+    { "path": "/api/jobs/outbox", "schedule": "*/5 * * * *" }
   ],
   "headers": [
     {

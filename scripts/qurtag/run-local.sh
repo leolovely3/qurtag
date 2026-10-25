@@ -6,7 +6,7 @@
 # Starts Supabase's Postgres 17 image as a stand-in for the shared project (container
 # qurtag-e2e-pg on 127.0.0.1:56850, removed at the end), adds decoy apps
 # (scripts/qurtag/decoys.sql), applies db/qurtag.sql and db/logins.sql exactly as
-# the rollout does (db/admin.sql too; as `postgres`, which is not a superuser there, with fresh passwords
+# the rollout does (db/admin.sql, db/support.sql and db/push.sql too; as `postgres`, which is not a superuser there, with fresh passwords
 # sent as SCRAM verifiers), starts the four server functions (with email off, as in production today: accounts are confirmed at once) on 127.0.0.1:56851, and
 # runs scripts/qurtag/e2e.test.mjs. QURTAG_E2E_KEEP=1 leaves the database running
 # afterwards. QURTAG_LOCAL_SERVE=1 skips the tests and keeps the server functions up for
@@ -59,7 +59,9 @@ AUTH_PW="$AUTH_PW" DATA_PW="$DATA_PW" SERVER_PW="$SERVER_PW" FACTORY_TOKEN="$FAC
 psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/admin.sql
 # Rollout step 7 (the Contact us form and its queue; needs the admin role).
 psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/support.sql
-echo "schema, logins and the admin role applied"
+# Rollout step 8 (iPhone push notifications; needs steps 5 and 6).
+psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/push.sql
+echo "schema, logins, the admin role and push applied"
 
 export QURTAG_AUTH_URL="http://127.0.0.1:$API_PORT"
 export QURTAG_DATABASE_URL="postgres://qurtag_auth:$AUTH_PW@127.0.0.1:$PG_PORT/postgres"
@@ -109,6 +111,26 @@ for _ in $(seq 1 40); do
   sleep 0.5
 done
 
+# A third copy for the push notification tests: email captured to a file, and Apple's server
+# replaced by a stand-in the test itself runs (scripts/qurtag/push.test.mjs). The signing key is
+# made here and thrown away; nothing reaches Apple. Its address is its own, so the outbox nudge
+# it sends after a note comes back to it.
+PUSH_PORT=$((API_PORT + 2))
+APNS_MOCK_PORT=$((API_PORT + 3))
+openssl ecparam -name prime256v1 -genkey -noout | openssl pkcs8 -topk8 -nocrypt -out "$WORK/apns-key.p8" 2>/dev/null
+openssl ec -in "$WORK/apns-key.p8" -pubout -out "$WORK/apns-pub.pem" 2>/dev/null
+QURTAG_LOCAL_PORT=$PUSH_PORT QURTAG_AUTH_URL="http://127.0.0.1:$PUSH_PORT" \
+  QURTAG_MAIL_MODE=capture QURTAG_MAIL_CAPTURE_FILE="$WORK/push-mail.jsonl" \
+  APNS_KEY_ID=TESTKEY123 APNS_TEAM_ID=CQUVU6BHHA APNS_KEY_P8="$(cat "$WORK/apns-key.p8")" \
+  QURTAG_APNS_URL="http://127.0.0.1:$APNS_MOCK_PORT" \
+  npx tsx scripts/qurtag/local-server.ts > "$WORK/push-server.log" 2>&1 &
+push_pid=$!
+trap 'kill $push_pid $mail_pid 2>/dev/null || true; cleanup' EXIT
+for _ in $(seq 1 40); do
+  curl -s "http://127.0.0.1:$PUSH_PORT/api/auth/ok" >/dev/null 2>&1 && break
+  sleep 0.5
+done
+
 QURTAG_TEST_MAIL_BASE="http://127.0.0.1:$MAIL_PORT" \
 QURTAG_TEST_MAIL_FILE="$WORK/mail.jsonl" \
 QURTAG_TEST_BASE="http://127.0.0.1:$API_PORT" \
@@ -131,3 +153,13 @@ QURTAG_TEST_LOGIN_DB_SERVER="$QURTAG_DATABASE_URL_SERVER" \
 QURTAG_TEST_LOGIN_DB_DATA="$QURTAG_DATABASE_URL_DATA" \
 QURTAG_TEST_FACTORY_TOKEN="$FACTORY_TOKEN" \
   npx tsx scripts/qurtag/membership.test.mjs || { echo "--- server log"; tail -40 "$WORK/server.log"; exit 1; }
+QURTAG_TEST_PUSH_BASE="http://127.0.0.1:$PUSH_PORT" \
+QURTAG_TEST_APNS_PORT="$APNS_MOCK_PORT" \
+QURTAG_TEST_APNS_PUB="$WORK/apns-pub.pem" \
+QURTAG_TEST_APNS_KEY_ID=TESTKEY123 \
+QURTAG_TEST_MAIL_FILE="$WORK/push-mail.jsonl" \
+QURTAG_TEST_BASE="http://127.0.0.1:$API_PORT" \
+QURTAG_TEST_ADMIN_DB="$ADMIN" \
+QURTAG_TEST_LOGIN_DB_SERVER="$QURTAG_DATABASE_URL_SERVER" \
+QURTAG_TEST_LOGIN_DB_DATA="$QURTAG_DATABASE_URL_DATA" \
+  npx tsx scripts/qurtag/push.test.mjs || { echo "--- server logs"; tail -40 "$WORK/server.log" "$WORK/push-server.log"; exit 1; }

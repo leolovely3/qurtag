@@ -35,7 +35,8 @@ export function FinderView() {
 
   const load = useCallback(
     async (scan: boolean, t: string | null) => {
-      const r = await viewTag(tagId, t, scan);
+      // A finder who already wrote a note and comes back to read the reply is not a new scan.
+      const r = await viewTag(tagId, t, scan && !t);
       if (r.ok) {
         setView(r.data);
         setState('ready');

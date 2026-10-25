@@ -29,6 +29,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 class AppViewController: CAPBridgeViewController {
     override func capacitorDidLoad() {
         super.capacitorDidLoad()
+        // The app's own plugin: session for Reply in a notification, badge (QurTagPushPlugin.swift).
+        bridge?.registerPluginInstance(QurTagPushPlugin())
         let canvas = UIColor { traits in
             traits.userInterfaceStyle == .dark
                 ? UIColor(red: 10 / 255, green: 11 / 255, blue: 15 / 255, alpha: 1)

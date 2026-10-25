@@ -307,8 +307,11 @@ let threadId;
   check('the outbox answers only the scheduler', nope.status === 401);
   const run = await fetch(`${BASE}/api/jobs/outbox`, { method: 'POST', headers: { authorization: `Bearer ${process.env.CRON_SECRET}` } });
   const j = await run.json();
-  const { rows: after } = await sql('select count(*)::int as n from qurtag.outbox where sent_at is null');
+  const { rows: after } = await sql("select count(*)::int as n from qurtag.outbox where kind = 'finder_message' and sent_at is null");
   check('the outbox finishes its rows (email is off: none sent)', run.status === 200 && after[0].n === 0, JSON.stringify(j));
+  // The email copy waits 10 minutes (db/push.sql); it is not due yet, so this run leaves it.
+  const { rows: copies } = await sql("select count(*)::int as n from qurtag.outbox where kind = 'push_email' and sent_at is null and next_attempt_at > now() + interval '9 minutes'");
+  check('each finder note also queued an email copy for 10 minutes later', copies[0].n === 2, JSON.stringify(copies));
 }
 
 // ------------------------------------------------------------------ Factory counts

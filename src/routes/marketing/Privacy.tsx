@@ -43,6 +43,7 @@ export function Privacy() {
               'Conversations: the notes you and a finder write to each other, and when they were read.',
               'Membership, if you buy one: which plan you have, whether it is monthly or yearly, whether it renews, when it ends, and the reference numbers Stripe or Apple give the subscription. We do not receive or keep your card number.',
               'Messages you send through the Contact us form: the text, the topic, the email address to reply to, and, if you were signed in, your account and plan. We keep them until the question is dealt with and as long after as we need to answer follow-ups.',
+              'Notifications, if you allow them in the iPhone app: your phone\'s device token (a code Apple gives the app so that our server can send it alerts), whether the app is a test or a live build, and the notification choices you make in Settings. We keep the token until you sign out, delete your account, or Apple tells us it no longer works.',
               'Family, if you use it: the email address you invite, until the invite is used, canceled or has expired (and for 30 days after), and the names and email addresses of the people in the family, which they can all see.',
             ]}
           />
@@ -99,8 +100,9 @@ export function Privacy() {
               'Supabase Inc. runs the database where your account, items, tags and conversations are stored, in the United States.',
               'Stripe, Inc. takes card payments on the web and runs the payment and membership pages you are sent to. It receives your email address, your card details (which it keeps, not us) and your payment history, under its own privacy policy.',
               'Apple Inc. takes payment for memberships bought in the iPhone app, under Apple\'s own terms and privacy policy. We receive only whether a subscription is active, which plan it is and when it ends.',
+              'Apple Inc. also delivers the alerts we send to your iPhone (the Apple Push Notification service). It receives your device token and the text of each alert: the item\'s name and the finder\'s note, or only "You have a new note" if you chose to hide the note on the lock screen. We use no other push service.',
               'RevenueCat, Inc. records iPhone app subscriptions for us and tells our server when one starts, renews or ends. It receives your QuR Tag account number (a random identifier, not your email address), your purchase records from Apple, and technical details of your device and network address.',
-              'Resend (Resend, Inc.) sends our email: the link to reset your password, and the emails that confirm your address, tell you a finder wrote, or carry a family invite. It receives your email address and the text of that email.',
+              'Resend (Resend, Inc.) sends our email: the link to reset your password, and the emails that confirm your address, tell you a finder wrote (at once, or as a copy ten minutes after an alert you have not opened), or carry a family invite. It receives your email address and the text of that email.',
             ]}
           />
         </Section>
@@ -121,6 +123,7 @@ export function Privacy() {
               'Deleting an item deletes its tags, scans and conversations at once, and its tag stops working.',
               'Deleting your account deletes everything above at once. Copies in our providers\' backups are replaced on their normal schedule.',
               'Sign-in records end when the session ends or expires.',
+              'Your phone\'s device token: until you sign out of the app or delete your account, or until Apple tells us it is no longer valid.',
               'Membership records: while your account exists. Deleting your account deletes them here; Stripe, Apple and RevenueCat keep their own records under their own rules. Cancel a membership that is still renewing before you delete your account, so you are not charged.',
             ]}
           />

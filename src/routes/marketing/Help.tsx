@@ -10,7 +10,7 @@ const faqs: { q: string; a: ReactNode }[] = [
   },
   {
     q: 'What do I see as the owner?',
-    a: 'Your QuR Tag inbox on the site shows each note from a finder. You can reply there. Email notifications are not live yet, so check your QuR Tag inbox now and then.',
+    a: 'Your QuR Tag inbox shows each note from a finder. You can reply there. In the iPhone app you can also get an alert the moment a finder writes, and reply from the alert itself. Turn it on in Settings, under Notifications. You choose which alerts you want.',
   },
   {
     q: 'How does the finder read my reply?',

@@ -10,6 +10,7 @@ import {
 import { authClient, clearDataPass, forgetSession } from './authClient';
 import { db } from './db';
 import { iapSignOut } from './iap';
+import { forgetPushDevice } from './nativePush';
 
 /**
  * Who is signed in, for every screen. Owners sign up and in with email and password
@@ -112,6 +113,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signOut = useCallback(async () => {
+    // This phone stops getting this account's alerts; it needs the pass, so it goes first.
+    await forgetPushDevice();
     clearDataPass();
     void iapSignOut();
     try {
