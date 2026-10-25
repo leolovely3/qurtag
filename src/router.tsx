@@ -11,6 +11,7 @@ import { PartnerLayout } from '@/components/layout/PartnerLayout';
 import { PartnerDashboard } from '@/routes/partners/Dashboard';
 import { PartnerScan } from '@/routes/partners/Scan';
 
+import { InAppDoc } from '@/routes/marketing/parts';
 import { Help } from '@/routes/marketing/Help';
 import { MarketingHome } from '@/routes/marketing/Home';
 import { HowItWorks } from '@/routes/marketing/HowItWorks';
@@ -80,6 +81,11 @@ export const router = createBrowserRouter([
       ...(FEATURES.trips ? [{ path: '/app/trips', element: <Trips /> }] : []),
       { path: '/app/membership', element: <MembershipPage /> },
       { path: '/app/settings', element: <Settings /> },
+      // The shared pages, read inside the app frame (src/routes/marketing/parts.tsx, InAppDoc).
+      { path: '/app/help', element: <InAppDoc title="Help" back={{ to: '/app/settings', label: 'Settings' }}><Help /></InAppDoc> },
+      { path: '/app/terms', element: <InAppDoc title="Terms" back={{ to: '/app/settings', label: 'Settings' }}><Terms /></InAppDoc> },
+      { path: '/app/privacy', element: <InAppDoc title="Privacy" back={{ to: '/app/settings', label: 'Settings' }}><Privacy /></InAppDoc> },
+      { path: '/app/make-it-last', element: <InAppDoc title="Make it last" back={{ to: '/app/help', label: 'Help' }}><MakeItLast /></InAppDoc> },
       { path: '/app/admin', element: <Admin /> },
       { path: '/app/admin/accounts/:userId', element: <AdminAccountPage /> },
     ],

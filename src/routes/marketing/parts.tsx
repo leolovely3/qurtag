@@ -1,11 +1,47 @@
 import type { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, type LinkProps } from 'react-router-dom';
+import { createContext, useContext } from 'react';
+import { AppPage } from '@/components/layout/AppPage';
 import { Container } from '@/components/ui/Container';
 import { Lede } from '@/components/brand/Typography';
 import { buttonClasses } from '@/components/ui/Button';
 import { cn } from '@/lib/cn';
 
 /** Shared building blocks for the plain marketing pages. */
+
+/**
+ * Help, Terms, Privacy and Make it last are written once. Signed-in people reach them from
+ * inside the app, at /app/help and so on, where they sit in the app frame (tab bar or sidebar,
+ * a Back button) and not under the website's header, which would look like being signed out.
+ * Inside the frame the page drops its own big heading (the frame's title is the h1), its
+ * sign-up band, and its links point at the /app copies.
+ */
+const InAppDocContext = createContext(false);
+const IN_APP_DOCS = ['/help', '/terms', '/privacy', '/make-it-last'];
+
+export function InAppDoc({
+  title,
+  back,
+  children,
+}: {
+  title: string;
+  back: { to: string; label: string };
+  children: ReactNode;
+}) {
+  return (
+    <InAppDocContext.Provider value={true}>
+      <AppPage title={title} back={back} width="normal">
+        <div className="flex flex-col gap-8 pb-4">{children}</div>
+      </AppPage>
+    </InAppDocContext.Provider>
+  );
+}
+
+/** A link to one of the four shared pages: the app copy when read inside the app. */
+export function DocLink({ to, ...rest }: LinkProps & { to: string }) {
+  const inApp = useContext(InAppDocContext);
+  return <Link to={inApp && IN_APP_DOCS.includes(to) ? `/app${to}` : to} {...rest} />;
+}
 
 export function PageHero({
   eyebrow,
@@ -18,6 +54,15 @@ export function PageHero({
   lede?: ReactNode;
   children?: ReactNode;
 }) {
+  const inApp = useContext(InAppDocContext);
+  if (inApp) {
+    return (
+      <div className="flex flex-col gap-3">
+        {lede && <p className="text-body text-muted text-pretty">{lede}</p>}
+        {children}
+      </div>
+    );
+  }
   return (
     <section>
       <Container size="md">
@@ -34,6 +79,8 @@ export function PageHero({
 }
 
 export function PageBody({ children, tone = 'paper' }: { children: ReactNode; tone?: 'paper' | 'canvas' }) {
+  const inApp = useContext(InAppDocContext);
+  if (inApp) return <div className="flex flex-col gap-10 text-ink-700">{children}</div>;
   return (
     <section className={cn('border-t border-hairline', tone === 'paper' && 'bg-paper')}>
       <Container size="md">
@@ -107,6 +154,8 @@ export function SecondaryLink({ to, children }: { to: string; children: ReactNod
 }
 
 export function CtaBand({ title, body, wide = false }: { title: string; body?: string; wide?: boolean }) {
+  const inApp = useContext(InAppDocContext);
+  if (inApp) return null;
   return (
     <section className="border-t border-hairline">
       <Container size={wide ? 'xl' : 'md'}>

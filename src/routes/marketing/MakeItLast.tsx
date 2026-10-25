@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { PageHero, PageBody, Section, P, Bullets, CtaBand } from './parts';
+import { PageHero, PageBody, Section, P, Bullets, CtaBand, DocLink } from './parts';
 
 /**
  * "Make it last": plain, brand-neutral advice for turning a printed tag into one that survives
@@ -107,7 +106,7 @@ export function MakeItLast() {
         <Section title="If it gets damaged or lost">
           <P>
             Print it again from your item. If the tag itself went missing and you want the old one to stop working, make a new code
-            there. See <Link to="/help" className="text-ink-900 underline underline-offset-4">Help</Link> for more.
+            there. See <DocLink to="/help" className="text-ink-900 underline underline-offset-4">Help</DocLink> for more.
           </P>
         </Section>
       </PageBody>

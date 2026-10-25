@@ -360,6 +360,9 @@ shell (`capacitor.config.ts`, `ios/`). The old Expo stub in `mobile/` is not use
 - On a phone (the app, and the website under 768px wide) the signed-in screens use a bottom tab bar
   (Items, Inbox, Settings); wider screens use a sidebar (`src/components/layout/AppLayout.tsx`). Each
   screen has a title, and nested screens a Back button (`src/components/layout/AppPage.tsx`).
+  Help, Terms, Privacy and Make it last open inside that frame for signed-in people, at `/app/help`, `/app/terms`,
+  `/app/privacy` and `/app/make-it-last` (`InAppDoc` in `src/routes/marketing/parts.tsx`); the public pages stay for visitors.
+  The How it works pictures are in `public/how` (tags drawn by `src/lib/tagStyles.ts`, two real screenshots, light and dark).
 - The app follows the phone's light or dark setting, and Settings lets the owner pick Light, Auto or Dark.
 - The app asks for notification permission once, right after the first item is saved, behind a short
   explanation (`src/components/push/PushPrimer.tsx`), never at launch. See "iPhone push notifications".

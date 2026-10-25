@@ -175,7 +175,7 @@ export function AppLayout() {
             </Link>
           )}
           <Link
-            to="/help"
+            to="/app/help"
             className="flex h-11 items-center gap-3 rounded-card px-3 text-sm font-medium text-ink-600 transition-colors hover:bg-ink-50 hover:text-ink-900"
           >
             <CircleHelp size={18} strokeWidth={1.75} aria-hidden />

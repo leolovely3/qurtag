@@ -362,7 +362,7 @@ export function TagPrint() {
 
         <p className="text-sm text-ink-700 text-pretty">
           Want it to last through rain, washing machines and school bags?{' '}
-          <Link to="/make-it-last" className="font-medium text-ink-900 underline underline-offset-4">
+          <Link to="/app/make-it-last" className="font-medium text-ink-900 underline underline-offset-4">
             Make it last
           </Link>
           .
