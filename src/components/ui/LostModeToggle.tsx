@@ -42,12 +42,12 @@ export function LostModeToggle({ value, onChange, pending, className }: LostMode
                 value ? 'text-signal-900' : 'text-ink-900',
               )}
             >
-              {value ? "This is missing. QurTag is paying attention." : 'This is at rest.'}
+              {value ? 'Marked lost.' : 'Not lost.'}
             </h3>
             <p className="text-caption text-muted text-pretty max-w-md">
               {value
-                ? 'Anyone who scans the tag sees an urgent prompt. You\'ll be notified the moment they do, anywhere in the world.'
-                : 'Turn this on the moment you notice something is gone. You can also schedule it for trips.'}
+                ? 'The tag\'s page tells the finder you are looking for it. Check your inbox for notes.'
+                : 'Switch this on when you notice it is gone. The tag works either way.'}
             </p>
           </div>
         </div>

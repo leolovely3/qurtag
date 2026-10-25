@@ -10,7 +10,6 @@ import {
   fetchPrimaryHouseholdId,
   fetchTripsForHousehold,
 } from '@/lib/queries';
-import { isSupabaseConfigured } from '@/lib/supabase';
 import type { Item, Trip } from '@/lib/database.types';
 import { cn } from '@/lib/cn';
 
@@ -35,7 +34,7 @@ export function Trips() {
   }, []);
 
   useEffect(() => {
-    if (authLoading || !user || !isSupabaseConfigured) {
+    if (authLoading || !user) {
       setLoading(false);
       return;
     }

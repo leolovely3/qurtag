@@ -1,6 +1,36 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "outputDirectory": "dist",
+  "framework": "vite",
   "rewrites": [
-    { "source": "/((?!assets/|.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
+    { "source": "/api/auth/(.*)", "destination": "/api/auth" },
+    { "source": "/api/data/(.*)", "destination": "/api/data" },
+    { "source": "/api/fn/(.*)", "destination": "/api/fn" },
+    { "source": "/api/jobs/(.*)", "destination": "/api/jobs" },
+    { "source": "/((?!api/|assets/|.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
+  ],
+  "functions": {
+    "api/jobs/index.ts": { "maxDuration": 60 }
+  },
+  "crons": [
+    { "path": "/api/jobs/daily", "schedule": "0 5 * * *" }
+  ],
+  "headers": [
+    {
+      "source": "/find/(.*)",
+      "headers": [
+        { "key": "Referrer-Policy", "value": "no-referrer" },
+        { "key": "X-Robots-Tag", "value": "noindex" }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" }
+      ]
+    }
   ]
 }

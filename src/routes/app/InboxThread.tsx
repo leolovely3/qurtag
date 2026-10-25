@@ -16,13 +16,13 @@ import {
   markThreadReadByOwner,
   markThreadStatus,
   reportAbuse,
-  sendMessage,
+  sendOwnerReply,
 } from '@/lib/queries';
+import { FEATURES } from '@/lib/features';
 import { releaseReward, startStripeCheckout } from '@/lib/stripe';
-import { encodeSystemPayload } from '@/lib/systemMessages';
 import { useToast } from '@/components/ui/Toast';
 import type { CourierOrder } from '@/lib/database.types';
-import { useThreadRealtime, useThreadStatusRealtime } from '@/lib/realtime';
+import { usePoll } from '@/lib/realtime';
 import type { Item, Message, Thread } from '@/lib/database.types';
 
 function labelForCourierState(state: CourierOrder['state']): string {
@@ -69,7 +69,7 @@ function ReportForm({ onClose, onSubmit }: ReportFormProps) {
         </button>
       </div>
       <p className="text-caption text-muted text-pretty">
-        A real person at QurTag reviews every report. We'll come back to you within 24 hours.
+        Tell us what happened. We read every report sent to info@impactconsulting.ai.
       </p>
       <div className="flex gap-2 flex-wrap">
         {(['spam', 'harassment', 'fraud', 'other'] as const).map((k) => (
@@ -148,6 +148,7 @@ export function InboxThread() {
   const [reportOpen, setReportOpen] = useState(false);
   const [reunitedOpen, setReunitedOpen] = useState(false);
   const [blockOpen, setBlockOpen] = useState(false);
+  const [closeOpen, setCloseOpen] = useState(false);
   const [releaseRewardOpen, setReleaseRewardOpen] = useState<null | { amountCents: number; rewardId: string }>(null);
   const [courier, setCourier] = useState<CourierOrder | null>(null);
   const [labelPending, setLabelPending] = useState(false);
@@ -180,7 +181,7 @@ export function InboxThread() {
       const [it, msgs, co] = await Promise.all([
         fetchItemById(t.item_id),
         fetchMessagesForThread(t.id),
-        fetchCourierOrderForThread(t.id),
+        FEATURES.courier ? fetchCourierOrderForThread(t.id) : Promise.resolve(null),
       ]);
       if (cancelled) return;
       setItem(it);
@@ -195,46 +196,30 @@ export function InboxThread() {
     };
   }, [authLoading, user, threadId, navigate]);
 
-  // Live updates. Finder replies land instantly.
-  useThreadRealtime(
-    threadId ?? null,
-    useCallback((incoming: Message) => {
-      setMessages((prev) => {
-        const idx = prev.findIndex((m) => m.id === incoming.id);
-        if (idx >= 0) {
-          const copy = prev.slice();
-          copy[idx] = incoming;
-          return copy;
-        }
-        return [...prev, incoming];
-      });
-      // If a finder message arrived while we're viewing, mark it read.
-      if (incoming.sender_kind === 'finder' && threadId) {
+  // New notes from the finder: ask again every few seconds while the page is open.
+  usePoll(async () => {
+    if (!threadId) return;
+    const [t, msgs] = await Promise.all([fetchThreadById(threadId), fetchMessagesForThread(threadId)]);
+    if (t) setThread(t);
+    setMessages((prev) => {
+      if (msgs.length > prev.length && msgs.some((m) => m.sender_kind === 'finder' && !m.read_by_owner_at)) {
         void markThreadReadByOwner(threadId);
       }
-    }, [threadId]),
-  );
-
-  // Status flips propagate live (e.g. if a co-owner marks reunited).
-  useThreadStatusRealtime(
-    threadId ?? null,
-    useCallback((updated) => {
-      setThread(updated);
-    }, []),
-  );
+      return msgs;
+    });
+  }, !!thread);
 
   const handleSend = useCallback(
     async (body: string) => {
       if (!thread) return;
-      const sent = await sendMessage({
-        threadId: thread.id,
-        senderKind: 'owner',
-        body,
-      });
-      if (!sent) return;
+      const sent = await sendOwnerReply({ threadId: thread.id, body });
+      if (!sent) {
+        toast.show({ kind: 'error', title: "Couldn't send your reply", body: 'Check your connection and try again.' });
+        throw new Error('not sent');
+      }
       await refetchMessages(thread.id);
     },
-    [thread, refetchMessages],
+    [thread, refetchMessages, toast],
   );
 
   async function confirmReunited() {
@@ -243,14 +228,9 @@ export function InboxThread() {
     setActionPending('reunited');
     try {
       await markThreadStatus(thread.id, 'reunited');
-      await sendMessage({
-        threadId: thread.id,
-        senderKind: 'system',
-        body: encodeSystemPayload({ type: 'reunited', at: new Date().toISOString() }),
-      });
-      await refetchMessages(thread.id);
-      toast.show({ kind: 'success', title: 'Marked reunited', body: 'A celebration card was added to the thread.' });
-      const reward = await fetchActiveRewardForItem(thread.item_id);
+      setThread({ ...thread, status: 'reunited' });
+      toast.show({ kind: 'success', title: 'Marked as back with you', body: 'You can still write to the finder here.' });
+      const reward = FEATURES.rewards ? await fetchActiveRewardForItem(thread.item_id) : null;
       if (reward && reward.state === 'held') {
         setReleaseRewardOpen({ amountCents: reward.amount_cents, rewardId: reward.id });
       }
@@ -284,14 +264,30 @@ export function InboxThread() {
     }
   }
 
+  async function confirmCloseConversation() {
+    if (!thread) return;
+    setCloseOpen(false);
+    setActionPending('close');
+    try {
+      await markThreadStatus(thread.id, 'closed');
+      setThread({ ...thread, status: 'closed' });
+      toast.show({ kind: 'info', title: 'Conversation closed', body: 'The finder can no longer write in it.' });
+    } finally {
+      setActionPending(null);
+    }
+  }
+
+  // Hidden feature (safety tools): conversations no longer carry a finder session id.
+  const finderSessionId = (thread as (Thread & { finder_session_id?: string | null }) | null)?.finder_session_id ?? null;
+
   async function confirmBlockFinder() {
-    if (!thread || !thread.finder_session_id) return;
+    if (!thread || !finderSessionId) return;
     setBlockOpen(false);
     setActionPending('block');
     try {
       await blockFinderSession({
         householdId: thread.household_id,
-        finderSessionId: thread.finder_session_id,
+        finderSessionId,
         reason: 'Manually blocked from inbox',
       });
       await markThreadStatus(thread.id, 'closed');
@@ -387,11 +383,22 @@ export function InboxThread() {
           type="button"
           onClick={() => setReunitedOpen(true)}
           disabled={!!actionPending || thread.status === 'reunited'}
-          className="inline-flex h-9 items-center gap-1.5 rounded-pill bg-verdigris-500 text-canvas text-caption font-medium px-4 hover:bg-verdigris-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-qurtag"
+          className="inline-flex h-11 items-center gap-1.5 rounded-pill bg-verdigris-500 text-canvas text-caption font-medium px-4 hover:bg-verdigris-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-qurtag"
         >
           <CheckCircle2 size={14} strokeWidth={1.75} />
-          {actionPending === 'reunited' ? 'Closing…' : 'Mark as reunited'}
+          {actionPending === 'reunited' ? 'Saving…' : thread.status === 'reunited' ? 'Back with you' : 'I have it back'}
         </button>
+        <button
+          type="button"
+          onClick={() => setCloseOpen(true)}
+          disabled={!!actionPending || thread.status === 'closed'}
+          className="inline-flex h-11 items-center gap-1.5 rounded-pill border border-hairline-strong text-ink-900 text-caption font-medium px-4 hover:border-ink-900 disabled:opacity-50 transition-colors duration-qurtag"
+        >
+          <ShieldOff size={14} strokeWidth={1.75} />
+          {thread.status === 'closed' ? 'Closed' : 'Close conversation'}
+        </button>
+        {FEATURES.safetyTools && (
+        <>
         <button
           type="button"
           onClick={() => setReportOpen(true)}
@@ -403,13 +410,15 @@ export function InboxThread() {
         </button>
         <button
           type="button"
-          onClick={() => thread.finder_session_id && setBlockOpen(true)}
-          disabled={!!actionPending || !thread.finder_session_id}
+          onClick={() => finderSessionId && setBlockOpen(true)}
+          disabled={!!actionPending || !finderSessionId}
           className="inline-flex h-9 items-center gap-1.5 rounded-pill border border-hairline-strong text-muted text-caption font-medium px-4 hover:border-signal-500 hover:text-signal-700 disabled:opacity-50 transition-colors duration-qurtag"
         >
           <ShieldOff size={14} strokeWidth={1.75} />
           Block this finder
         </button>
+        </>
+        )}
       </div>
 
       {reportOpen && (
@@ -419,11 +428,11 @@ export function InboxThread() {
       <Modal
         open={reunitedOpen}
         onClose={() => setReunitedOpen(false)}
-        eyebrow="Mark as reunited"
-        title="Is the item back where it should be?"
-        description="This closes the conversation, posts a celebration message in the thread, and (if you held a reward) prompts to release it."
+        eyebrow="Back with you"
+        title="Do you have it back?"
+        description="This marks the conversation as done. You and the finder can still write in it."
         primaryAction={{
-          label: 'Yes, it’s home',
+          label: 'Yes, I have it',
           onClick: confirmReunited,
           pending: actionPending === 'reunited',
         }}
@@ -449,6 +458,16 @@ export function InboxThread() {
           label: 'Not yet',
           onClick: () => setReleaseRewardOpen(null),
         }}
+      />
+
+      <Modal
+        open={closeOpen}
+        onClose={() => setCloseOpen(false)}
+        eyebrow="Close conversation"
+        title="Close this conversation?"
+        description="The finder will see that you closed it and can no longer write in it. Use this if the notes are not helpful or not kind."
+        primaryAction={{ label: 'Close it', tone: 'destructive', onClick: confirmCloseConversation, pending: actionPending === 'close' }}
+        secondaryAction={{ label: 'Cancel', onClick: () => setCloseOpen(false) }}
       />
 
       <Modal
@@ -556,7 +575,9 @@ export function InboxThread() {
       {/* Composer */}
       <MessageComposer
         label="Reply"
-        placeholder="A short note. Direct and human."
+        placeholder="Thank you! Could you leave it at the front desk?"
+        maxLength={2000}
+        disabled={thread.status === 'closed'}
         onSend={handleSend}
       />
 
@@ -564,8 +585,8 @@ export function InboxThread() {
       <div className="mt-qurtag-3 rounded-card bg-paper border border-hairline p-qurtag-3 flex items-start gap-3">
         <Lock size={16} strokeWidth={1.75} className="mt-0.5 text-ink-900 shrink-0" />
         <p className="text-caption text-ink-700 text-pretty">
-          The finder doesn't see your email, phone, or any account detail. QurTag relays your reply
-          and keeps the bridge private from both sides.
+          The finder does not see your name, email or phone number. They read your reply on the
+          tag's page. Only share an address or number if you want to.
         </p>
       </div>
     </div>

@@ -7,9 +7,9 @@ import { cn } from '@/lib/cn';
 
 const nav = [
   { to: '/how-it-works', label: 'How it works' },
-  { to: '/tags', label: 'Tags' },
-  { to: '/pricing', label: 'Pricing' },
-  { to: '/security', label: 'Security' },
+  { to: '/tags', label: 'Your tag' },
+  { to: '/pricing', label: 'Free' },
+  { to: '/help', label: 'Help' },
 ];
 
 export function MarketingLayout() {
@@ -71,22 +71,22 @@ export function MarketingLayout() {
             </nav>
             <div className="flex items-center gap-3 md:gap-5">
               <Link
-                to="/app"
-                className="hidden md:inline-flex text-caption font-medium text-ink-700 hover:opacity-70 transition-opacity duration-qurtag"
+                to="/start"
+                className="hidden md:inline-flex min-h-11 items-center text-caption font-medium text-ink-700 hover:opacity-70 transition-opacity duration-qurtag"
               >
                 Sign in
               </Link>
               <Link
                 to="/start"
-                className="inline-flex h-9 items-center rounded-pill bg-ink-900 px-4 text-caption font-medium text-canvas hover:bg-ink-700 transition-colors duration-qurtag"
+                className="inline-flex h-11 items-center rounded-pill bg-ink-900 px-4 text-caption font-medium text-canvas hover:bg-ink-700 transition-colors duration-qurtag"
               >
-                Start free
+                Make a free tag
               </Link>
               <button
                 type="button"
                 onClick={() => setDrawerOpen(true)}
                 aria-label="Open menu"
-                className="md:hidden size-9 grid place-items-center rounded-pill text-ink-900 hover:bg-ink-50 transition-colors duration-qurtag"
+                className="md:hidden size-11 grid place-items-center rounded-pill text-ink-900 hover:bg-ink-50 transition-colors duration-qurtag"
               >
                 <Menu size={20} strokeWidth={1.75} />
               </button>
@@ -111,7 +111,7 @@ export function MarketingLayout() {
                 type="button"
                 onClick={() => setDrawerOpen(false)}
                 aria-label="Close menu"
-                className="size-9 grid place-items-center rounded-pill text-muted hover:bg-ink-50 transition-colors duration-qurtag"
+                className="size-11 grid place-items-center rounded-pill text-muted hover:bg-ink-50 transition-colors duration-qurtag"
               >
                 <X size={18} strokeWidth={1.75} />
               </button>
@@ -135,16 +135,16 @@ export function MarketingLayout() {
               ))}
               <div className="border-t border-hairline my-qurtag-2" />
               <Link
-                to="/app"
+                to="/start"
                 className="px-3 h-11 flex items-center rounded-card text-body font-medium text-ink-700 hover:bg-ink-50 hover:text-ink-900 transition-colors duration-qurtag"
               >
                 Sign in
               </Link>
               <Link
-                to="/help"
+                to="/security"
                 className="px-3 h-11 flex items-center rounded-card text-body font-medium text-ink-700 hover:bg-ink-50 hover:text-ink-900 transition-colors duration-qurtag"
               >
-                Help
+                Privacy and safety
               </Link>
             </nav>
           </aside>
@@ -157,36 +157,30 @@ export function MarketingLayout() {
 
       <footer className="border-t border-hairline bg-canvas">
         <Container size="xl">
-          <div className="py-qurtag-12 grid gap-qurtag-8 md:grid-cols-4">
+          <div className="py-qurtag-12 grid gap-qurtag-8 md:grid-cols-3">
             <div className="flex flex-col gap-3 max-w-xs">
               <Wordmark />
               <p className="text-caption text-muted text-pretty">
-                Calm software for the things you'd rather not lose.
+                A free QR tag, so a kind stranger can message you.
               </p>
             </div>
-            <div className="flex flex-col gap-3 text-caption">
-              <span className="text-eyebrow uppercase tracking-[0.14em] text-muted">Product</span>
-              <Link to="/how-it-works" className="text-ink-700 hover:opacity-70 transition-opacity">How it works</Link>
-              <Link to="/tags" className="text-ink-700 hover:opacity-70 transition-opacity">Tags</Link>
-              <Link to="/pricing" className="text-ink-700 hover:opacity-70 transition-opacity">Pricing</Link>
-              <Link to="/business" className="text-ink-700 hover:opacity-70 transition-opacity">For business</Link>
+            <div className="flex flex-col text-caption">
+              <span className="text-eyebrow uppercase tracking-[0.14em] text-muted mb-1">Product</span>
+              <Link to="/how-it-works" className="min-h-11 flex items-center text-ink-700 hover:opacity-70 transition-opacity">How it works</Link>
+              <Link to="/tags" className="min-h-11 flex items-center text-ink-700 hover:opacity-70 transition-opacity">Your tag</Link>
+              <Link to="/pricing" className="min-h-11 flex items-center text-ink-700 hover:opacity-70 transition-opacity">Free</Link>
+              <Link to="/help" className="min-h-11 flex items-center text-ink-700 hover:opacity-70 transition-opacity">Help</Link>
             </div>
-            <div className="flex flex-col gap-3 text-caption">
-              <span className="text-eyebrow uppercase tracking-[0.14em] text-muted">Company</span>
-              <Link to="/security" className="text-ink-700 hover:opacity-70 transition-opacity">Security</Link>
-              <Link to="/stories" className="text-ink-700 hover:opacity-70 transition-opacity">Stories</Link>
-              <Link to="/help" className="text-ink-700 hover:opacity-70 transition-opacity">Help</Link>
-            </div>
-            <div className="flex flex-col gap-3 text-caption">
-              <span className="text-eyebrow uppercase tracking-[0.14em] text-muted">Legal</span>
-              <Link to="/privacy" className="text-ink-700 hover:opacity-70 transition-opacity">Privacy</Link>
-              <Link to="/terms" className="text-ink-700 hover:opacity-70 transition-opacity">Terms</Link>
-              <Link to="/security-txt" className="text-ink-700 hover:opacity-70 transition-opacity">security.txt</Link>
+            <div className="flex flex-col text-caption">
+              <span className="text-eyebrow uppercase tracking-[0.14em] text-muted mb-1">Legal</span>
+              <Link to="/privacy" className="min-h-11 flex items-center text-ink-700 hover:opacity-70 transition-opacity">Privacy</Link>
+              <Link to="/terms" className="min-h-11 flex items-center text-ink-700 hover:opacity-70 transition-opacity">Terms</Link>
+              <Link to="/security" className="min-h-11 flex items-center text-ink-700 hover:opacity-70 transition-opacity">Security</Link>
+              <a href="mailto:info@impactconsulting.ai" className="min-h-11 flex items-center text-ink-700 hover:opacity-70 transition-opacity break-all">info@impactconsulting.ai</a>
             </div>
           </div>
-          <div className="py-5 border-t border-hairline flex items-center justify-between text-caption text-muted">
-            <span>© {new Date().getFullYear()} QurTag</span>
-            <span>Made for the people who travel light.</span>
+          <div className="py-5 border-t border-hairline text-caption text-muted">
+            <span>© 2026 Impact Consulting AI LLC</span>
           </div>
         </Container>
       </footer>

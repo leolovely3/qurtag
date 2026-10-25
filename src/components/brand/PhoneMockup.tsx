@@ -1,4 +1,4 @@
-import { MapPin, Lock, Package, Plus, Laptop, Headphones } from 'lucide-react';
+import { MessageCircle, Package, Plus, Key, Music2 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 interface PhoneMockupProps {
@@ -6,7 +6,7 @@ interface PhoneMockupProps {
 }
 
 /**
- * QurTag /app home dashboard, rendered inside a device frame.
+ * QuR Tag /app home dashboard, rendered inside a device frame.
  * Faithful to the real AppHome surface. Same greeting, same "Your items"
  * heading + Add link, same item-card layout (tier eyebrow + armed/idle pill
  * + name + value/location row).
@@ -48,7 +48,7 @@ export function PhoneMockup({ className }: PhoneMockupProps) {
                 Good afternoon
               </span>
               <h3 className="font-display text-[18px] tracking-[-0.022em] font-semibold text-ink-900 leading-tight">
-                Everything is where it should be.
+                Your tags are ready.
               </h3>
             </div>
 
@@ -63,7 +63,7 @@ export function PhoneMockup({ className }: PhoneMockupProps) {
               </span>
             </div>
 
-            {/* Item 1. Rimowa, armed */}
+            {/* Item 1. Lost */}
             <article className="rounded-2xl border border-hairline bg-canvas p-3 flex gap-2.5">
               <div className="size-12 rounded-card bg-ink-50 grid place-items-center shrink-0">
                 <Package size={16} strokeWidth={1.5} className="text-ink-900" />
@@ -71,80 +71,71 @@ export function PhoneMockup({ className }: PhoneMockupProps) {
               <div className="flex-1 min-w-0 flex flex-col gap-1">
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-[8px] uppercase tracking-[0.14em] text-muted font-medium">
-                    Signature
+                    Tag printed
                   </span>
                   <span className="inline-flex items-center gap-0.5 rounded-pill bg-signal-50 text-signal-700 px-1.5 py-px text-[8px] font-medium">
                     <span className="size-1 rounded-full bg-signal-500 animate-qurtag-pulse" />
-                    Armed
+                    Lost
                   </span>
                 </div>
                 <h5 className="font-display text-[12px] font-semibold text-ink-900 tracking-[-0.014em] truncate">
-                  Rimowa Original Cabin
+                  Blue water bottle
                 </h5>
                 <div className="flex items-center gap-2 text-[9px] text-muted mt-auto">
                   <span className="inline-flex items-center gap-0.5">
-                    <Lock size={8} strokeWidth={1.75} /> $1,200
-                  </span>
-                  <span className="inline-flex items-center gap-0.5">
-                    <MapPin size={8} strokeWidth={1.75} /> LHR
+                    <MessageCircle size={8} strokeWidth={1.75} /> 1 new note
                   </span>
                 </div>
               </div>
             </article>
 
-            {/* Item 2. MacBook, idle */}
+            {/* Item 2. Safe */}
             <article className="rounded-2xl border border-hairline bg-canvas p-3 flex gap-2.5">
               <div className="size-12 rounded-card bg-ink-50 grid place-items-center shrink-0">
-                <Laptop size={16} strokeWidth={1.5} className="text-ink-900" />
+                <Music2 size={16} strokeWidth={1.5} className="text-ink-900" />
               </div>
               <div className="flex-1 min-w-0 flex flex-col gap-1">
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-[8px] uppercase tracking-[0.14em] text-muted font-medium">
-                    Sticker
+                    Tag printed
                   </span>
                   <span className="inline-flex items-center gap-0.5 rounded-pill bg-ink-50 text-muted px-1.5 py-px text-[8px] font-medium">
                     <span className="size-1 rounded-full bg-ink-300" />
-                    Idle
+                    Safe
                   </span>
                 </div>
                 <h5 className="font-display text-[12px] font-semibold text-ink-900 tracking-[-0.014em] truncate">
-                  MacBook Pro
+                  Violin case
                 </h5>
                 <div className="flex items-center gap-2 text-[9px] text-muted mt-auto">
                   <span className="inline-flex items-center gap-0.5">
-                    <Lock size={8} strokeWidth={1.75} /> $2,400
-                  </span>
-                  <span className="inline-flex items-center gap-0.5">
-                    <MapPin size={8} strokeWidth={1.75} /> Home
+                    <MessageCircle size={8} strokeWidth={1.75} /> No notes
                   </span>
                 </div>
               </div>
             </article>
 
-            {/* Item 3. AirPods, idle */}
+            {/* Item 3. Safe */}
             <article className="rounded-2xl border border-hairline bg-canvas p-3 flex gap-2.5">
               <div className="size-12 rounded-card bg-ink-50 grid place-items-center shrink-0">
-                <Headphones size={16} strokeWidth={1.5} className="text-ink-900" />
+                <Key size={16} strokeWidth={1.5} className="text-ink-900" />
               </div>
               <div className="flex-1 min-w-0 flex flex-col gap-1">
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-[8px] uppercase tracking-[0.14em] text-muted font-medium">
-                    Sticker
+                    Tag printed
                   </span>
                   <span className="inline-flex items-center gap-0.5 rounded-pill bg-ink-50 text-muted px-1.5 py-px text-[8px] font-medium">
                     <span className="size-1 rounded-full bg-ink-300" />
-                    Idle
+                    Safe
                   </span>
                 </div>
                 <h5 className="font-display text-[12px] font-semibold text-ink-900 tracking-[-0.014em] truncate">
-                  AirPods Max
+                  House keys
                 </h5>
                 <div className="flex items-center gap-2 text-[9px] text-muted mt-auto">
                   <span className="inline-flex items-center gap-0.5">
-                    <Lock size={8} strokeWidth={1.75} /> $549
-                  </span>
-                  <span className="inline-flex items-center gap-0.5">
-                    <MapPin size={8} strokeWidth={1.75} /> Home
+                    <MessageCircle size={8} strokeWidth={1.75} /> No notes
                   </span>
                 </div>
               </div>

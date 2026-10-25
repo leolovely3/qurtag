@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { useHouseholdInboxRealtime } from '@/lib/realtime';
+import { usePoll } from '@/lib/realtime';
+import { FEATURES } from '@/lib/features';
 import {
   Home,
   Package,
@@ -15,17 +16,16 @@ import {
 import { Wordmark } from '@/components/brand/Wordmark';
 import { useAuth } from '@/lib/auth';
 import { countUnreadForHousehold, fetchPrimaryHouseholdId } from '@/lib/queries';
-import { isSupabaseConfigured } from '@/lib/supabase';
 import { cn } from '@/lib/cn';
 
 const nav = [
   { to: '/app', label: 'Home', icon: Home, end: true, key: 'home' },
+  { to: '/app/inbox', label: 'Inbox', icon: Inbox, end: false, key: 'inbox' },
   { to: '/app/items', label: 'Items', icon: Package, end: false, key: 'items' },
   { to: '/app/tags', label: 'Tags', icon: Tag, end: false, key: 'tags' },
-  { to: '/app/inbox', label: 'Inbox', icon: Inbox, end: false, key: 'inbox' },
-  { to: '/app/trips', label: 'Trips', icon: Plane, end: false, key: 'trips' },
+  ...(FEATURES.trips ? [{ to: '/app/trips', label: 'Trips', icon: Plane, end: false, key: 'trips' }] : []),
   { to: '/app/settings', label: 'Settings', icon: Settings, end: false, key: 'settings' },
-] as const;
+];
 
 export function AppLayout() {
   const { user, loading, signOut } = useAuth();
@@ -40,7 +40,7 @@ export function AppLayout() {
   }, [loading, user, navigate]);
 
   useEffect(() => {
-    if (!user || !isSupabaseConfigured) return;
+    if (!user) return;
     void fetchPrimaryHouseholdId().then(setHouseholdId);
   }, [user]);
 
@@ -69,8 +69,8 @@ export function AppLayout() {
     };
   }, [drawerOpen]);
 
-  // Bump the count the instant a finder writes. Anywhere in the app.
-  useHouseholdInboxRealtime(householdId, refreshUnread);
+  // Keep the inbox count fresh while the app is open.
+  usePoll(refreshUnread, !!householdId);
 
   async function handleSignOut() {
     await signOut();
@@ -86,7 +86,7 @@ export function AppLayout() {
           end={item.end}
           className={({ isActive }) =>
             cn(
-              'flex items-center gap-3 px-3 h-10 md:h-9 rounded-card text-body md:text-caption font-medium',
+              'flex items-center gap-3 px-3 h-11 rounded-card text-body md:text-caption font-medium',
               'transition-colors duration-qurtag',
               isActive
                 ? 'bg-ink-50 text-ink-900'
@@ -109,21 +109,21 @@ export function AppLayout() {
   const railFooter = (
     <div className="px-qurtag-3 py-qurtag-3 border-t border-hairline flex flex-col gap-2">
       <div className="rounded-card bg-paper px-3 py-3 flex flex-col gap-1.5">
-        <span className="text-eyebrow uppercase tracking-[0.14em] text-muted">Free plan</span>
+        <span className="text-eyebrow uppercase tracking-[0.14em] text-muted">Free</span>
         <p className="text-caption text-ink-700 text-pretty">
-          Upgrade for translation, trip mode, and 0% fees.
+          QuR Tag is free for up to two items.
         </p>
         <Link
-          to="/pricing"
-          className="text-caption font-medium text-ink-900 hover:opacity-70 transition-opacity self-start"
+          to="/help"
+          className="text-caption font-medium text-ink-900 hover:opacity-70 transition-opacity self-start min-h-11 inline-flex items-center"
         >
-          See plans →
+          Help →
         </Link>
       </div>
       <button
         type="button"
         onClick={handleSignOut}
-        className="flex items-center gap-3 px-3 h-9 rounded-card text-caption font-medium text-muted hover:text-ink-900 hover:bg-ink-50 transition-colors"
+        className="flex items-center gap-3 px-3 h-11 rounded-card text-caption font-medium text-muted hover:text-ink-900 hover:bg-ink-50 transition-colors"
       >
         <LogOut size={16} strokeWidth={1.75} />
         Sign out

@@ -1,197 +1,166 @@
-import { Link } from 'react-router-dom';
-import { AlertTriangle } from 'lucide-react';
-import { Container } from '@/components/ui/Container';
-import { Eyebrow, Lede } from '@/components/brand/Typography';
+import { PageHero, PageBody, Section, P, Bullets, ContactLink } from './parts';
 
+/**
+ * QuR Tag's privacy policy. Every statement here must match what the code does: the
+ * tables in db/qurtag.sql, the finder routes (server/routes/finder.ts), the sign-in
+ * service (server/auth/qurtagAuth.ts) and the browser storage in src/lib/finder.ts.
+ * Change this page in the same pull request as any change to what QuR Tag collects.
+ */
 export function Privacy() {
   return (
     <>
-      <section>
-        <Container size="md">
-          <div className="pt-qurtag-8 pb-qurtag-8 md:pt-16 md:pb-qurtag-8 flex flex-col gap-5">
-            <Eyebrow>Privacy</Eyebrow>
-            <h1 className="font-display font-semibold text-ink-900 text-h2 sm:text-h1 tracking-[-0.035em] leading-[0.95] text-balance">
-              What we collect, what we don't, and what we do with the rest.
-            </h1>
-            <Lede>
-              QurTag is a privacy product. The whole point is that we know as little about you as
-              we can get away with, and that the people who scan your tags know nothing at all.
-              This page is the long version of that promise.
-            </Lede>
-            <div className="rounded-card border border-signal-200 bg-signal-50 p-qurtag-3 flex items-start gap-3">
-              <AlertTriangle size={18} strokeWidth={1.75} className="text-signal-700 mt-0.5 shrink-0" />
-              <div className="flex flex-col gap-1">
-                <p className="text-caption font-medium text-signal-700">
-                  This is a DRAFT pending legal review.
-                </p>
-                <p className="text-caption text-ink-700 text-pretty">
-                  The plain-English summary below describes how we actually run QurTag. A formal
-                  policy reviewed by counsel will replace this before public launch.
-                </p>
-              </div>
-            </div>
-            <p className="text-caption text-muted">Last updated: {new Date('2026-06-15').toLocaleDateString('en-US', { dateStyle: 'long' })}</p>
-          </div>
-        </Container>
-      </section>
+      <PageHero eyebrow="Privacy" title="Privacy policy" lede="What QuR Tag collects, why, who can see it, and how to get it deleted.">
+        <p className="text-caption text-muted">Last updated 25 October 2026</p>
+      </PageHero>
+      <PageBody>
+        <Section title="Who we are">
+          <P>
+            QuR Tag is run by Impact Consulting AI LLC, a Florida limited liability company ("we", "us").
+            This policy covers the QuR Tag website and app at qurtag.com, including the page a finder sees
+            after scanning a tag. Questions: <ContactLink />.
+          </P>
+        </Section>
 
-      <section className="border-t border-hairline bg-paper">
-        <Container size="md">
-          <div className="py-qurtag-12 md:py-qurtag-16 flex flex-col gap-qurtag-8 text-ink-700">
-            <Section title="1. What we collect about you (the owner)">
-              <Body>
-                When you sign up, we collect your email address. That's it. There is no name field,
-                no phone field, no address field on the sign-up form.
-              </Body>
-              <Body>
-                If you later choose to use the courier flow we ask you for a return address (so we
-                can generate a prepaid pickup label). If you choose to use trip mode we ask you for
-                a flight number. If you upload photos of your items we store them. In every case,
-                we collect that information because you typed it and we use it for the feature you
-                asked for.
-              </Body>
-              <Body>
-                Web Push subscriptions are stored only after you opt in from{' '}
-                <Link to="/app/settings" className="text-ink-900 underline-offset-4 hover:underline">
-                  /app/settings
-                </Link>
-                . They contain an endpoint your browser issued, scoped to your account.
-              </Body>
-            </Section>
+        <Section title="1. The short version">
+          <Bullets
+            items={[
+              'We collect what we need to let a finder reach you about a lost thing, and nothing more.',
+              'A finder sees your item, never your name, email or phone number.',
+              'Finders do not make an account. We do not record where they are.',
+              'We do not sell your information and we show no ads.',
+              'You can download your data or delete your account yourself, at any time, from Settings.',
+            ]}
+          />
+        </Section>
 
-            <Section title="2. What we collect about the finder">
-              <Body>
-                Almost nothing. When somebody scans your tag, we record the scan (timestamp,
-                coarse-grained country from IP, anonymized user-agent class) and assign their
-                browser an anonymous session ID stored in their own localStorage. We do not log
-                their IP address beyond the country lookup. We never ask for their name, phone,
-                email, or address.
-              </Body>
-              <Body>
-                The only time a finder gives us personal information is when they choose to: a
-                payout email if they set up Stripe Connect to receive a reward, or a pickup
-                address if they request a courier (and that address is encrypted on our side and
-                never shown to you).
-              </Body>
-            </Section>
+        <Section title="2. What we collect from owners">
+          <Bullets
+            items={[
+              'Account: your email address, the first name you give us, and your password, which is stored only as a secure hash.',
+              'Sign-in records: when you sign in, the network (IP) address and browser type of that sign-in, kept with the session so we can keep accounts safe.',
+              'Items you add, up to two: the name, an optional description, an optional photo (we shrink it on your device before it is saved), an optional note for the finder, an optional private note, and whether you marked it lost.',
+              'Tags: the code of each tag you make and whether it is switched on.',
+              'Conversations: the notes you and a finder write to each other, and when they were read.',
+            ]}
+          />
+        </Section>
 
-            <Section title="3. What we share between owner and finder">
-              <Body>
-                QurTag is a bridge. Messages typed by the finder appear in your inbox; replies you
-                type appear on the finder's page. Neither side sees the other's account email,
-                phone, address, or browser identity. This is enforced at the database layer (RLS)
-                and at the application layer.
-              </Body>
-              <Body>
-                A finder who shares their location does so explicitly via a system message. They
-                see the prompt, they tap accept, the coordinates land in the conversation. You
-                never see anything they didn't choose to send.
-              </Body>
-            </Section>
+        <Section title="3. What we collect when someone scans a tag">
+          <Bullets
+            items={[
+              'A scan record: the time, which tag was scanned, and a rough device type (for example "iPhone" or "Android phone"). We do not keep the finder\'s network address or location with it.',
+              'If the finder writes: their notes. Anything they choose to write, such as where they found the item, is part of the note.',
+              'A private conversation key. When a finder sends their first note, we give their browser a random key so it can reopen that conversation. The key stays in their browser; we keep only a scrambled (hashed) form of it, which cannot be turned back into the key.',
+            ]}
+          />
+        </Section>
 
-            <Section title="4. The processors we use">
-              <Body>
-                QurTag runs on:{' '}
-                <strong className="text-ink-900">Supabase</strong> (our database + auth + storage),{' '}
-                <strong className="text-ink-900">Stripe</strong> (reward escrow + courier
-                payments),{' '}
-                <strong className="text-ink-900">Resend</strong> (transactional email),{' '}
-                <strong className="text-ink-900">Mapbox</strong> (maps + geocoding),{' '}
-                <strong className="text-ink-900">FlightAware AeroAPI</strong> (trip status),{' '}
-                <strong className="text-ink-900">Shippo</strong> (courier labels), and{' '}
-                <strong className="text-ink-900">Vercel</strong> (hosting).
-              </Body>
-              <Body>
-                We share with each processor only the data they need to do the job. Email
-                addresses go to Resend so they can deliver email. A pickup address goes to Shippo
-                so they can generate a label. Flight numbers go to AeroAPI so we can show live
-                status. Nothing else.
-              </Body>
-            </Section>
+        <Section title="4. What we do not collect">
+          <P>
+            We do not collect payment card or bank details, government ID, health or medical information,
+            or precise location. There is no field for any of these, and we ask you not to put them in an
+            item name, a note or a message. Please do not put a child's full name on a tag.
+          </P>
+        </Section>
 
-            <Section title="5. What we never sell">
-              <Body>
-                Your data. Anyone's data. Ever. QurTag makes money from one-time hardware
-                purchases, software subscriptions, and transaction fees on rewards and courier
-                labels. Not from advertising, not from data brokers, not from anything that would
-                require sharing what you put in your inbox.
-              </Body>
-            </Section>
+        <Section title="5. How we use it">
+          <Bullets
+            items={[
+              'To run QuR Tag: show the finder the item, deliver notes between you, and show you your inbox.',
+              'To keep it safe: sign-in limits, stopping abuse and spam, and fixing faults.',
+              'To count how QuR Tag is used, as totals only (for example, how many tags were scanned this month).',
+              'To answer you when you write to us.',
+            ]}
+          />
+          <P>We do not use your information for advertising, and we do not sell or rent it to anyone.</P>
+        </Section>
 
-            <Section title="6. How long we keep it">
-              <Body>
-                Account data: while you have an account. Items, tags, and household records:
-                until you delete them. Scan history: 30 days on Free, 12 months on Plus, forever
-                on Family. Messages: while a thread is open + 90 days after it's closed, then
-                deleted. Logs: 30 days for operations, 365 days for security events. Backups:
-                daily encrypted snapshots, retained 7 days.
-              </Body>
-            </Section>
+        <Section title="6. Who can see it">
+          <Bullets
+            items={[
+              "A finder who scans your tag sees the item's name, its photo, your note for the finder, and whether it is marked lost. Nothing else about you.",
+              'You see the notes a finder writes about your items. The finder sees your replies.',
+              'We can see stored data when we need to run or repair QuR Tag, stop abuse, or meet a legal duty.',
+              'We may share information if the law requires it, to protect someone from harm, or as part of a sale or merger of our business, in which case this policy keeps applying to it.',
+            ]}
+          />
+        </Section>
 
-            <Section title="7. Your rights (GDPR / CCPA)">
-              <Body>
-                If you live in the EU/UK or California (or anywhere that has parallel rules), you
-                have rights to access, export, correct, and delete your personal data. You can
-                trigger each of those from{' '}
-                <Link to="/app/settings" className="text-ink-900 underline-offset-4 hover:underline">
-                  /app/settings
-                </Link>
-                . If anything doesn't work the way it should, write to{' '}
-                <a href="mailto:privacy@qurtag.com" className="text-ink-900 underline-offset-4 hover:underline">
-                  privacy@qurtag.com
-                </a>{' '}
-                and we'll respond within 14 days.
-              </Body>
-            </Section>
+        <Section title="7. Our service providers">
+          <P>These companies process data for us only so that QuR Tag works, under their own data protection terms:</P>
+          <Bullets
+            items={[
+              'Vercel Inc. hosts the website and runs our server code. Like any web host it keeps short-lived request logs, which include network addresses.',
+              'Supabase Inc. runs the database where your account, items, tags and conversations are stored, in the United States.',
+            ]}
+          />
+          <P>QuR Tag does not send email yet. If we switch on email alerts, we will name the provider here before we do.</P>
+        </Section>
 
-            <Section title="8. Children">
-              <Body>
-                QurTag isn't designed for children under 13 (or 16 in the EU). Kid Mode lets a
-                parent manage tags on a child's belongings, but the account remains the
-                parent's. We do not knowingly collect data from children directly.
-              </Body>
-            </Section>
+        <Section title="8. Cookies and browser storage">
+          <P>
+            Owners get one sign-in cookie, which keeps you signed in. A finder's browser stores the private
+            conversation key described above, so they can come back to their conversation. We use no
+            advertising or tracking cookies and no third-party analytics.
+          </P>
+        </Section>
 
-            <Section title="9. Changes to this policy">
-              <Body>
-                If we materially change how we collect or use data, we'll tell you by email and
-                show a notice in the app before the change takes effect. Minor edits (clarifying
-                wording, adding processors) we just push and date.
-              </Body>
-            </Section>
+        <Section title="9. How long we keep it">
+          <Bullets
+            items={[
+              'Your account, items, tags, scans and conversations: until you delete them or your account.',
+              'Deleting an item deletes its tags, scans and conversations at once, and its tag stops working.',
+              'Deleting your account deletes everything above at once. Copies in our providers\' backups are replaced on their normal schedule.',
+              'Sign-in records end when the session ends or expires.',
+            ]}
+          />
+        </Section>
 
-            <Section title="10. Contact">
-              <Body>
-                Email{' '}
-                <a href="mailto:privacy@qurtag.com" className="text-ink-900 underline-offset-4 hover:underline">
-                  privacy@qurtag.com
-                </a>{' '}
-                for anything privacy-related. For data-subject requests, security disclosures,
-                press, or general support, see{' '}
-                <Link to="/help" className="text-ink-900 underline-offset-4 hover:underline">
-                  /help
-                </Link>
-                .
-              </Body>
-            </Section>
-          </div>
-        </Container>
-      </section>
+        <Section title="10. Your choices and rights">
+          <Bullets
+            items={[
+              'See and change your items at any time in the app.',
+              'Download your data: Settings, then Download my data.',
+              'Delete your account: Settings, then Delete my account. It takes effect at once.',
+              'A finder who wants their notes removed can email us with the tag code and roughly when they wrote.',
+              <>
+                For anything else, including a question about the law where you live, email <ContactLink />. We
+                answer requests within 30 days.
+              </>,
+            ]}
+          />
+        </Section>
+
+        <Section title="11. Security">
+          <P>
+            QuR Tag is served over HTTPS only. Passwords and finders' conversation keys are stored hashed.
+            QuR Tag's data sits in its own part of our database, reached through separate logins that can
+            reach nothing else, and a finder's page can only read the item card and that finder's own
+            conversation. No system is perfectly secure; if we learn of a breach that affects you, we will
+            tell you as the law requires.
+          </P>
+        </Section>
+
+        <Section title="12. Children">
+          <P>
+            You must be 18 or over to make an account. A parent or carer can tag a child's things from
+            their own account. A finder can be any age; we do not ask finders who they are.
+          </P>
+        </Section>
+
+        <Section title="13. Changes">
+          <P>
+            If we change this policy, we will update the date at the top. If a change is significant, we
+            will put a notice on this site before it takes effect.
+          </P>
+        </Section>
+
+        <Section title="14. Contact">
+          <P>
+            Impact Consulting AI LLC, Florida, United States. Email <ContactLink />.
+          </P>
+        </Section>
+      </PageBody>
     </>
   );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-3 border-t border-hairline pt-qurtag-5 first:border-t-0 first:pt-0">
-      <h2 className="font-display font-semibold text-h5 text-ink-900 tracking-[-0.018em] text-balance">
-        {title}
-      </h2>
-      {children}
-    </div>
-  );
-}
-
-function Body({ children }: { children: React.ReactNode }) {
-  return <p className="text-body text-ink-700 text-pretty">{children}</p>;
 }

@@ -4,8 +4,8 @@ import { Container } from '@/components/ui/Container';
 import { useAuth } from '@/lib/auth';
 
 /**
- * Supabase's detectSessionInUrl handles token exchange automatically.
- * This page just waits for the session to land, then routes the user on.
+ * Where an email confirmation link may land (when email is set up). The sign-in service
+ * has already signed the person in; this page sends them on.
  */
 export function AuthCallback() {
   const { user, loading } = useAuth();
@@ -14,9 +14,8 @@ export function AuthCallback() {
   useEffect(() => {
     if (loading) return;
     if (user) {
-      navigate('/start/setup', { replace: true });
+      navigate('/app', { replace: true });
     } else {
-      // Give Supabase a tick to process the URL fragment before giving up.
       const t = setTimeout(() => navigate('/start', { replace: true }), 1500);
       return () => clearTimeout(t);
     }

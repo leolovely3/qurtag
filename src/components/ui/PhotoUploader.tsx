@@ -26,8 +26,8 @@ export function PhotoUploader({ householdId, value, onChange, className }: Photo
         setError('Hang on. Finding your account.');
         return;
       }
-      if (file.size > 10 * 1024 * 1024) {
-        setError('Photos must be under 10 MB.');
+      if (file.size > 25 * 1024 * 1024) {
+        setError('That photo is too large. Try another one.');
         return;
       }
       setUploading(true);
@@ -94,12 +94,12 @@ export function PhotoUploader({ householdId, value, onChange, className }: Photo
             )}
           </div>
           <span className="text-body font-medium text-ink-900">
-            {uploading ? 'Uploading…' : 'Add a photo'}
+            {uploading ? 'Preparing…' : 'Add a photo (optional)'}
           </span>
-          <span className="text-caption text-muted">Drop or tap. JPG / PNG / WebP / HEIC.</span>
+          <span className="text-caption text-muted">Tap to choose a photo, or drop one here.</span>
           <span className="text-caption text-muted inline-flex items-center gap-1.5">
             <Upload size={12} strokeWidth={1.75} />
-            Up to 10 MB
+            The finder sees this photo
           </span>
         </label>
       )}

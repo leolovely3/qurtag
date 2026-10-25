@@ -26,7 +26,7 @@ interface ModalProps {
 }
 
 /**
- * Headless modal. Premium-QurTag aesthetic, focus-trapped, escape-to-close,
+ * Headless modal. Premium-QuR Tag aesthetic, focus-trapped, escape-to-close,
  * portal-rendered so it survives any layout context.
  */
 export function Modal({

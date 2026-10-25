@@ -4,7 +4,6 @@ import { Package, ScanLine } from 'lucide-react';
 import { Eyebrow } from '@/components/brand/Typography';
 import { useAuth } from '@/lib/auth';
 import { fetchMyPartner, fetchPartnerDropoffs } from '@/lib/queries';
-import { isSupabaseConfigured } from '@/lib/supabase';
 import type { Partner, PartnerDropoff } from '@/lib/database.types';
 
 export function PartnerDashboard() {
@@ -14,7 +13,7 @@ export function PartnerDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (authLoading || !user || !isSupabaseConfigured) {
+    if (authLoading || !user) {
       setLoading(false);
       return;
     }
@@ -50,7 +49,7 @@ export function PartnerDashboard() {
       <div className="px-qurtag-5 md:px-qurtag-8 py-qurtag-8 max-w-3xl flex flex-col gap-5">
         <Eyebrow>Partners</Eyebrow>
         <h1 className="font-display font-semibold text-ink-900 text-h3 sm:text-h2 tracking-[-0.028em] leading-[1.04] text-balance">
-          You aren't a QurTag partner yet.
+          You aren't a QuR Tag partner yet.
         </h1>
         <p className="text-body text-muted text-pretty">
           Partner accounts (hotels, airlines, coworking spaces, gyms) are invite-only while we
@@ -98,7 +97,7 @@ export function PartnerDashboard() {
             Nothing in the queue.
           </h2>
           <p className="text-body text-muted max-w-md text-pretty">
-            Scan a QurTag tag on a found item to log a drop-off. The owner is notified instantly.
+            Scan a QuR Tag tag on a found item to log a drop-off. The owner is notified instantly.
           </p>
         </div>
       ) : (

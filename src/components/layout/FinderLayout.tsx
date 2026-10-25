@@ -1,5 +1,4 @@
 import { Link, Outlet } from 'react-router-dom';
-import { Languages } from 'lucide-react';
 import { Wordmark } from '@/components/brand/Wordmark';
 
 /**
@@ -16,13 +15,7 @@ export function FinderLayout() {
           <Link to="/" className="flex items-center gap-2">
             <Wordmark />
           </Link>
-          <button
-            type="button"
-            className="inline-flex items-center gap-1.5 text-caption text-muted hover:text-ink-900 transition-colors duration-qurtag"
-          >
-            <Languages size={14} strokeWidth={1.75} />
-            English
-          </button>
+          <span className="text-caption text-muted">No app needed</span>
         </div>
       </header>
       <main id="main-content" className="flex-1 flex">
@@ -32,9 +25,9 @@ export function FinderLayout() {
       </main>
       <footer className="border-t border-hairline">
         <div className="mx-auto max-w-2xl w-full px-6 py-3 flex items-center justify-between text-caption text-muted">
-          <span>Need help? We're here.</span>
-          <Link to="/help" className="text-ink-700 hover:text-ink-900 transition-colors">
-            Talk to a human
+          <span>Questions? info@impactconsulting.ai</span>
+          <Link to="/help" className="inline-flex items-center min-h-11 text-ink-700 hover:text-ink-900 transition-colors">
+            Help
           </Link>
         </div>
       </footer>

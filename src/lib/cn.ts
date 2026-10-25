@@ -2,7 +2,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { extendTailwindMerge } from 'tailwind-merge';
 
 /**
- * tailwind-merge needs to know that our custom QurTag type scale
+ * tailwind-merge needs to know that our custom QuR Tag type scale
  * (text-eyebrow, text-body, text-h1, etc.) are font-size classes, not
  * text-color classes. Without this, a class like `text-bone` (color) and
  * `text-body` (size) collide and the color silently disappears.

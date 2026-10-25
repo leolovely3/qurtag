@@ -1,4 +1,6 @@
-# QurTag — Stripe test-mode demo script
+> Historical: this document describes an earlier plan for QuR Tag on a Supabase project of its own, with features that are switched off. The running product and its backend are described in README.md.
+
+# QurTag, Stripe test-mode demo script
 
 Walk this end-to-end the first time you turn Stripe on. Twenty minutes, no
 charges, two working flows demonstrable to anyone after.
@@ -10,7 +12,7 @@ You should already have:
 - A Supabase project, migrations applied through `20260614050000_addresses_rewards_trips_actions.sql`.
 - The Supabase CLI installed and linked: `supabase link --project-ref <ref>`.
 - A Stripe account (free; flip into Test Mode in the Dashboard).
-- The local app working — you can sign in, create an item, see your inbox.
+- The local app working, you can sign in, create an item, see your inbox.
 
 ## 1. Get Stripe keys
 
@@ -28,7 +30,7 @@ Supabase Dashboard → **Project → Edge Functions → Manage secrets**, add:
 ```
 STRIPE_SECRET_KEY=sk_test_xxx
 QURTAG_APP_URL=http://localhost:5180          # local for now; flip later
-STRIPE_WEBHOOK_SECRET=                       # leave blank for now — step 4 fills it
+STRIPE_WEBHOOK_SECRET=                       # leave blank for now, step 4 fills it
 ```
 
 Or via CLI:
@@ -74,13 +76,13 @@ Use these any time Stripe Checkout asks for a card:
 | Card                   | Number              | Outcome                                |
 |------------------------|---------------------|----------------------------------------|
 | Succeeds immediately   | 4242 4242 4242 4242 | Normal success                          |
-| Requires authentication| 4000 0025 0000 3155 | 3D Secure modal — confirm to succeed    |
+| Requires authentication| 4000 0025 0000 3155 | 3D Secure modal, confirm to succeed    |
 | Declined               | 4000 0000 0000 0002 | Stripe rejects                          |
 | Insufficient funds     | 4000 0000 0000 9995 | Authorization fails                     |
 
 For all of them: any future expiry (`12/34`), any 3-digit CVC, any postal code.
 
-## 6. Demo path A — Reward escrow
+## 6. Demo path A, Reward escrow
 
 1. Sign in to your QurTag app.
 2. Add an item (Rimowa Original Cabin, declared value $1200).
@@ -103,7 +105,7 @@ For all of them: any future expiry (`12/34`), any 3-digit CVC, any postal code.
     - Stripe Dashboard payment status flips to **Succeeded** ($50 captured).
     - In your test balance you see the funds.
 
-## 7. Demo path B — Courier label payment
+## 7. Demo path B, Courier label payment
 
 1. From your incognito window, open the printed tag URL (`/find/<public_id>`).
 2. Send a quick note and request a courier (any pickup address, any window).
@@ -114,11 +116,11 @@ For all of them: any future expiry (`12/34`), any 3-digit CVC, any postal code.
 6. Pay with `4242 4242 4242 4242`.
 7. You'll land back on `/app/inbox/<thread>?courier=paid`.
 8. Confirm:
-   - The courier card state changes (via webhook) to "Paid — generating label…"
+   - The courier card state changes (via webhook) to "Paid, generating label…"
    - In Supabase → `courier_orders`: state is `paid`.
    - If you've also wired Shippo + the `courier-fulfill` function, the label
      URL and tracking number appear. If not (the v1 default), the function
-     errors silently in the logs — that's fine for the demo.
+     errors silently in the logs, that's fine for the demo.
 
 ## 8. What "Pass" looks like
 
@@ -149,7 +151,7 @@ After both flows complete, you should be able to:
   Dashboard → Edge Functions → `stripe-webhook` → Logs. Usually it's a
   metadata key mismatch.
 - **Reward state stuck on `pending`.** The webhook didn't fire (Stripe never
-  saw a `requires_capture`) — usually means Checkout was cancelled. Click
+  saw a `requires_capture`), usually means Checkout was cancelled. Click
   escrow again to retry.
 - **Released reward stays in your account, not the finder's.** Expected for
   v1. Finder payout via Stripe Connect Express is documented in

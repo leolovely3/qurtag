@@ -3,10 +3,9 @@ import {
   Package,
   Tag as TagIcon,
   Inbox,
-  Plane,
   Settings,
   MessageCircle,
-  MapPin,
+  KeyRound,
   Lock,
   ArrowLeft,
   ArrowRight,
@@ -20,7 +19,7 @@ interface DesktopMockupProps {
 }
 
 /**
- * QurTag app inside a browser window. Used in marketing hero behind
+ * QuR Tag app inside a browser window. Used in marketing hero behind
  * the phone mockup. Communicates: this is a web app you can also use on
  * any laptop. No native install required.
  */
@@ -48,7 +47,7 @@ export function DesktopMockup({ className }: DesktopMockupProps) {
               <span className="size-2.5 rounded-sm bg-ink-900 inline-block grid place-items-center">
                 <span className="text-[7px] font-bold text-canvas leading-none">C</span>
               </span>
-              <span className="truncate">QurTag. Inbox</span>
+              <span className="truncate">QuR Tag inbox</span>
             </div>
             <div className="flex-1" />
           </div>
@@ -75,7 +74,7 @@ export function DesktopMockup({ className }: DesktopMockupProps) {
           <aside className="w-40 border-r border-hairline bg-paper py-qurtag-3 px-2 flex flex-col">
             <div className="px-3 pb-2 border-b border-hairline mb-2">
               <span className="font-display font-semibold text-h6 tracking-[-0.011em] text-ink-900">
-                QurTag
+                QuR Tag
               </span>
             </div>
             <nav className="flex flex-col gap-0.5">
@@ -84,8 +83,7 @@ export function DesktopMockup({ className }: DesktopMockupProps) {
                 { icon: Package, label: 'Items' },
                 { icon: TagIcon, label: 'Tags' },
                 { icon: Inbox, label: 'Inbox', active: true, badge: 1 },
-                { icon: Plane, label: 'Trips' },
-                { icon: Settings, label: 'Settings' },
+                                { icon: Settings, label: 'Settings' },
               ].map((item) => (
                 <div
                   key={item.label}
@@ -105,17 +103,7 @@ export function DesktopMockup({ className }: DesktopMockupProps) {
               ))}
             </nav>
 
-            {/* Bottom of rail: Free plan upsell + Sign out. Matches real AppLayout */}
             <div className="mt-auto pt-qurtag-2 flex flex-col gap-1.5">
-              <div className="rounded-card bg-canvas border border-hairline px-2 py-1.5 flex flex-col gap-1">
-                <span className="text-[7px] uppercase tracking-[0.14em] text-muted font-medium">
-                  Free plan
-                </span>
-                <p className="text-[9px] text-ink-700 leading-tight">
-                  Upgrade for translation, trip mode, and 0% fees.
-                </p>
-                <span className="text-[9px] font-medium text-ink-900">See plans →</span>
-              </div>
               <div className="flex items-center gap-2.5 px-3 h-7 rounded-card text-[11px] font-medium text-muted">
                 <LogOut size={12} strokeWidth={1.75} aria-hidden />
                 <span>Sign out</span>
@@ -134,7 +122,7 @@ export function DesktopMockup({ className }: DesktopMockupProps) {
                   1 new note to read.
                 </h3>
               </div>
-              <span className="text-[10px] text-muted">Wed 14:08</span>
+              <span className="text-[10px] text-muted">Today</span>
             </div>
 
             {/* Thread preview row. Unread */}
@@ -144,15 +132,15 @@ export function DesktopMockup({ className }: DesktopMockupProps) {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
-                  <span className="text-[11px] font-semibold text-ink-900">Rimowa Original Cabin</span>
+                  <span className="text-[11px] font-semibold text-ink-900">Blue water bottle</span>
                   <span className="text-[9px] text-muted shrink-0">just now</span>
                 </div>
                 <p className="text-[10px] text-ink-900 truncate mt-0.5">
-                  They wrote: "I have your bag. I'm at the Memmo Alfama. Leave it at the front desk?"
+                  They wrote: "I found your bottle at the bus stop. Where can I leave it?"
                 </p>
                 <div className="flex items-center gap-2 mt-1 text-[9px] text-muted">
                   <span className="inline-flex items-center gap-0.5 text-signal-700">
-                    <MapPin size={9} strokeWidth={1.75} /> Armed
+                    <KeyRound size={9} strokeWidth={1.75} /> Lost
                   </span>
                   <span className="inline-flex items-center gap-0.5 rounded-pill bg-signal-500 text-canvas px-1 py-px font-semibold uppercase tracking-wider">
                     1 new
@@ -168,11 +156,11 @@ export function DesktopMockup({ className }: DesktopMockupProps) {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
-                  <span className="text-[11px] font-medium text-ink-700">MacBook Pro</span>
+                  <span className="text-[11px] font-medium text-ink-700">Violin case</span>
                   <span className="text-[9px] text-muted shrink-0">2h ago</span>
                 </div>
                 <p className="text-[10px] text-muted truncate mt-0.5">
-                  You wrote: "Thank you. I'm grabbing it on the way back."
+                  You wrote: "Thank you. Please leave it with the shop next door."
                 </p>
               </div>
             </div>

@@ -1,231 +1,137 @@
 import { Link } from 'react-router-dom';
-import { AlertTriangle } from 'lucide-react';
-import { Container } from '@/components/ui/Container';
-import { Eyebrow, Lede } from '@/components/brand/Typography';
+import { PageHero, PageBody, Section, P, Bullets, ContactLink } from './parts';
 
 export function Terms() {
   return (
     <>
-      <section>
-        <Container size="md">
-          <div className="pt-qurtag-8 pb-qurtag-8 md:pt-16 md:pb-qurtag-8 flex flex-col gap-5">
-            <Eyebrow>Terms of service</Eyebrow>
-            <h1 className="font-display font-semibold text-ink-900 text-h2 sm:text-h1 tracking-[-0.035em] leading-[0.95] text-balance">
-              The boring necessary things, written plainly.
-            </h1>
-            <Lede>
-              These are the rules that govern your use of QurTag. We've written them in English
-              instead of legalese where we can, and noted the spots where formal language is the
-              point.
-            </Lede>
-            <div className="rounded-card border border-signal-200 bg-signal-50 p-qurtag-3 flex items-start gap-3">
-              <AlertTriangle size={18} strokeWidth={1.75} className="text-signal-700 mt-0.5 shrink-0" />
-              <div className="flex flex-col gap-1">
-                <p className="text-caption font-medium text-signal-700">
-                  This is a DRAFT pending legal review.
-                </p>
-                <p className="text-caption text-ink-700 text-pretty">
-                  The terms below describe how QurTag actually operates today. A formal version
-                  reviewed by counsel will replace this before public launch and may add or
-                  reword sections to match local law.
-                </p>
-              </div>
-            </div>
-            <p className="text-caption text-muted">Last updated: {new Date('2026-06-15').toLocaleDateString('en-US', { dateStyle: 'long' })}</p>
-          </div>
-        </Container>
-      </section>
+      <PageHero eyebrow="Terms" title="Terms of use" lede="The rules for using QuR Tag, in plain words.">
+        <p className="text-caption text-muted">Last updated 25 October 2026</p>
+      </PageHero>
+      <PageBody>
+        <Section title="1. Who we are and what this covers">
+          <P>
+            QuR Tag is run by Impact Consulting AI LLC, a Florida limited liability company ("we", "us").
+            These terms apply to everyone who uses qurtag.com: owners who make an account and finders who
+            scan a tag. By using QuR Tag you agree to them. Our{' '}
+            <Link to="/privacy" className="text-ink-900 underline underline-offset-4">privacy policy</Link> explains
+            how we handle information.
+          </P>
+        </Section>
 
-      <section className="border-t border-hairline bg-paper">
-        <Container size="md">
-          <div className="py-qurtag-12 md:py-qurtag-16 flex flex-col gap-qurtag-8 text-ink-700">
-            <Section title="1. The agreement">
-              <Body>
-                By creating a QurTag account or using a QurTag tag, you agree to these terms and to
-                our{' '}
-                <Link to="/privacy" className="text-ink-900 underline-offset-4 hover:underline">
-                  Privacy Policy
-                </Link>
-                . If you don't agree, don't use QurTag, and write to us so we know what to fix.
-              </Body>
-            </Section>
+        <Section title="2. What QuR Tag does">
+          <P>
+            QuR Tag lets you print a QR tag for a thing you own. When someone finds it and scans the tag,
+            they see a page about the item and can send you a note, and you can reply. QuR Tag is not a
+            tracker: it does not locate anything, and it works only if someone finds your thing, scans the
+            tag and chooses to write. We do not promise that anything will be returned.
+          </P>
+        </Section>
 
-            <Section title="2. What QurTag does">
-              <Body>
-                QurTag is software (and optional hardware tags) that helps you recover items you've
-                lost. The recovery loop works by letting someone who finds a tagged item send you
-                a private message; you both stay anonymous. QurTag is not a real-time tracker.
-                We don't claim that every lost item will come home. Only that the odds are
-                materially better with us than without us, and that we'll try.
-              </Body>
-            </Section>
+        <Section title="3. Price">
+          <P>
+            QuR Tag is free for up to two items. There is nothing to buy. If we ever offer anything paid, we
+            will say so clearly first, and nothing will be charged without your agreement.
+          </P>
+        </Section>
 
-            <Section title="3. Your account">
-              <Body>
-                You're responsible for keeping your email secure (you sign in via magic link, so
-                whoever can read your email can sign in as you). You can delete your account at
-                any time from{' '}
-                <Link to="/app/settings" className="text-ink-900 underline-offset-4 hover:underline">
-                  /app/settings
-                </Link>
-                ; we'll erase your account data per the retention policy on the Privacy page.
-              </Body>
-            </Section>
+        <Section title="4. Your account">
+          <Bullets
+            items={[
+              'You must be 18 or over to make an account.',
+              'Give a real email address you can read, and keep your password to yourself.',
+              'You are responsible for what happens in your account and for the items and notes you add.',
+              'Only tag things that are yours, or that you look after for someone in your family.',
+            ]}
+          />
+        </Section>
 
-            <Section title="4. Plans, fees, and the 7%">
-              <Body>
-                <strong className="text-ink-900">Free</strong> includes up to 2 items, the
-                printable tag, and the full recovery loop. When you offer a reward or pay for a
-                prepaid courier label on Free, QurTag keeps a 7% platform fee on the funds flowing
-                through Stripe.
-              </Body>
-              <Body>
-                <strong className="text-ink-900">Plus</strong> ($2.99/mo or $19/yr) removes the
-                7% fee, unlocks unlimited items, translation, trip mode, and lifetime scan
-                history.{' '}
-                <strong className="text-ink-900">Family</strong> ($4.99/mo or $39/yr) adds up to
-                5 members and Kid/Caregiver modes.{' '}
-                <strong className="text-ink-900">Business</strong> is custom; talk to us.
-              </Body>
-              <Body>
-                Subscription fees are charged in advance. If you cancel, your subscription stays
-                active until the end of the period you've paid for and then drops to Free.
-              </Body>
-            </Section>
+        <Section title="5. Finders">
+          <P>
+            Finders do not need an account. A finder agrees to use the page only to help return the item,
+            and to write honestly. Returning an item is an arrangement between the finder and the owner. Any
+            thank-you the owner offers is their own promise; QuR Tag does not handle money and is not a party
+            to it.
+          </P>
+        </Section>
 
-            <Section title="5. Reward escrow">
-              <Body>
-                When you offer a reward to a finder, QurTag places a hold on your payment method
-                via Stripe. The hold becomes a charge the moment you confirm the item has been
-                returned, and the funds are released to the finder. If you cancel lost mode, scan
-                the tag yourself, or take no action for 30 days, the hold is released and you are
-                not charged.
-              </Body>
-              <Body>
-                QurTag is not a party to the relationship between you and the finder. The reward
-                is a thank-you you offered; we relay it, hold the funds in escrow, and release
-                them when you confirm. If you and the finder dispute whether the item has been
-                returned, you can open a dispute in the app and a human at QurTag will review the
-                evidence within 48 hours.
-              </Body>
-            </Section>
+        <Section title="6. Stay safe">
+          <Bullets
+            items={[
+              'Do not share your home address or phone number unless you want to.',
+              'If you meet to hand something over, choose a busy public place, or ask the finder to leave it at a desk, office or shop.',
+              'Never pay a finder in advance or send them money through a link.',
+              'If someone threatens you or tries to trick you, stop replying, close the conversation and contact the police if you feel unsafe.',
+            ]}
+          />
+        </Section>
 
-            <Section title="6. Courier labels">
-              <Body>
-                When you pay for a prepaid courier label, QurTag purchases the label via Shippo on
-                your behalf and emails it to the finder. The label price covers carrier fees,
-                Shippo's markup, and QurTag's transaction fee (7% on Free, $0 on Plus and above).
-              </Body>
-            </Section>
+        <Section title="7. What you must not do">
+          <Bullets
+            items={[
+              'Use QuR Tag to harass, threaten, scam or spam anyone.',
+              'Put illegal, hateful or sexual content in an item, a photo or a note.',
+              "Put health details, payment details, government ID numbers or a child's full name in QuR Tag.",
+              'Try to read other people\'s items or conversations, guess tag codes, overload the service, or get around its limits.',
+              'Use QuR Tag for a business, or resell it, without our written agreement.',
+            ]}
+          />
+        </Section>
 
-            <Section title="7. Hardware purchases + returns">
-              <Body>
-                Hardware (premium tags, sticker packs, Signature monogrammed tags) is sold
-                separately. We accept returns within 100 days for any reason. Hardware returns
-                are free in the contiguous US; international returns are at your cost up to $10.
-              </Body>
-              <Body>
-                If a tag fails within 1 year (the QR scuffs off, the leather delaminates, the
-                aluminum bends in normal use), we will replace it free. Send a photo and we'll
-                send a new one.
-              </Body>
-            </Section>
+        <Section title="8. Your content">
+          <P>
+            The items, photos and notes you add stay yours. You let us store and show them only to run
+            QuR Tag, for example showing your item's name and photo to someone who scans its tag. We may
+            remove content that breaks these terms.
+          </P>
+        </Section>
 
-            <Section title="8. Acceptable use">
-              <Body>
-                Don't use QurTag to harass people, send spam, defraud Stripe, or attach tags to
-                things that aren't yours. We reserve the right to suspend or delete accounts that
-                violate this, and we report illegal activity to law enforcement when required.
-              </Body>
-              <Body>
-                Owners cannot use QurTag to track other people. Tags are for items; not for
-                covertly monitoring a person's location. If a partner has used QurTag to surveil
-                you, write to{' '}
-                <a href="mailto:safety@qurtag.com" className="text-ink-900 underline-offset-4 hover:underline">
-                  safety@qurtag.com
-                </a>{' '}
-                and we will help.
-              </Body>
-            </Section>
+        <Section title="9. Ending your use">
+          <P>
+            You can delete your account at any time from Settings, which also switches off your tags. We may
+            suspend or close an account, or block a tag, that breaks these terms or puts someone at risk.
+          </P>
+        </Section>
 
-            <Section title="9. Refunds">
-              <Body>
-                Subscriptions: 30-day money-back guarantee. Email{' '}
-                <a href="mailto:hello@qurtag.com" className="text-ink-900 underline-offset-4 hover:underline">
-                  hello@qurtag.com
-                </a>{' '}
-                within 30 days of purchase, no questions. Hardware: 100 days, no questions, free
-                return label.
-              </Body>
-            </Section>
+        <Section title="10. No warranty">
+          <P>
+            QuR Tag is provided "as is" and "as available". We work to keep it running and safe, but we do
+            not promise it will always be available, free of errors, or that a printed tag will stay
+            readable.
+          </P>
+        </Section>
 
-            <Section title="10. Disclaimers">
-              <Body>
-                QurTag is provided "as is." We make no warranty that every lost item will be
-                recovered or that the messaging bridge will be available without interruption.
-                We're allergic to that kind of language, so we'll add: we take outages seriously,
-                and our uptime target is 99.9% for paying customers.
-              </Body>
-              <Body>
-                To the maximum extent permitted by law, QurTag is not liable for indirect or
-                consequential damages, lost profits, or the recovery (or non-recovery) of any
-                specific item. Our total liability for any claim is capped at the amount you've
-                paid us in the prior 12 months.
-              </Body>
-            </Section>
+        <Section title="11. Limits on our liability">
+          <P>
+            To the extent the law allows, we are not responsible for the loss of, or damage to, any item,
+            for what a finder or owner does, or for indirect losses. Because QuR Tag is free, our total
+            liability to you for any claim is limited to 100 US dollars. Nothing in these terms limits
+            rights that the law says cannot be limited.
+          </P>
+        </Section>
 
-            <Section title="11. Governing law">
-              <Body>
-                These terms are governed by the law of Delaware, USA. Disputes are resolved by
-                binding arbitration in Wilmington, DE. Except that either party may pursue
-                claims in small claims court, and either party may seek injunctive relief in any
-                court of competent jurisdiction.
-              </Body>
-            </Section>
+        <Section title="12. Law and disputes">
+          <P>
+            These terms are governed by the laws of the State of Florida, United States, without regard to
+            its conflict of law rules. Any dispute will be decided in the state or federal courts located in
+            Florida, unless the law where you live gives you the right to bring it elsewhere. Before going to
+            court, please email us so we can try to sort it out.
+          </P>
+        </Section>
 
-            <Section title="12. Changes to these terms">
-              <Body>
-                If we materially change these terms, we'll tell you by email 30 days before the
-                change takes effect. If you don't like the change, cancel before the effective
-                date and we'll refund any prorated subscription time.
-              </Body>
-            </Section>
+        <Section title="13. Changes">
+          <P>
+            We may update these terms. We will change the date at the top, and put a notice on this site
+            before a significant change takes effect. If you keep using QuR Tag after that, the new terms
+            apply.
+          </P>
+        </Section>
 
-            <Section title="13. Contact">
-              <Body>
-                Email{' '}
-                <a href="mailto:hello@qurtag.com" className="text-ink-900 underline-offset-4 hover:underline">
-                  hello@qurtag.com
-                </a>{' '}
-                for general questions,{' '}
-                <a href="mailto:safety@qurtag.com" className="text-ink-900 underline-offset-4 hover:underline">
-                  safety@qurtag.com
-                </a>{' '}
-                for misuse, and{' '}
-                <a href="mailto:legal@qurtag.com" className="text-ink-900 underline-offset-4 hover:underline">
-                  legal@qurtag.com
-                </a>{' '}
-                for formal notices.
-              </Body>
-            </Section>
-          </div>
-        </Container>
-      </section>
+        <Section title="14. Contact">
+          <P>
+            Impact Consulting AI LLC, Florida, United States. Email <ContactLink />.
+          </P>
+        </Section>
+      </PageBody>
     </>
   );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-3 border-t border-hairline pt-qurtag-5 first:border-t-0 first:pt-0">
-      <h2 className="font-display font-semibold text-h5 text-ink-900 tracking-[-0.018em] text-balance">
-        {title}
-      </h2>
-      {children}
-    </div>
-  );
-}
-
-function Body({ children }: { children: React.ReactNode }) {
-  return <p className="text-body text-ink-700 text-pretty">{children}</p>;
 }
