@@ -4,7 +4,8 @@ import { Inbox as InboxIcon, Package, Plus, Printer } from 'lucide-react';
 import { Eyebrow } from '@/components/brand/Typography';
 import { ItemCardSkeleton } from '@/components/ui/Skeleton';
 import { useAuth } from '@/lib/auth';
-import { countUnreadForHousehold, fetchItems, fetchPrimaryHouseholdId, fetchTags, FREE_ITEM_LIMIT } from '@/lib/queries';
+import { countUnreadForHousehold, fetchItems, fetchPrimaryHouseholdId, fetchTags } from '@/lib/queries';
+import { fetchMembership, type Membership } from '@/lib/membership';
 import type { Item, Tag } from '@/lib/database.types';
 import { cn } from '@/lib/cn';
 
@@ -14,6 +15,7 @@ export function useOwnerItems() {
   const [items, setItems] = useState<Item[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [unread, setUnread] = useState(0);
+  const [membership, setMembership] = useState<Membership | null>(null);
   const [fetching, setFetching] = useState(true);
   const [failed, setFailed] = useState(false);
 
@@ -31,8 +33,9 @@ export function useOwnerItems() {
         setFetching(false);
         return;
       }
-      const [its, tgs, n] = await Promise.all([fetchItems(hh), fetchTags(hh), countUnreadForHousehold(hh)]);
+      const [its, tgs, n, m] = await Promise.all([fetchItems(hh), fetchTags(hh), countUnreadForHousehold(hh), fetchMembership()]);
       if (cancelled) return;
+      setMembership(m);
       setItems(its);
       setTags(tgs);
       setUnread(n);
@@ -49,14 +52,17 @@ export function useOwnerItems() {
     return m;
   }, [tags]);
 
-  return { items, tagByItemId, unread, loading: authLoading || fetching, failed };
+  const readOnly = useMemo(() => new Set(membership?.read_only_item_ids ?? []), [membership]);
+
+  return { items, tagByItemId, unread, membership, readOnly, loading: authLoading || fetching, failed };
 }
 
-export function ItemList({ items, tagByItemId }: { items: Item[]; tagByItemId: Map<string, Tag> }) {
+export function ItemList({ items, tagByItemId, readOnly }: { items: Item[]; tagByItemId: Map<string, Tag>; readOnly?: Set<string> }) {
   return (
     <ul className="grid sm:grid-cols-2 gap-3">
       {items.map((item) => {
         const tag = tagByItemId.get(item.id);
+        const locked = readOnly?.has(item.id) ?? false;
         return (
           <li key={item.id} className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-qurtag-3">
             <Link to={`/app/items/${item.id}`} className="flex gap-qurtag-3 min-w-0">
@@ -79,6 +85,9 @@ export function ItemList({ items, tagByItemId }: { items: Item[]; tagByItemId: M
                   {item.lost_mode ? 'Marked lost' : 'Not lost'}
                 </span>
                 <span className="text-caption text-muted">{tag ? `Tag ${tag.public_id}` : 'No working tag'}</span>
+                {locked && (
+                  <span className="self-start text-caption px-2 py-0.5 rounded-pill bg-ink-50 text-ink-700">Read-only: over your plan's limit</span>
+                )}
               </div>
             </Link>
             <div className="flex flex-wrap gap-2">
@@ -86,7 +95,7 @@ export function ItemList({ items, tagByItemId }: { items: Item[]; tagByItemId: M
                 to={`/app/items/${item.id}`}
                 className="inline-flex h-11 items-center rounded-pill border border-hairline-strong px-4 text-caption font-medium text-ink-900"
               >
-                Edit
+                {locked ? 'View' : 'Edit'}
               </Link>
               {tag && (
                 <Link
@@ -105,12 +114,23 @@ export function ItemList({ items, tagByItemId }: { items: Item[]; tagByItemId: M
   );
 }
 
-export function AddItemCard({ count }: { count: number }) {
-  if (count >= FREE_ITEM_LIMIT) {
+export function AddItemCard({ count, membership }: { count: number; membership?: Membership | null }) {
+  // Until the plan is known, trust the database to refuse (it does, with a plain message).
+  if (membership && !membership.can_add_items) {
     return (
-      <p className="mt-qurtag-3 text-caption text-muted text-pretty">
-        QuR Tag is free for up to two items, and you have two. To tag something else, delete one first.
-      </p>
+      <div className="mt-qurtag-3 flex flex-col gap-2 items-start">
+        <p className="text-caption text-muted text-pretty">
+          {membership.item_limit === 2
+            ? 'QuR Tag is free for up to two items, and you have two. To tag something else, upgrade your plan or delete one first.'
+            : `Your plan covers ${membership.item_limit} items. To tag something else, delete one first.`}
+        </p>
+        <Link
+          to="/app/membership"
+          className="inline-flex h-11 items-center rounded-pill bg-ink-900 px-5 text-caption font-medium text-canvas hover:bg-ink-700 transition-colors duration-qurtag"
+        >
+          See plans
+        </Link>
+      </div>
     );
   }
   return (
@@ -125,7 +145,7 @@ export function AddItemCard({ count }: { count: number }) {
 }
 
 export function AppHome() {
-  const { items, tagByItemId, unread, loading, failed } = useOwnerItems();
+  const { items, tagByItemId, unread, membership, readOnly, loading, failed } = useOwnerItems();
 
   return (
     <div className="px-qurtag-5 md:px-qurtag-8 py-qurtag-8 max-w-5xl">
@@ -168,12 +188,18 @@ export function AppHome() {
             A water bottle, a violin case, a gym bag, a set of keys. If someone finds it, they scan the
             tag and send you a note here. Free for up to two items.
           </p>
-          <AddItemCard count={0} />
+          <AddItemCard count={0} membership={membership} />
         </section>
       ) : (
         <>
-          <ItemList items={items} tagByItemId={tagByItemId} />
-          <AddItemCard count={items.length} />
+          {readOnly.size > 0 && (
+            <p className="mb-qurtag-3 rounded-card bg-ink-50 px-3 py-2 text-caption text-ink-700 text-pretty">
+              {readOnly.size === 1 ? '1 item is' : `${readOnly.size} items are`} over your plan's limit, so {readOnly.size === 1 ? 'it' : 'they'} can be read but not changed. Nothing was deleted.{' '}
+              <Link to="/app/membership" className="underline underline-offset-4 text-ink-900">See plans</Link>
+            </p>
+          )}
+          <ItemList items={items} tagByItemId={tagByItemId} readOnly={readOnly} />
+          <AddItemCard count={items.length} membership={membership} />
         </>
       )}
     </div>

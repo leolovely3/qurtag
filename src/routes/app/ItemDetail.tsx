@@ -26,6 +26,7 @@ import {
   updateItem,
 } from '@/lib/queries';
 import { FEATURES } from '@/lib/features';
+import { fetchMembership } from '@/lib/membership';
 import { Modal } from '@/components/ui/Modal';
 import { issueGoogleWalletPass, startStripeCheckout } from '@/lib/stripe';
 import { useToast } from '@/components/ui/Toast';
@@ -91,6 +92,9 @@ export function ItemDetail() {
   const [item, setItem] = useState<Item | null>(null);
   const [tag, setTag] = useState<Tag | null>(null);
   const [scans, setScans] = useState<Scan[]>([]);
+  const [readOnly, setReadOnly] = useState(false);
+  const [limitedHistory, setLimitedHistory] = useState(false);
+  const [showAllScans, setShowAllScans] = useState(false);
   const [reward, setReward] = useState<Reward | null>(null);
   const [householdId, setHouseholdId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -156,11 +160,14 @@ export function ItemDetail() {
         if (cancelled) return;
         setTag(tags.find((t) => t.current_item_id === itemId && t.status === 'active') ?? null);
       }
-      const [sc, rw] = await Promise.all([
+      const [sc, rw, ms] = await Promise.all([
         fetchScansForItem(itemId),
         FEATURES.rewards ? fetchActiveRewardForItem(itemId) : Promise.resolve(null),
+        fetchMembership(),
       ]);
       if (cancelled) return;
+      setReadOnly(!!ms?.read_only_item_ids.includes(itemId));
+      setLimitedHistory(!!it && ms?.items_plan === 'free');
       setScans(sc);
       setReward(rw);
       setLoading(false);
@@ -349,16 +356,26 @@ export function ItemDetail() {
         <Eyebrow>{tag?.hardware_tier ?? 'No tag'}</Eyebrow>
         <input
           aria-label="Item name"
+          readOnly={readOnly}
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="font-display font-semibold text-ink-900 text-h2 sm:text-h1 tracking-[-0.032em] leading-[1.02] bg-transparent border-0 outline-none w-full text-balance focus:outline-none focus-visible:bg-ink-50 rounded-card px-1 -mx-1 transition-colors duration-qurtag"
         />
       </div>
 
+      {readOnly && (
+        <p role="status" className="mb-qurtag-5 rounded-card bg-ink-50 px-4 py-3 text-caption text-ink-700 text-pretty">
+          This item is over your plan's limit, so it is read-only: you can see it, print its tag and delete it, but not change it.
+          Finders can still scan its tag and write to you, and you can still reply.{' '}
+          <Link to="/app/membership" className="underline underline-offset-4 text-ink-900">See plans</Link>
+        </p>
+      )}
+
       <div className="grid lg:grid-cols-12 gap-qurtag-5">
         {/* Left column */}
         <div className="lg:col-span-7 flex flex-col gap-qurtag-5">
-          {/* Lost mode + reward */}
+          {/* Lost mode + reward. A read-only item (over the plan's limit) cannot be changed. */}
+          <fieldset disabled={readOnly} className="contents">
           <LostModeToggle
             value={lostMode}
             pending={lostPending}
@@ -459,11 +476,13 @@ export function ItemDetail() {
             </div>
           </div>
 
+          </fieldset>
+
           {/* Scan history */}
           <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <Eyebrow>Recent scans</Eyebrow>
-              <span className="text-caption text-muted">{scans.length} total</span>
+              <Eyebrow>{limitedHistory ? 'Scans, last 30 days' : 'Scan history'}</Eyebrow>
+              <span className="text-caption text-muted">{scans.length} {limitedHistory ? 'in 30 days' : 'total'}</span>
             </div>
             {scans.length === 0 ? (
               <div className="flex items-center gap-3 py-qurtag-3 text-caption text-muted">
@@ -472,7 +491,7 @@ export function ItemDetail() {
               </div>
             ) : (
               <ul className="flex flex-col divide-y divide-hairline">
-                {scans.slice(0, 10).map((scan) => (
+                {(showAllScans ? scans : scans.slice(0, 10)).map((scan) => (
                   <li
                     key={scan.id}
                     className="flex items-center justify-between gap-3 py-3 text-caption"
@@ -495,11 +514,27 @@ export function ItemDetail() {
                 ))}
               </ul>
             )}
+            {scans.length > 10 && (
+              <button
+                type="button"
+                onClick={() => setShowAllScans((v) => !v)}
+                className="self-start inline-flex h-11 items-center text-caption font-medium text-ink-900 underline underline-offset-4"
+              >
+                {showAllScans ? 'Show fewer' : `Show all ${scans.length}`}
+              </button>
+            )}
+            {limitedHistory && (
+              <p className="text-caption text-muted text-pretty">
+                The Free plan keeps the last 30 days of scans in view.{' '}
+                <Link to="/app/membership" className="underline underline-offset-4 text-ink-900">Plus shows them all.</Link>
+              </p>
+            )}
           </div>
         </div>
 
         {/* Right column */}
         <div className="lg:col-span-5 flex flex-col gap-qurtag-5">
+          <fieldset disabled={readOnly} className="contents">
           <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-4">
             <PhotoUploader
               householdId={householdId}
@@ -526,6 +561,7 @@ export function ItemDetail() {
             />
             )}
           </div>
+          </fieldset>
 
           {FEATURES.walletPasses && (
           <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3">
@@ -604,6 +640,7 @@ export function ItemDetail() {
             </button>
           </div>
 
+          <fieldset disabled={readOnly} className="contents">
           <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-2">
             <Eyebrow>Notes</Eyebrow>
             <textarea
@@ -618,6 +655,7 @@ export function ItemDetail() {
               Private to you. Never shown to a finder.
             </p>
           </div>
+          </fieldset>
         </div>
       </div>
 

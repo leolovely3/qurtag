@@ -53,8 +53,9 @@ export async function drainOutbox(env: NodeJS.ProcessEnv = process.env, db: pg.P
             'select * from qurtag.server_finder_message_notice($1)',
             [row.ref],
           );
-          // The account or item may have been deleted since; nothing to send then.
-          if (notice[0]) await sendMail(finderMessageMail(notice[0].owner_email, notice[0].item_name, `${siteUrl(env)}/app/inbox`));
+          // The account or item may have been deleted since; nothing to send then. A Family
+          // household has one row per person who can read the inbox.
+          for (const n of notice) await sendMail(finderMessageMail(n.owner_email, n.item_name, `${siteUrl(env)}/app/inbox`));
         }
       }
       await db.query('select qurtag.server_outbox_finish($1, null, 0)', [row.id]);

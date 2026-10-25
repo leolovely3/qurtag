@@ -19,6 +19,13 @@
   ],
   "headers": [
     {
+      "source": "/join/(.*)",
+      "headers": [
+        { "key": "Referrer-Policy", "value": "no-referrer" },
+        { "key": "X-Robots-Tag", "value": "noindex" }
+      ]
+    },
+    {
       "source": "/find/(.*)",
       "headers": [
         { "key": "Referrer-Policy", "value": "no-referrer" },

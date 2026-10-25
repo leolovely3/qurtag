@@ -5,7 +5,7 @@ export function Terms() {
   return (
     <>
       <PageHero eyebrow="Terms" title="Terms of use" lede="The rules for using QuR Tag, in plain words.">
-        <p className="text-caption text-muted">Last updated 25 October 2026</p>
+        <p className="text-caption text-muted">Last updated 26 October 2026</p>
       </PageHero>
       <PageBody>
         <Section title="1. Who we are and what this covers">
@@ -27,14 +27,54 @@ export function Terms() {
           </P>
         </Section>
 
-        <Section title="3. Price">
+        <Section title="3. Plans, prices and payment">
+          <Bullets
+            items={[
+              'Free: up to two items, one person, and the last 30 days of scan history. No payment is taken.',
+              'Plus: unlimited items, one person and the full scan history. $2.99 a month or $19 a year.',
+              'Family: Plus for up to five people who share the items and the inbox. $4.99 a month or $39 a year.',
+            ]}
+          />
           <P>
-            QuR Tag is free for up to two items. There is nothing to buy. If we ever offer anything paid, we
-            will say so clearly first, and nothing will be charged without your agreement.
+            Prices are in US dollars and may not include tax. Plus and Family are subscriptions that renew
+            automatically every month or every year, whichever you chose, until you cancel. You can cancel at any
+            time; you keep your plan until the end of the period you already paid for, and nothing more is charged.
+            Canceling does not delete anything you made.
+          </P>
+          <P>
+            On the web, payment is taken by Stripe, and you manage or cancel your membership from the Membership page
+            in your account. On iPhone, payment is taken by Apple through the App Store. It is charged to your Apple
+            ID at confirmation of purchase and renews unless you cancel at least 24 hours before the period ends; you
+            manage or cancel it in your iPhone's Settings, under Subscriptions. A membership bought either way applies
+            to your QuR Tag account wherever you sign in. If you have bought one both ways, the better plan applies.
+          </P>
+          <P>
+            Refunds for purchases made in the iPhone app are handled by Apple, under Apple's rules, at
+            reportaproblem.apple.com. If you think you were charged by mistake on the web, use the Contact us form (in{' '}
+            <Link to="/help" className="text-ink-900 underline underline-offset-4">Help</Link>, or "Question about a charge?" on the Membership page),
+            or email <ContactLink /> if you cannot sign in. If we change a price, we will tell you before the new price
+            applies to your next renewal.
+          </P>
+          <P>
+            If your membership ends or you move to a lower plan, nothing is deleted. Items over the new limit stay,
+            and you can read them, print their tags and delete them, but you cannot change them until you upgrade
+            again. Finders can still scan their tags and write to you.
           </P>
         </Section>
 
-        <Section title="4. Your account">
+        <Section title="4. The Family plan">
+          <Bullets
+            items={[
+              'The person who buys Family is its owner. The owner can invite up to four other people by email. An invite works once, only for the address it was sent to, and expires after seven days.',
+              'Everyone in a family sees the same items, tags, scans and inbox, and can change them and reply to finders. Items a person adds while in a family belong to the family and stay if they leave.',
+              'Each person keeps their own account and password. What a person made on their own account before joining stays theirs and is not shown to the family.',
+              'The owner can remove anyone, and anyone can leave, at any time. Access ends at once.',
+              'If the owner deletes their account, the family\'s items are deleted with it. If the Family plan ends, the other people lose access to the family\'s items until it is active again; nothing is deleted.',
+            ]}
+          />
+        </Section>
+
+        <Section title="5. Your account">
           <Bullets
             items={[
               'You must be 18 or over to make an account.',
@@ -45,7 +85,7 @@ export function Terms() {
           />
         </Section>
 
-        <Section title="5. Finders">
+        <Section title="6. Finders">
           <P>
             Finders do not need an account. A finder agrees to use the page only to help return the item,
             and to write honestly. Returning an item is an arrangement between the finder and the owner. Any
@@ -54,7 +94,7 @@ export function Terms() {
           </P>
         </Section>
 
-        <Section title="6. Stay safe">
+        <Section title="7. Stay safe">
           <Bullets
             items={[
               'Do not share your home address or phone number unless you want to.',
@@ -65,7 +105,7 @@ export function Terms() {
           />
         </Section>
 
-        <Section title="7. What you must not do">
+        <Section title="8. What you must not do">
           <Bullets
             items={[
               'Use QuR Tag to harass, threaten, scam or spam anyone.',
@@ -77,7 +117,7 @@ export function Terms() {
           />
         </Section>
 
-        <Section title="8. Your content">
+        <Section title="9. Your content">
           <P>
             The items, photos and notes you add stay yours. You let us store and show them only to run
             QuR Tag, for example showing your item's name and photo to someone who scans its tag. We may
@@ -85,14 +125,14 @@ export function Terms() {
           </P>
         </Section>
 
-        <Section title="9. Ending your use">
+        <Section title="10. Ending your use">
           <P>
             You can delete your account at any time from Settings, which also switches off your tags. We may
             suspend or close an account, or block a tag, that breaks these terms or puts someone at risk.
           </P>
         </Section>
 
-        <Section title="10. No warranty">
+        <Section title="11. No warranty">
           <P>
             QuR Tag is provided "as is" and "as available". We work to keep it running and safe, but we do
             not promise it will always be available, free of errors, or that a printed tag will stay
@@ -100,16 +140,16 @@ export function Terms() {
           </P>
         </Section>
 
-        <Section title="11. Limits on our liability">
+        <Section title="12. Limits on our liability">
           <P>
             To the extent the law allows, we are not responsible for the loss of, or damage to, any item,
-            for what a finder or owner does, or for indirect losses. Because QuR Tag is free, our total
-            liability to you for any claim is limited to 100 US dollars. Nothing in these terms limits
+            for what a finder or owner does, or for indirect losses. Our total liability to you for any claim
+            is limited to the greater of 100 US dollars and what you paid us in the 12 months before the claim. Nothing in these terms limits
             rights that the law says cannot be limited.
           </P>
         </Section>
 
-        <Section title="12. Law and disputes">
+        <Section title="13. Law and disputes">
           <P>
             These terms are governed by the laws of the State of Florida, United States, without regard to
             its conflict of law rules. Any dispute will be decided in the state or federal courts located in
@@ -118,7 +158,7 @@ export function Terms() {
           </P>
         </Section>
 
-        <Section title="13. Changes">
+        <Section title="14. Changes">
           <P>
             We may update these terms. We will change the date at the top, and put a notice on this site
             before a significant change takes effect. If you keep using QuR Tag after that, the new terms
@@ -126,7 +166,7 @@ export function Terms() {
           </P>
         </Section>
 
-        <Section title="14. Contact">
+        <Section title="15. Contact">
           <P>
             Impact Consulting AI LLC, Florida, United States. Email <ContactLink />.
           </P>

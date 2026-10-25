@@ -5,20 +5,30 @@
  *   POST /api/fn/finder-view   the finder-safe item card and the finder's own conversation
  *   POST /api/fn/finder-send   a finder's note (opens a conversation, or adds to theirs)
  *
- * Both are in server/routes/finder.ts. Errors become a plain 500; nothing internal
+ * Both are in server/routes/finder.ts. The membership routes (billing-config, billing-checkout,
+ * billing-portal, family-invite, stripe-webhook, revenuecat-webhook) are in server/routes/billing.ts. Errors become a plain 500; nothing internal
  * reaches the caller.
  */
 import { withPhoneAppCors } from '../../server/auth/phoneCors.js';
 import { json } from '../../server/routes/core.js';
+import { createBillingRoutes } from '../../server/routes/billing.js';
 import { createFinderRoutes } from '../../server/routes/finder.js';
 
 export const config = { runtime: 'nodejs' };
 
 const finder = createFinderRoutes();
+const billing = createBillingRoutes();
 
 const ROUTES: Record<string, (request: Request) => Promise<Response>> = {
   'finder-view': finder.view,
   'finder-send': finder.send,
+  'billing-config': billing.config,
+  'billing-checkout': billing.checkout,
+  'billing-portal': billing.portal,
+  'family-invite': billing.invite,
+  'support': billing.support,
+  'stripe-webhook': billing.stripeWebhook,
+  'revenuecat-webhook': billing.revenueCatWebhook,
 };
 
 const handle = withPhoneAppCors(async (request: Request): Promise<Response> => {

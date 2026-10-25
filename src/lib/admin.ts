@@ -128,6 +128,24 @@ export const adminSetTag = (tagId: string, active: boolean) =>
 export const adminSetMessageHidden = (messageId: string, hidden: boolean) =>
   call<{ id: string; hidden: boolean }>('admin_set_message_hidden', { p_message: messageId, p_hidden: hidden });
 
+export interface SupportRequestRow {
+  id: string;
+  created_at: string;
+  topic: 'billing' | 'account' | 'finder' | 'other';
+  status: 'open' | 'closed';
+  plan: string | null;
+  message: string;
+  reply_email: string | null;
+  user_id: string | null;
+  account_email: string | null;
+  closed_at: string | null;
+}
+
+export const adminSupportList = (status: 'open' | 'closed' = 'open') =>
+  call<{ open: number; requests: SupportRequestRow[] }>('admin_support_list', { p_status: status });
+
+export const adminSupportClose = (id: string) => call<{ id: string; status: string }>('admin_support_close', { p_id: id });
+
 export const adminDeleteAccount = (userId: string, confirmEmail: string) =>
   call<{ deleted: boolean }>('admin_delete_account', { p_user: userId, p_confirm_email: confirmEmail });
 

@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { authClient, clearDataPass, forgetSession } from './authClient';
 import { db } from './db';
+import { iapSignOut } from './iap';
 
 /**
  * Who is signed in, for every screen. Owners sign up and in with email and password
@@ -112,6 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     clearDataPass();
+    void iapSignOut();
     try {
       await authClient.signOut();
     } finally {
@@ -122,8 +124,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const deleteAccount = useCallback<AuthContextValue['deleteAccount']>(async () => {
     const { error } = await db.rpc('delete_my_account');
-    if (error) return { ok: false, error: 'Could not delete the account. Try again, or email info@impactconsulting.ai.' };
+    if (error) {
+      return {
+        ok: false,
+        error:
+          error.message === 'membership_active'
+            ? 'Your membership is still renewing. Cancel it first (Membership, then Manage), then delete your account, so you are not charged for an account that no longer exists.'
+            : 'Could not delete the account. Try again, or email info@impactconsulting.ai.',
+      };
+    }
     clearDataPass();
+    void iapSignOut();
     await authClient.signOut().catch(() => {});
     forgetSession();
     setUser(null);

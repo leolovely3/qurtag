@@ -33,6 +33,8 @@ import { Trips } from '@/routes/app/Trips';
 import { FinderView } from '@/routes/finder/FinderView';
 import { StartSignIn } from '@/routes/start/SignIn';
 import { StartSetup } from '@/routes/start/Setup';
+import { JoinFamily } from '@/routes/start/JoinFamily';
+import { MembershipPage } from '@/routes/app/Membership';
 import { ForgotPassword, ResetPassword } from '@/routes/auth/Reset';
 import { AuthCallback } from '@/routes/auth/Callback';
 
@@ -59,6 +61,7 @@ export const router = createBrowserRouter([
       { path: '/forgot-password', element: <ForgotPassword /> },
       { path: '/reset-password', element: <ResetPassword /> },
       { path: '/auth/callback', element: <AuthCallback /> },
+      { path: '/join/:token', element: <JoinFamily /> },
     ],
   },
   {
@@ -71,6 +74,7 @@ export const router = createBrowserRouter([
       { path: '/app/inbox', element: <Inbox /> },
       { path: '/app/inbox/:threadId', element: <InboxThread /> },
       ...(FEATURES.trips ? [{ path: '/app/trips', element: <Trips /> }] : []),
+      { path: '/app/membership', element: <MembershipPage /> },
       { path: '/app/settings', element: <Settings /> },
       { path: '/app/admin', element: <Admin /> },
       { path: '/app/admin/accounts/:userId', element: <AdminAccountPage /> },
