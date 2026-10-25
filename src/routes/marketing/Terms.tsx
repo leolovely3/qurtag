@@ -5,7 +5,7 @@ export function Terms() {
   return (
     <>
       <PageHero eyebrow="Terms" title="Terms of use" lede="The rules for using QuR Tag, in plain words.">
-        <p className="text-caption text-muted">Last updated 26 October 2026</p>
+        <p className="text-caption text-muted">Last updated 25 October 2026</p>
       </PageHero>
       <PageBody>
         <Section title="1. Who we are and what this covers">
@@ -117,7 +117,28 @@ export function Terms() {
           />
         </Section>
 
-        <Section title="9. Your content">
+        <Section title="9. Notes from finders, reporting and blocking">
+          <P>
+            QuR Tag has zero tolerance for objectionable content and for abusive users. That means anything
+            hateful, harassing, threatening, sexual, violent, illegal or deceptive, and spam, in a note, an item
+            name, a photo or a thank-you text. We remove it and block or close the accounts and finders behind it,
+            without warning.
+          </P>
+          <Bullets
+            items={[
+              'Filter. Every note a finder sends is checked by our system before you see it. A note with offensive words or a threat is held back: you see "This note may be offensive. Show it?" and choose whether to read it. Notes that are only links, or that carry many links, are not delivered, and a finder can only send so many notes in a short time.',
+              'Report. Open a conversation and choose Report under any note from a finder. Pick a reason (harassment, spam, threats, inappropriate or other) and add a comment if you like. The note is hidden from you at once. A person at QuR Tag reviews every report within 24 hours and can hide the note for everyone, block the finder, or close the account of anyone who keeps breaking these rules.',
+              'Block. Choose Block this finder in a conversation. That finder cannot write to you again, their notes leave your inbox, and they are only told that the conversation is closed. You can see and unblock the finders you blocked in Settings.',
+              'Finders. If an owner\'s page or reply is abusive or unsafe, write to us at the address below with the tag page you were on. We review it within 24 hours too.',
+            ]}
+          />
+          <P>
+            To report a problem, or to ask us about a decision, email <ContactLink />. Reports are kept private: the
+            person reported is never told who made the report.
+          </P>
+        </Section>
+
+        <Section title="10. Your content">
           <P>
             The items, photos and notes you add stay yours. You let us store and show them only to run
             QuR Tag, for example showing your item's name and photo to someone who scans its tag. We may
@@ -125,14 +146,14 @@ export function Terms() {
           </P>
         </Section>
 
-        <Section title="10. Ending your use">
+        <Section title="11. Ending your use">
           <P>
             You can delete your account at any time from Settings, which also switches off your tags. We may
             suspend or close an account, or block a tag, that breaks these terms or puts someone at risk.
           </P>
         </Section>
 
-        <Section title="11. No warranty">
+        <Section title="12. No warranty">
           <P>
             QuR Tag is provided "as is" and "as available". We work to keep it running and safe, but we do
             not promise it will always be available, free of errors, or that a printed tag will stay
@@ -140,7 +161,7 @@ export function Terms() {
           </P>
         </Section>
 
-        <Section title="12. Limits on our liability">
+        <Section title="13. Limits on our liability">
           <P>
             To the extent the law allows, we are not responsible for the loss of, or damage to, any item,
             for what a finder or owner does, or for indirect losses. Our total liability to you for any claim
@@ -149,7 +170,7 @@ export function Terms() {
           </P>
         </Section>
 
-        <Section title="13. Law and disputes">
+        <Section title="14. Law and disputes">
           <P>
             These terms are governed by the laws of the State of Florida, United States, without regard to
             its conflict of law rules. Any dispute will be decided in the state or federal courts located in
@@ -158,7 +179,7 @@ export function Terms() {
           </P>
         </Section>
 
-        <Section title="14. Changes">
+        <Section title="15. Changes">
           <P>
             We may update these terms. We will change the date at the top, and put a notice on this site
             before a significant change takes effect. If you keep using QuR Tag after that, the new terms
@@ -166,7 +187,7 @@ export function Terms() {
           </P>
         </Section>
 
-        <Section title="15. Contact">
+        <Section title="16. Contact">
           <P>
             Impact Consulting AI LLC, Florida, United States. Email <ContactLink />.
           </P>

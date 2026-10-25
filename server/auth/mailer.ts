@@ -131,6 +131,22 @@ export function finderMessageMail(to: string, itemName: string, inboxUrl: string
   };
 }
 
+/** Tells the company a report or a held note is waiting. A link to the Admin screen; never any note text. */
+export function adminReportMail(waiting: number, adminUrl: string): Mail {
+  const lead = waiting === 1 ? 'There is a new report on QuR Tag.' : `There are ${waiting} new reports on QuR Tag.`;
+  const after = 'Each report is answered within 24 hours. Open Admin, then Reported notes.';
+  return {
+    kind: 'admin-report',
+    to: CONTACT_EMAIL,
+    subject: 'New report on QuR Tag',
+    text: `${lead}\n\nReview: ${adminUrl}\n\n${after}\n`,
+    html:
+      `<p>${escapeHtml(lead)}</p>` +
+      `<p><a href="${escapeHtml(adminUrl)}" style="display:inline-block;padding:10px 18px;background:#0A0B0F;color:#fff;border-radius:8px;text-decoration:none">Open Admin</a></p>` +
+      `<p style="color:#555">${escapeHtml(after)}</p>`,
+  };
+}
+
 /** Invites someone to share a Family plan. Says who invited them and how to accept. */
 export function familyInviteMail(to: string, inviter: string, joinUrl: string): Mail {
   const lead = `${inviter} invited you to share their QuR Tag family plan. You will see the same items and the same inbox.`;

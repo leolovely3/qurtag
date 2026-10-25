@@ -26,10 +26,18 @@
  *
  * Limits: per network address and function instance, 60 views and 12 notes a minute;
  * the database adds its own per tag and per conversation (20 new conversations per tag a
- * day, 30 notes per conversation an hour).
+ * day, 60 notes per tag an hour, 5 notes per conversation a minute and 30 an hour).
+ *
+ * Moderation (server/moderation/filter.ts, db/moderation.sql): every note is checked before it
+ * reaches the database. A note with a slur or a threat is accepted and stored held, so the
+ * finder sees the normal confirmation and the owner chooses whether to read it. A note of
+ * only links, or with more than a few, is refused with a plain sentence. A finder whose owner
+ * blocked them is answered "This conversation is closed.", the same words as a closed
+ * conversation, so a block is not announced.
  */
 import { randomBytes } from 'node:crypto';
 import { trustedOrigins } from '../auth/origins.js';
+import { checkNote } from '../moderation/filter.js';
 import { kickOutbox, json, serverPool } from './core.js';
 
 /** A tag's public id, as db/qurtag.sql makes them (qurtag.new_public_id). */
@@ -169,7 +177,8 @@ const notFound = () => json(404, { error: 'not_found', message: "This tag isn't 
 const REASONS: Record<string, [number, string, string]> = {
   tag_not_found: [404, 'not_found', "This tag isn't registered."],
   thread_not_found: [404, 'thread_not_found', 'That conversation could not be found on this phone. Send a new note instead.'],
-  thread_closed: [409, 'thread_closed', 'The owner closed this conversation.'],
+  thread_closed: [409, 'thread_closed', 'This conversation is closed.'],
+  thread_blocked: [409, 'thread_closed', 'This conversation is closed.'],
   too_many: [429, 'too_many', 'Too many notes for now. Please wait a little and try again.'],
   empty_message: [400, 'empty_message', 'Write a short note first.'],
   bad_token: [400, 'bad_request', 'That request is not valid.'],
@@ -228,15 +237,18 @@ export function createFinderRoutes(opts: { query?: Query; env?: NodeJS.ProcessEn
     if (!note) return json(400, { error: 'empty_message', message: 'Write a short note first.' });
     if (note.length > MAX_NOTE_LENGTH) return json(400, { error: 'too_long', message: `Keep it under ${MAX_NOTE_LENGTH} characters.` });
     const given = str(body.token);
+    const verdict = checkNote(note);
+    if (verdict.kind === 'reject') return json(400, { error: verdict.code, message: verdict.message });
+    const hold = verdict.kind === 'hold' ? verdict.reason : null;
     try {
       if (given) {
         if (!THREAD_TOKEN.test(given)) return json(404, { error: 'thread_not_found', message: REASONS.thread_not_found[2] });
-        await query('select qurtag.server_finder_post($1, $2, $3)', [tag, given, note]);
+        await query('select qurtag.server_finder_post($1, $2, $3, $4)', [tag, given, note, hold]);
         afterNote();
         return json(200, { ok: true });
       }
       const token = newThreadToken();
-      await query('select qurtag.server_finder_open($1, $2, $3)', [tag, token, note]);
+      await query('select qurtag.server_finder_open($1, $2, $3, $4)', [tag, token, note, hold]);
       afterNote();
       return json(200, { ok: true, token });
     } catch (e) {

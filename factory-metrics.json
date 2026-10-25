@@ -1,5 +1,5 @@
 {
-  "$comment": "How the Factory reads this product's numbers: QuR Tag keeps its data in schema qurtag of the shared ImpactConsulting project behind its own data API (/api/data), so the Factory calls one counting function, qurtag.factory_metrics, with its metrics token (only the token's SHA-256 is kept, in qurtag.factory_access). It returns totals only: accounts, sign-ups and sign-ins, accounts with an item, items, working tags, scans, conversations and owner replies. Defined in db/qurtag.sql.",
+  "$comment": "How the Factory reads this product's numbers: QuR Tag keeps its data in schema qurtag of the shared ImpactConsulting project behind its own data API (/api/data), so the Factory calls one counting function, qurtag.factory_metrics, with its metrics token (only the token's SHA-256 is kept, in qurtag.factory_access). It returns totals only: accounts, sign-ups and sign-ins, accounts with an item, items, working tags, scans, conversations, owner replies, and the support queue (Contact us requests plus open reports of finders' notes, as support_open, support_30d and support_oldest_open_days; the reports on their own as reports_open, reports_30d and reports_oldest_open_days). Defined in db/qurtag.sql.",
   "source": "rpc",
   "rpc": "factory_metrics"
 }

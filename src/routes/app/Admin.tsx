@@ -10,6 +10,8 @@ import {
   adminDeleteAccount,
   adminListAccounts,
   adminOverview,
+  adminReportResolve,
+  adminReportsList,
   adminSetMessageHidden,
   adminSetTag,
   adminSupportClose,
@@ -19,6 +21,8 @@ import {
   type AdminAccountRow,
   type AdminOverview,
   type AdminTag,
+  type ReportAction,
+  type ReportRow,
   type SupportRequestRow,
 } from '@/lib/admin';
 
@@ -56,9 +60,9 @@ function Heading({ eyebrow, title, sub }: { eyebrow: string; title: string; sub?
   );
 }
 
-function Box({ title, children }: { title: string; children: React.ReactNode }) {
+function Box({ title, children, id }: { title: string; children: React.ReactNode; id?: string }) {
   return (
-    <section className="mb-qurtag-5">
+    <section className="mb-qurtag-5 scroll-mt-4" id={id}>
       <h2 className="mb-3 text-lg font-semibold text-ink-900">{title}</h2>
       {children}
     </section>
@@ -103,6 +107,67 @@ function Count({ label, value }: { label: string; value: number | string }) {
       <div className="text-2xl font-semibold tabular-nums text-ink-900">{value}</div>
       <div className="text-sm text-muted">{label}</div>
     </div>
+  );
+}
+
+function ReportsQueue() {
+  const [rows, setRows] = useState<ReportRow[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [working, setWorking] = useState<string | null>(null);
+  const load = useCallback(async () => {
+    const r = await adminReportsList('open');
+    if (r.ok) {
+      setRows(r.data.reports);
+      setError(null);
+    } else setError(r.error);
+  }, []);
+  useEffect(() => {
+    void load();
+  }, [load]);
+  // A tap on an admin alert opens /app/admin#reported-notes.
+  useEffect(() => {
+    if (rows !== null && window.location.hash === '#reported-notes') document.getElementById('reported-notes')?.scrollIntoView();
+  }, [rows]);
+  async function act(id: string, action: ReportAction) {
+    setWorking(`${id}:${action}`);
+    const r = await adminReportResolve(id, action);
+    setWorking(null);
+    if (!r.ok) setError(r.error);
+    await load();
+  }
+  const label = { harassment: 'Harassment', spam: 'Spam', threats: 'Threats', inappropriate: 'Inappropriate', other: 'Other' } as const;
+  return (
+    <Box title="Reported notes" id="reported-notes">
+      {error && <p className="text-caption text-signal-600 mb-2">{error}</p>}
+      <p className="text-caption text-muted mb-2">
+        {rows === null ? 'Loading...' : `${rows.length} open, oldest first. Each is answered within 24 hours.`}
+      </p>
+      <ul className="rounded-modal border border-hairline bg-canvas overflow-hidden divide-y divide-hairline" data-testid="reports-queue">
+        {(rows ?? []).map((q) => (
+          <li key={q.id} className="p-3 flex flex-col gap-2">
+            <div className="text-caption text-muted">
+              {stamp(q.created_at)} · {label[q.reason]} · about {q.item_name}
+              {q.reporter_email ? ` · reported by ${q.reporter_email}` : ''}
+              {q.was_held ? ' · held by the filter' : ''}
+            </div>
+            <p className="text-body text-ink-900 whitespace-pre-wrap break-words rounded-card bg-ink-50 p-3">{q.message_text}</p>
+            {q.comment && <p className="text-caption text-muted whitespace-pre-wrap break-words">Owner's comment: {q.comment}</p>}
+            <div className="flex flex-wrap gap-2">
+              <Button variant="secondary" disabled={working !== null} onClick={() => void act(q.id, 'hide')}>
+                {working === `${q.id}:hide` ? 'Hiding...' : 'Hide for everyone'}
+              </Button>
+              <Button variant="secondary" disabled={working !== null} onClick={() => void act(q.id, 'dismiss')}>
+                {working === `${q.id}:dismiss` ? 'Dismissing...' : 'Dismiss'}
+              </Button>
+              <Button variant="secondary" disabled={working !== null} onClick={() => void act(q.id, 'block')}>
+                {working === `${q.id}:block` ? 'Blocking...' : 'Block finder'}
+              </Button>
+            </div>
+          </li>
+        ))}
+        {rows !== null && rows.length === 0 && <li className="p-3 text-caption text-muted">Nothing open.</li>}
+      </ul>
+    </Box>
   );
 }
 
@@ -215,6 +280,8 @@ function AdminHome() {
           </div>
         )}
       </Box>
+
+      <ReportsQueue />
 
       <SupportQueue />
 

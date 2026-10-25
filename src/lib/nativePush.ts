@@ -128,6 +128,8 @@ export async function forgetPushDevice(): Promise<void> {
 
 export interface PushTap {
   thread: string | null;
+  /** An admin alert: the screen to open. */
+  open: string | null;
 }
 
 /** Calls back when the person taps a notification (not Reply, which the app's native code handles). */
@@ -136,9 +138,10 @@ export function onPushTap(handler: (tap: PushTap) => void): () => void {
   let handle: { remove: () => Promise<void> } | null = null;
   let gone = false;
   void PushNotifications.addListener('pushNotificationActionPerformed', (event) => {
-    const data = (event.notification?.data ?? {}) as { thread?: unknown };
+    const data = (event.notification?.data ?? {}) as { thread?: unknown; open?: unknown };
     const thread = typeof data.thread === 'string' && /^[0-9a-f-]{36}$/i.test(data.thread) ? data.thread : null;
-    handler({ thread });
+    const open = typeof data.open === 'string' && /^\/app\/admin(#[a-z-]+)?$/.test(data.open) ? data.open : null;
+    handler({ thread, open });
   }).then((h) => {
     if (gone) void h.remove();
     else handle = h;

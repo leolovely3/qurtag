@@ -29,11 +29,12 @@
 import { createPrivateKey, sign } from 'node:crypto';
 import http2 from 'node:http2';
 
-export type PushKind = 'found' | 'message' | 'scan';
+export type PushKind = 'found' | 'message' | 'scan' | 'admin';
 
 /** The categories the iPhone app registers (ios/App/App/QurTagNotifications.swift). */
 export const CATEGORY_FOUND = 'QURTAG_FOUND';
 export const CATEGORY_MESSAGE = 'QURTAG_MESSAGE';
+export const CATEGORY_ADMIN = 'QURTAG_ADMIN';
 export const DEFAULT_BUNDLE_ID = 'app.impactconsultingai.qurtag';
 export const HIDDEN_TITLE = 'You have a new note';
 
@@ -47,6 +48,8 @@ export interface PushInput {
   hideText: boolean;
   /** Notes the person has not read, for the badge on the app icon. */
   unread: number;
+  /** Admin alerts: how many reports and held notes are waiting. */
+  waiting?: number;
 }
 
 export interface PushPayload {
@@ -58,8 +61,10 @@ export interface PushPayload {
     category?: string;
     'interruption-level'?: 'time-sensitive';
   };
-  /** The conversation to open and reply to. Absent for a scan. */
+  /** The conversation to open and reply to. Absent for a scan and an admin alert. */
   thread?: string;
+  /** Admin alerts: the screen a tap opens. */
+  open?: string;
 }
 
 const NOTE_PREVIEW = 120;
@@ -69,14 +74,18 @@ function preview(note: string): string {
   return flat.length <= NOTE_PREVIEW ? flat : `${flat.slice(0, NOTE_PREVIEW - 1).trimEnd()}…`;
 }
 
-/** Whether a kind breaks through a Focus. Found and new-message alerts only. */
-export const isTimeSensitive = (kind: PushKind): boolean => kind === 'found' || kind === 'message';
+/** Whether a kind breaks through a Focus. Found, new-message and admin alerts. */
+export const isTimeSensitive = (kind: PushKind): boolean => kind === 'found' || kind === 'message' || kind === 'admin';
 
 export function buildPayload(input: PushInput): PushPayload {
   const badge = Number.isFinite(input.unread) ? Math.max(0, Math.min(9999, Math.trunc(input.unread))) : 0;
   const name = input.itemName.trim();
   let alert: PushPayload['aps']['alert'];
-  if (input.kind === 'scan') {
+  if (input.kind === 'admin') {
+    // Never any note text: only that something waits. The count says how many.
+    const n = Math.max(1, Math.trunc(input.waiting ?? 1));
+    alert = n === 1 ? { title: 'New report on QuR Tag', body: 'Review it in Admin.' } : { title: `${n} new reports on QuR Tag`, body: 'Review them in Admin.' };
+  } else if (input.kind === 'scan') {
     alert = input.hideText
       ? { title: 'Your tag was scanned' }
       : { title: 'Your tag was scanned', body: `Someone opened the page for your ${name}.` };
@@ -90,7 +99,10 @@ export function buildPayload(input: PushInput): PushPayload {
   }
   const aps: PushPayload['aps'] = { alert, badge, sound: 'default' };
   const payload: PushPayload = { aps };
-  if (input.kind !== 'scan' && input.threadId) {
+  if (input.kind === 'admin') {
+    aps.category = CATEGORY_ADMIN;
+    payload.open = '/app/admin#reported-notes';
+  } else if (input.kind !== 'scan' && input.threadId) {
     aps['thread-id'] = input.threadId;
     aps.category = input.kind === 'found' ? CATEGORY_FOUND : CATEGORY_MESSAGE;
     payload.thread = input.threadId;

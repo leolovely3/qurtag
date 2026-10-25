@@ -95,13 +95,6 @@ export interface CourierOrder {
   updated_at: string;
 }
 
-export interface BlockedFinderSession {
-  household_id: string;
-  finder_session_id: string;
-  reason: string | null;
-  created_at: string;
-}
-
 export type PartnerKind = 'hotel' | 'airline' | 'coworking' | 'gym' | 'other';
 export type PartnerDropoffStatus = 'received' | 'awaiting_pickup' | 'collected' | 'shipped';
 
@@ -134,19 +127,6 @@ export interface PartnerDropoff {
   notes: string | null;
   created_at: string;
   updated_at: string;
-}
-
-export type AbuseKind = 'spam' | 'harassment' | 'fraud' | 'other';
-
-export interface AbuseReport {
-  id: string;
-  thread_id: string | null;
-  household_id: string;
-  reporter_user_id: string | null;
-  kind: AbuseKind;
-  body: string | null;
-  resolved_at: string | null;
-  created_at: string;
 }
 
 export interface HouseholdMember {
@@ -318,18 +298,6 @@ export type Database = {
         Row: TripItem;
         Insert: Omit<TripItem, 'added_at'> & { added_at?: string };
         Update: Partial<TripItem>;
-        Relationships: [];
-      };
-      blocked_finder_sessions: {
-        Row: BlockedFinderSession;
-        Insert: Omit<BlockedFinderSession, 'created_at'> & { created_at?: string };
-        Update: Partial<BlockedFinderSession>;
-        Relationships: [];
-      };
-      abuse_reports: {
-        Row: AbuseReport;
-        Insert: Omit<AbuseReport, 'id' | 'created_at'> & { id?: string; created_at?: string };
-        Update: Partial<AbuseReport>;
         Relationships: [];
       };
     };

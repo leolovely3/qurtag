@@ -13,6 +13,18 @@ const faqs: { q: string; a: ReactNode }[] = [
     a: 'Your QuR Tag inbox shows each note from a finder. You can reply there. In the iPhone app you can also get an alert the moment a finder writes, and reply from the alert itself. Turn it on in Settings, under Notifications. You choose which alerts you want.',
   },
   {
+    q: 'Report or block a finder',
+    a: (
+      <>
+        Open the conversation in your inbox. To report one note, choose Report under it, pick a reason and send. The
+        note is hidden from you at once, and we review every report within 24 hours. To stop a finder writing to you,
+        choose Block this finder: they cannot write again and are only told the conversation is closed. You can unblock
+        from Settings, under Blocked finders. A note with offensive words or a threat arrives held back with
+        "This note may be offensive. Show it?" so you choose whether to read it. For anything else, email <ContactLink />.
+      </>
+    ),
+  },
+  {
     q: 'How does the finder read my reply?',
     a: 'They open the same tag page on the same phone. The page keeps their conversation in that browser and shows your reply there.',
   },
