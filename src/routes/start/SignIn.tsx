@@ -12,7 +12,7 @@ type Mode = 'create' | 'signin';
 
 /**
  * /start: create an account or sign in, with email and password. A new account goes on
- * to add its first item (/start/setup); someone signing in goes to /app.
+ * to the first-tag walkthrough (/app/first-tag); someone signing in goes to /app.
  */
 export function StartSignIn() {
   const { user, loading, signUp, signIn } = useAuth();
@@ -49,7 +49,7 @@ export function StartSignIn() {
         setSubmitting(false);
         return setCheckEmail(true);
       }
-      navigate(next ?? '/start/setup', { replace: true });
+      navigate(next ?? '/app/first-tag', { replace: true });
     } else {
       const r = await signIn(email, password);
       if (!r.ok) {

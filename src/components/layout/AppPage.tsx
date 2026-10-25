@@ -1,6 +1,7 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
+import { HelpButton } from '@/components/account/Account';
 import { cn } from '@/lib/cn';
 
 /**
@@ -21,6 +22,10 @@ interface AppPageProps {
   action?: ReactNode;
   /** A short line under a top-level title. */
   subtitle?: ReactNode;
+  /** Top-level screens, phone bar: something at the left (the account button on Items). */
+  leading?: ReactNode;
+  /** Top-level screens: the Help section this screen's "?" opens (src/routes/app/HelpCenter.tsx). */
+  help?: string;
   width?: 'narrow' | 'normal' | 'wide';
   children: ReactNode;
   className?: string;
@@ -32,7 +37,7 @@ const widths = {
   wide: 'max-w-5xl',
 } as const;
 
-export function AppPage({ title, back, action, subtitle, width = 'normal', children, className }: AppPageProps) {
+export function AppPage({ title, back, action, subtitle, leading, help, width = 'normal', children, className }: AppPageProps) {
   if (back) {
     return (
       <div className={cn('w-full', className)}>
@@ -59,15 +64,65 @@ export function AppPage({ title, back, action, subtitle, width = 'normal', child
     );
   }
   return (
-    <div className={cn('mx-auto w-full px-4 pb-8 pt-6 md:px-8 md:pt-10', widths[width], className)}>
-      <header className="mb-5 flex items-center justify-between gap-3 md:mb-6">
-        <div className="flex min-w-0 flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900 md:text-[2rem] md:leading-tight">{title}</h1>
-          {subtitle && <p className="text-sm text-muted text-pretty">{subtitle}</p>}
-        </div>
-        {action && <div className="shrink-0">{action}</div>}
-      </header>
+    <TopLevel title={title} action={action} subtitle={subtitle} leading={leading} help={help} width={width} className={className}>
       {children}
+    </TopLevel>
+  );
+}
+
+function TopLevel({
+  title,
+  action,
+  subtitle,
+  leading,
+  help,
+  width,
+  className,
+  children,
+}: Pick<AppPageProps, 'title' | 'action' | 'subtitle' | 'leading' | 'help' | 'className' | 'children'> & { width: keyof typeof widths }) {
+  const largeTitle = useRef<HTMLHeadingElement>(null);
+  const [scrolled, setScrolled] = useState(false);
+  // The bar's small title and its hairline appear once the large title has scrolled under it.
+  useEffect(() => {
+    const el = largeTitle.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver(([entry]) => setScrolled(!entry.isIntersecting), { rootMargin: '-44px 0px 0px 0px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  return (
+    <div className={cn('w-full', className)}>
+      <header
+        className={cn(
+          'no-print sticky top-0 z-30 border-b transition-colors duration-150 md:hidden',
+          scrolled ? 'border-hairline bg-canvas/85 backdrop-blur-xl' : 'border-transparent bg-canvas',
+        )}
+      >
+        <div className="grid h-11 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-2">
+          <div className="flex justify-self-start">{leading}</div>
+          <span aria-hidden className={cn('max-w-[50vw] truncate text-base font-semibold text-ink-900 transition-opacity duration-150', scrolled ? 'opacity-100' : 'opacity-0')}>
+            {title}
+          </span>
+          <div className="flex items-center justify-self-end">
+            {help && <HelpButton section={help} />}
+            {action}
+          </div>
+        </div>
+      </header>
+      <div className={cn('mx-auto w-full px-4 pb-8 pt-1 md:px-8 md:pt-10', widths[width])}>
+        <header className="mb-5 flex items-center justify-between gap-3 md:mb-6">
+          <div className="flex min-w-0 flex-col gap-1">
+            <h1 ref={largeTitle} className="text-[2rem] font-bold leading-tight tracking-[-0.02em] text-ink-900 md:text-[2rem] md:font-semibold">{title}</h1>
+            {subtitle && <p className="text-sm text-muted text-pretty">{subtitle}</p>}
+          </div>
+          <div className="hidden shrink-0 items-center gap-1 md:flex">
+            {help && <HelpButton section={help} />}
+            {action}
+          </div>
+        </header>
+        {children}
+      </div>
     </div>
   );
 }

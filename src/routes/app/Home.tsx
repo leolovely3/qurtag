@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { ChevronRight, Inbox as InboxIcon, Package, Plus, Tag as TagIcon } from 'lucide-react';
 import { AppPage } from '@/components/layout/AppPage';
+import { AccountButton } from '@/components/account/Account';
+import { GettingStarted } from '@/components/GettingStarted';
+import { SKIP_KEY } from '@/lib/gettingStarted';
 import { buttonClasses } from '@/components/ui/Button';
 import { ItemRowSkeleton } from '@/components/ui/Skeleton';
 import { useAuth } from '@/lib/auth';
@@ -27,6 +30,8 @@ export function useOwnerItems() {
       return;
     }
     let cancelled = false;
+    // Until the first answer, the screen is loading, not empty (an empty list sends a new owner to the walkthrough).
+    setFetching(true);
     (async () => {
       const hh = await fetchPrimaryHouseholdId();
       if (cancelled) return;
@@ -111,15 +116,24 @@ export function ItemList({ items, tagByItemId, readOnly }: { items: Item[]; tagB
   );
 }
 
-/** The add button beside the title, or nothing once the plan's limit is reached. */
-export function AddItemButton({ membership }: { membership?: Membership | null }) {
+/**
+ * The add button: a "+" in the phone's top bar, "Add item" beside the heading on wider screens.
+ * With no items yet it starts the first-tag walkthrough instead of the plain form.
+ */
+export function AddItemButton({ membership, first = false }: { membership?: Membership | null; first?: boolean }) {
   // Until the plan is known, trust the database to refuse (it does, with a plain message).
   if (membership && !membership.can_add_items) return null;
+  const to = first ? '/app/first-tag' : '/start/setup';
   return (
-    <Link to="/start/setup" className={buttonClasses({ variant: 'primary', className: 'px-4' })}>
-      <Plus size={18} strokeWidth={2} aria-hidden />
-      Add item
-    </Link>
+    <>
+      <Link to={to} aria-label={first ? 'Make your first tag' : 'Add item'} className="grid size-11 place-items-center rounded-pill text-ink-900 hover:bg-ink-50 active:bg-ink-50 md:hidden">
+        <Plus size={24} strokeWidth={2} aria-hidden />
+      </Link>
+      <Link to={to} className={buttonClasses({ variant: 'primary', className: 'hidden px-4 md:inline-flex' })}>
+        <Plus size={18} strokeWidth={2} aria-hidden />
+        Add item
+      </Link>
+    </>
   );
 }
 
@@ -156,9 +170,12 @@ function EmptyItems() {
         A water bottle, a violin case, a gym bag, your keys. If someone finds it, they scan the tag and
         send you a note here.
       </p>
-      <Link to="/start/setup" className={buttonClasses({ variant: 'primary', size: 'lg', className: 'mt-2' })}>
+      <Link to="/app/first-tag" className={buttonClasses({ variant: 'primary', size: 'lg', className: 'mt-2' })}>
         <Plus size={18} strokeWidth={2} aria-hidden />
-        Add your first item
+        Make your first tag
+      </Link>
+      <Link to="/app/help#getting-started" className="inline-flex min-h-11 items-center text-sm font-medium text-ink-900 underline underline-offset-4">
+        Need help?
       </Link>
     </section>
   );
@@ -186,6 +203,13 @@ function MoreLinks() {
 export function ItemsScreen() {
   const memberships = useMembershipsAvailable();
   const { items, tagByItemId, unread, membership, readOnly, loading, failed } = useOwnerItems();
+  // With no items, the walkthrough opens by itself; Skip for now leaves the empty screen for this visit.
+  let skipped = false;
+  try {
+    skipped = window.sessionStorage.getItem(SKIP_KEY) === '1';
+  } catch {
+    /* storage off: the walkthrough opens each time */
+  }
   const subtitle =
     loading || !membership
       ? '\u00a0'
@@ -193,11 +217,15 @@ export function ItemsScreen() {
         ? `${items.length} ${items.length === 1 ? 'item' : 'items'}`
         : `${items.length} of ${membership.item_limit} items`;
 
+  if (!loading && !failed && items.length === 0 && !skipped) return <Navigate to="/app/first-tag" replace />;
+
   return (
     <AppPage
       title="Items"
       subtitle={subtitle}
-      action={!loading && items.length > 0 ? <AddItemButton membership={membership} /> : undefined}
+      leading={<AccountButton />}
+      help="getting-started"
+      action={!loading ? <AddItemButton membership={membership} first={items.length === 0} /> : undefined}
     >
       {!loading && unread > 0 && (
         <Link
@@ -213,6 +241,8 @@ export function ItemsScreen() {
           <ChevronRight size={20} strokeWidth={1.75} className="shrink-0 text-signal-700" aria-hidden />
         </Link>
       )}
+
+      {!loading && items.length > 0 && <GettingStarted itemCount={items.length} firstTag={tagByItemId.get(items[items.length - 1].id) ?? null} />}
 
       {failed && (
         <p role="alert" className="mb-4 rounded-card bg-signal-50 px-4 py-3 text-sm text-signal-700">

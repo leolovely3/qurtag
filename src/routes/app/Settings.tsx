@@ -1,19 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import type { LucideIcon } from 'lucide-react';
-import { Bell, BellOff, ChevronRight, CreditCard, CircleHelp, Download, FileText, Home, Lock, LogOut, Mail, Monitor, Moon, Sun, Tag as TagIcon, Trash2 } from 'lucide-react';
+import { Bell, BellOff, ChevronRight, CreditCard, CircleHelp, FileText, Home, Lock, Monitor, Moon, Sun, Tag as TagIcon } from 'lucide-react';
 import { useTheme } from '@/lib/theme';
 import { Eyebrow } from '@/components/brand/Typography';
 import { AppPage, AppSection } from '@/components/layout/AppPage';
+import { useHashScroll } from '@/lib/useHashScroll';
+import { AccountCard, HelpLink } from '@/components/account/Account';
 import { Input } from '@/components/ui/Input';
 import { useAuth } from '@/lib/auth';
 import { usePushSubscription, isPushSupported } from '@/lib/push';
-import { exportMyData, fetchHousehold, fetchPrimaryHouseholdId, updateHousehold } from '@/lib/queries';
+import { fetchHousehold, fetchPrimaryHouseholdId, updateHousehold } from '@/lib/queries';
 import { FEATURES } from '@/lib/features';
-import { saveFile } from '@/lib/saveFile';
 import { fetchEmailAvailable } from '@/lib/membership';
 import { useMembershipsAvailable } from '@/lib/useMembershipsAvailable';
-import { Modal } from '@/components/ui/Modal';
 import { NotificationSettings } from '@/components/push/NotificationSettings';
 import { BlockedFinders } from '@/components/moderation/BlockedFinders';
 import type { Household } from '@/lib/database.types';
@@ -23,13 +23,10 @@ import { cn } from '@/lib/cn';
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
 export function Settings() {
-  const { user, signOut, deleteAccount } = useAuth();
+  const { user } = useAuth();
+  useHashScroll();
   const memberships = useMembershipsAvailable();
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [exporting, setExporting] = useState(false);
   const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
-  const navigate = useNavigate();
   const { permission, subscribed, pending, subscribe, unsubscribe } = usePushSubscription(
     user?.id ?? null,
   );
@@ -123,43 +120,10 @@ export function Settings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [country]);
 
-  async function handleSignOut() {
-    await signOut();
-    navigate('/start', { replace: true });
-  }
-
-  async function handleExport() {
-    setExporting(true);
-    try {
-      const data = await exportMyData();
-      await saveFile({
-        filename: 'qurtag-my-data.json',
-        mime: 'application/json',
-        text: JSON.stringify({ account: { email: user?.email, name: user?.name }, ...data }, null, 2),
-        dialogTitle: 'Save your data',
-      });
-    } catch {
-      toast.show({ kind: 'error', title: "Couldn't prepare your data", body: 'Your file was not saved. Try again in a moment.' });
-    } finally {
-      setExporting(false);
-    }
-  }
-
-  async function handleDelete() {
-    setDeleting(true);
-    const r = await deleteAccount();
-    setDeleting(false);
-    if (!r.ok) {
-      toast.show({ kind: 'error', title: "Couldn't delete your account", body: r.error });
-      return;
-    }
-    setDeleteOpen(false);
-    navigate('/', { replace: true });
-  }
-
   return (
     <AppPage
       title="Settings"
+      help="account"
       action={
         saveState === 'saving' ? (
           <span className="text-sm text-muted">Saving…</span>
@@ -169,6 +133,13 @@ export function Settings() {
       }
     >
       <div className="flex flex-col gap-6">
+
+      <AccountCard />
+
+      <AppSection title="Account">
+        <ActionRow icon={CircleHelp} title="Help and questions" body="Answers, how-tos and a way to reach us." to="/app/help" />
+        {memberships && <ActionRow icon={CreditCard} title="Membership" body="Your plan, billing and your family." to="/app/membership" />}
+      </AppSection>
 
       {/* Return address (courier feature, hidden) */}
       {FEATURES.courier && (
@@ -231,7 +202,8 @@ export function Settings() {
       )}
 
       {/* Notifications */}
-      <AppSection title="Notifications">
+      <div id="alerts" className="-mt-2 flex scroll-mt-16 flex-col gap-2">
+      <AppSection title="Notifications" description={undefined}>
 
         {FEATURES.push && (
         <Row
@@ -277,6 +249,8 @@ export function Settings() {
 
         <NotificationSettings emailAvailable={emailAvailable} />
       </AppSection>
+      <div className="px-1"><HelpLink section="alerts" label="How alerts work" /></div>
+      </div>
 
       <AppSection title="Blocked finders" description="Finders you blocked cannot write to you, and their notes stay out of your inbox.">
         <BlockedFinders />
@@ -324,33 +298,11 @@ export function Settings() {
         </Row>
       </AppSection>
 
-      {/* Account */}
-      <AppSection title="Account">
-        <Row icon={Mail} title={user?.email ?? 'Signed in'} body="The email you sign in with. Finders never see it." />
-        {memberships && <ActionRow icon={CreditCard} title="Membership" body="Your plan, billing and your family." to="/app/membership" />}
-        <ActionRow
-          icon={Download}
-          title={exporting ? 'Preparing your file…' : 'Download my data'}
-          body={
-            memberships
-              ? 'Your items, tags, scans and conversations, as a file. On the Free plan the file holds the last 30 days of scans.'
-              : 'Your items, tags, scans and conversations, as a file.'
-          }
-          onClick={handleExport}
-          disabled={exporting}
-        />
-        <ActionRow icon={LogOut} title="Sign out" onClick={handleSignOut} />
-      </AppSection>
-
-      <AppSection description="Deletes your account, items, tags and conversations for good. Your tags stop working.">
-        <ActionRow icon={Trash2} title="Delete my account" onClick={() => setDeleteOpen(true)} tone="danger" />
-      </AppSection>
-
-      <AppSection title="Help">
+      {/* About */}
+      <AppSection title="About">
         <ul className="divide-y divide-hairline">
           {[
             { to: '/app/tags', label: 'Your tags', icon: TagIcon },
-            { to: '/app/help', label: 'Help and questions', icon: CircleHelp },
             { to: '/app/privacy', label: 'Privacy', icon: Lock },
             { to: '/app/terms', label: 'Terms', icon: FileText },
           ].map((l) => (
@@ -367,20 +319,6 @@ export function Settings() {
         </ul>
       </AppSection>
       </div>
-
-      <Modal
-        open={deleteOpen}
-        onClose={() => setDeleteOpen(false)}
-        eyebrow="Delete account"
-        title="Delete your QuR Tag account?"
-        description={
-          memberships
-            ? "Your account, items, tags, scans and conversations are deleted at once and cannot be brought back. Any tag you printed stops working. If you have a family, its members lose access to the family's items. A membership that is still renewing must be canceled first."
-            : 'Your account, items, tags, scans and conversations are deleted at once and cannot be brought back. Any tag you printed stops working.'
-        }
-        primaryAction={{ label: 'Delete everything', tone: 'destructive', onClick: handleDelete, pending: deleting }}
-        secondaryAction={{ label: 'Cancel', onClick: () => setDeleteOpen(false) }}
-      />
 
       {FEATURES.push && !isPushSupported && (
         <p className="mt-6 text-sm text-muted">

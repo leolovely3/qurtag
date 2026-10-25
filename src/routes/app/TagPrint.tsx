@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Download, ImageDown, Printer } from 'lucide-react';
 import { AppPage } from '@/components/layout/AppPage';
+import { HelpLink } from '@/components/account/Account';
+import { recordStep } from '@/lib/useGettingStarted';
 import { buttonClasses } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useAuth } from '@/lib/auth';
@@ -133,6 +135,7 @@ export function TagPrint() {
     setBusy(kind);
     try {
       await work();
+      if (user) recordStep(user.id, 'print');
     } catch (err) {
       // Closing the share sheet without choosing anything is not a failure.
       const message = err instanceof Error ? err.message : '';
@@ -170,7 +173,13 @@ export function TagPrint() {
     <button
       type="button"
       disabled={busy !== null || !sheet}
-      onClick={() => (isNative() ? void run('pdf', () => saveTagPdf(sheet!, fileBase + '.pdf', 'Print your tags')) : window.print())}
+      onClick={() => {
+        if (isNative()) void run('pdf', () => saveTagPdf(sheet!, fileBase + '.pdf', 'Print your tags'));
+        else {
+          if (user) recordStep(user.id, 'print');
+          window.print();
+        }
+      }}
       className={buttonClasses({ variant: 'primary', className: 'px-4' })}
     >
       <Printer size={16} strokeWidth={1.75} aria-hidden />
@@ -211,7 +220,10 @@ export function TagPrint() {
         )}
 
         <section aria-labelledby="style-h" className="flex flex-col gap-3">
-          <h2 id="style-h" className="text-lg font-semibold text-ink-900">Choose a style</h2>
+          <div className="flex items-center justify-between gap-2">
+            <h2 id="style-h" className="text-lg font-semibold text-ink-900">Choose a style</h2>
+            <HelpLink section="which-style" label="Which style?" />
+          </div>
           <div role="radiogroup" aria-labelledby="style-h" className="grid gap-2 sm:grid-cols-2">
             {STYLES.map((s) => (
               <label key={s.id} className={choice(s.id === styleId)}>
