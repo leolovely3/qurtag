@@ -4,6 +4,7 @@
  *
  *   POST /api/fn/finder-view   the finder-safe item card and the finder's own conversation
  *   POST /api/fn/finder-send   a finder's note (opens a conversation, or adds to theirs)
+ *   GET  /api/fn?go=<code>     a short code (qurtag.com/k7m2p) sent on to the finder page
  *
  * Both are in server/routes/finder.ts. The iPhone app's push routes (push-register, push-unregister,
  * push-reply) are in server/routes/push.ts. The membership routes (billing-config, billing-checkout,
@@ -15,12 +16,14 @@ import { json } from '../../server/routes/core.js';
 import { createBillingRoutes } from '../../server/routes/billing.js';
 import { createFinderRoutes } from '../../server/routes/finder.js';
 import { createPushRoutes } from '../../server/routes/push.js';
+import { createShortCodeRoute } from '../../server/routes/shortcode.js';
 
 export const config = { runtime: 'nodejs' };
 
 const finder = createFinderRoutes();
 const billing = createBillingRoutes();
 const push = createPushRoutes();
+const shortCode = createShortCodeRoute();
 
 const ROUTES: Record<string, (request: Request) => Promise<Response>> = {
   'finder-view': finder.view,
@@ -38,6 +41,9 @@ const ROUTES: Record<string, (request: Request) => Promise<Response>> = {
 };
 
 const handle = withPhoneAppCors(async (request: Request): Promise<Response> => {
+  // vercel.json sends qurtag.com/<short code> here as /api/fn?go=<code> (server/routes/shortcode.ts).
+  const go = new URL(request.url).searchParams.get('go');
+  if (go !== null) return shortCode(request, go.slice(0, 32));
   const name = new URL(request.url).pathname.replace(/^\/api\/fn\/?/, '').replace(/\/+$/, '');
   const route = Object.prototype.hasOwnProperty.call(ROUTES, name) ? ROUTES[name] : undefined;
   if (!route) return json(404, { error: 'not_found' });

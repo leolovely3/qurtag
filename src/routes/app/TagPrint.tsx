@@ -1,16 +1,51 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { QRCodeSVG } from 'qrcode.react';
-import { Printer, Scissors } from 'lucide-react';
+import { Download, ImageDown, Printer } from 'lucide-react';
 import { AppPage } from '@/components/layout/AppPage';
-import { TagLogo } from '@/components/brand/Wordmark';
 import { buttonClasses } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useAuth } from '@/lib/auth';
 import { isNative, publicUrl } from '@/lib/platform';
-import { shareTagPdf } from '@/lib/tagPdf';
+import { cn } from '@/lib/cn';
+import { saveTagPdf, saveTagPng } from '@/lib/tagExport';
+import {
+  BLEED_IN,
+  LOOKS,
+  PAPERS,
+  STYLES,
+  copiesOnPage,
+  copyChoices,
+  defaultPaper,
+  gridFor,
+  printReadySize,
+  styleById,
+  type LookId,
+  type PaperId,
+  type StyleId,
+} from '@/lib/tagLayout';
+import { pageToSvg } from '@/lib/tagSvg';
+import { buildPreview, buildPrintReady, buildSheet } from '@/lib/tagStyles';
 import { fetchItemById, fetchTagById } from '@/lib/queries';
 import type { Item, Tag } from '@/lib/database.types';
+
+const STORE = 'qurtag.tagstyle';
+
+function remembered<T extends string>(key: string, allowed: T[], fallback: T): T {
+  try {
+    const v = (JSON.parse(localStorage.getItem(STORE) ?? '{}') as Record<string, string>)[key];
+    return allowed.includes(v as T) ? (v as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function remember(values: Record<string, string>): void {
+  try {
+    localStorage.setItem(STORE, JSON.stringify(values));
+  } catch {
+    /* private window: nothing to remember */
+  }
+}
 
 export function TagPrint() {
   const { tagId } = useParams();
@@ -20,8 +55,15 @@ export function TagPrint() {
   const [tag, setTag] = useState<Tag | null>(null);
   const [item, setItem] = useState<Item | null>(null);
   const [fetching, setFetching] = useState(true);
-  const [preparing, setPreparing] = useState(false);
-  const [shareError, setShareError] = useState('');
+  const [busy, setBusy] = useState<'pdf' | 'png' | 'pdf2' | null>(null);
+  const [error, setError] = useState('');
+  const [styleId, setStyleId] = useState<StyleId>(() => remembered('style', STYLES.map((s) => s.id), 'wallet'));
+  const [look, setLook] = useState<LookId>(() => remembered('look', LOOKS.map((l) => l.id), 'clean'));
+  const [paperId, setPaperId] = useState<PaperId>(() =>
+    remembered('paper', ['letter', 'a4'], defaultPaper(typeof navigator === 'undefined' ? undefined : navigator.language)),
+  );
+  const [copies, setCopies] = useState(0);
+  const [mirror, setMirror] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -53,18 +95,50 @@ export function TagPrint() {
     return publicUrl(`/find/${tag.public_id}`);
   }, [tag]);
 
-  async function printInApp() {
-    if (!tag) return;
-    setShareError('');
-    setPreparing(true);
+  const spec = styleById(styleId);
+  const paper = PAPERS[paperId];
+  const capacity = gridFor(spec, paperId).count;
+  const choices = copyChoices(spec, paperId);
+  // 0 means "a full page"; a choice that no longer fits (another style or paper) is cut back.
+  const count = copies === 0 ? capacity : copiesOnPage(spec, paperId, copies);
+
+  useEffect(() => remember({ style: styleId, look, paper: paperId }), [styleId, look, paperId]);
+  useEffect(() => setCopies(0), [styleId, paperId]);
+
+  const data = useMemo(
+    () => ({ finderUrl, shortCode: tag?.short_code ?? null, itemName: item?.name ?? null }),
+    [finderUrl, tag?.short_code, item?.name],
+  );
+  const { preview, sheet, printReady } = useMemo(() => {
+    if (!finderUrl) return { preview: null, sheet: null, printReady: null };
     try {
-      await shareTagPdf({ publicId: tag.public_id, finderUrl, itemName: item?.name });
+      return {
+        preview: buildPreview(styleId, look, data),
+        sheet: buildSheet(styleId, look, data, { paper: paperId, copies: count, mirror }),
+        printReady: buildPrintReady(styleId, look, data),
+      };
+    } catch {
+      return { preview: null, sheet: null, printReady: null };
+    }
+  }, [finderUrl, styleId, look, data, paperId, count, mirror]);
+
+  /** Pixels per inch on screen: a small tag is shown larger so its details can be seen. */
+  const zoomPx = Math.min(180, 420 / spec.w, 560 / spec.h);
+  const zoom = Math.round((zoomPx / 96) * 10) / 10;
+
+  const fileBase = `qurtag-${styleId}-${look}-${tag?.short_code ?? tag?.public_id ?? 'tag'}`;
+
+  async function run(kind: 'pdf' | 'png' | 'pdf2', work: () => Promise<void>) {
+    setError('');
+    setBusy(kind);
+    try {
+      await work();
     } catch (err) {
       // Closing the share sheet without choosing anything is not a failure.
       const message = err instanceof Error ? err.message : '';
-      if (!/cancel/i.test(message)) setShareError('The tag could not be prepared. Please try again.');
+      if (!/cancel/i.test(message)) setError('The tag could not be prepared. Please try again.');
     } finally {
-      setPreparing(false);
+      setBusy(null);
     }
   }
 
@@ -95,78 +169,203 @@ export function TagPrint() {
   const printButton = (
     <button
       type="button"
-      disabled={preparing}
-      onClick={() => (isNative() ? void printInApp() : window.print())}
+      disabled={busy !== null || !sheet}
+      onClick={() => (isNative() ? void run('pdf', () => saveTagPdf(sheet!, fileBase + '.pdf', 'Print your tags')) : window.print())}
       className={buttonClasses({ variant: 'primary', className: 'px-4' })}
     >
       <Printer size={16} strokeWidth={1.75} aria-hidden />
-      {preparing ? 'Preparing…' : 'Print'}
+      {busy === 'pdf' ? 'Preparing…' : isNative() ? 'Print or share' : 'Print'}
     </button>
   );
+
+  const choice = (selected: boolean) =>
+    cn(
+      'rounded-card border px-3 py-3 text-left transition-colors focus-within:ring-2 focus-within:ring-ink-900',
+      selected ? 'border-ink-900 bg-paper' : 'border-hairline hover:border-hairline-strong',
+    );
 
   return (
     <AppPage title="Tag" back={back} action={printButton} width="normal">
       <style>{`
         @media print {
           body { background: white !important; }
-          @page { size: Letter; margin: 0.5in; }
+          @page { size: ${paper.w}in ${paper.h}in; margin: 0; }
         }
       `}</style>
 
-      {shareError && (
-        <p role="alert" className="no-print mb-4 rounded-card bg-signal-50 px-4 py-3 text-sm text-signal-700">
-          {shareError}
-        </p>
+      {/* What the printer gets: the page itself, at true size. Hidden on screen. */}
+      {sheet && (
+        <div
+          aria-hidden
+          className="hidden bg-white print:fixed print:left-0 print:top-0 print:z-[200] print:block print:overflow-hidden"
+          style={{ width: `${paper.w}in`, height: `${paper.h}in` }}
+          dangerouslySetInnerHTML={{ __html: pageToSvg(sheet) }}
+        />
       )}
 
-      {/* The printable tag */}
-      <div className="flex justify-center print:block">
-        <article className="w-full max-w-2xl rounded-modal border border-hairline bg-white p-6 text-[#0A0B0F] shadow-card sm:p-8 print:rounded-none print:border-0 print:p-0 print:shadow-none">
-          <div className="mb-6">
-            <TagLogo />
-          </div>
+      <div className="no-print flex flex-col gap-6">
+        {error && (
+          <p role="alert" className="rounded-card bg-signal-50 px-4 py-3 text-sm text-signal-700">
+            {error}
+          </p>
+        )}
 
-          <div className="grid items-center gap-6 sm:grid-cols-2 sm:gap-8">
-            <div className="flex flex-col gap-3">
-              <h2 className="text-[1.75rem] font-semibold leading-tight tracking-[-0.02em] text-[#0A0B0F]">
-                If found, please scan.
-              </h2>
-              <p className="max-w-sm text-base text-[#34363D] text-pretty">
-                Point your phone camera at the code to send the owner a note. No app needed, and
-                neither of you sees the other's phone number or email.
-              </p>
-              {item && (
-                <p className="mt-1 text-sm text-[#52545B]">
-                  On: <span className="font-medium text-[#0A0B0F]">{item.name}</span>
-                </p>
-              )}
-            </div>
-            <div className="flex flex-col items-center gap-3">
-              {/* White in every theme: a QR code needs a light quiet zone around it to scan. */}
-              <div className="rounded-modal border border-black/15 bg-white p-4">
-                <QRCodeSVG value={finderUrl} size={200} level="H" marginSize={0} bgColor="#FFFFFF" fgColor="#0A0B0F" />
+        <section aria-labelledby="style-h" className="flex flex-col gap-3">
+          <h2 id="style-h" className="text-lg font-semibold text-ink-900">Choose a style</h2>
+          <div role="radiogroup" aria-labelledby="style-h" className="grid gap-2 sm:grid-cols-2">
+            {STYLES.map((s) => (
+              <label key={s.id} className={choice(s.id === styleId)}>
+                <input type="radio" name="tag-style" className="sr-only" checked={s.id === styleId} onChange={() => setStyleId(s.id)} />
+                <span className="block text-base font-semibold text-ink-900">{s.name}</span>
+                <span className="block text-sm text-ink-700">{s.sizeLabel}</span>
+                <span className="block text-sm text-muted">{s.suits}</span>
+              </label>
+            ))}
+          </div>
+        </section>
+
+        <section aria-labelledby="look-h" className="flex flex-col gap-3">
+          <h2 id="look-h" className="text-lg font-semibold text-ink-900">Choose a look</h2>
+          <div role="radiogroup" aria-labelledby="look-h" className="grid gap-2 sm:grid-cols-3">
+            {LOOKS.map((l) => (
+              <label key={l.id} className={choice(l.id === look)}>
+                <input type="radio" name="tag-look" className="sr-only" checked={l.id === look} onChange={() => setLook(l.id)} />
+                <span className="block text-base font-semibold text-ink-900">{l.name}</span>
+                <span className="block text-sm text-muted">{l.note}</span>
+              </label>
+            ))}
+          </div>
+        </section>
+
+        <section aria-labelledby="page-h" className="flex flex-col gap-3">
+          <h2 id="page-h" className="text-lg font-semibold text-ink-900">Your page</h2>
+          <div className="flex flex-wrap items-end gap-4">
+            <fieldset className="flex flex-col gap-1">
+              <legend className="text-sm font-medium text-ink-900">Paper</legend>
+              <div className="flex gap-2">
+                {(['letter', 'a4'] as PaperId[]).map((id) => (
+                  <label key={id} className={cn(choice(id === paperId), 'px-4 py-2')}>
+                    <input type="radio" name="tag-paper" className="sr-only" checked={id === paperId} onChange={() => setPaperId(id)} />
+                    <span className="text-sm font-medium text-ink-900">{PAPERS[id].name}</span>
+                  </label>
+                ))}
               </div>
-              {/* The address carries the tag's code, which is case-sensitive: never shown in capitals. */}
-              <span className="break-all text-center font-mono text-sm text-[#52545B]">
-                {finderUrl.replace(/^https?:\/\//, '')}
+            </fieldset>
+            <label className="flex flex-col gap-1 text-sm font-medium text-ink-900">
+              Copies on the page
+              <select
+                value={count}
+                onChange={(e) => setCopies(Number(e.target.value))}
+                className="h-11 rounded-card border border-hairline-strong bg-canvas px-3 text-base text-ink-900"
+              >
+                {choices.map((n) => (
+                  <option key={n} value={n}>
+                    {n === capacity ? `${n} (a full page)` : n}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          {spec.mirrorable && (
+            <label className="flex items-start gap-3 text-sm text-ink-900">
+              <input type="checkbox" checked={mirror} onChange={(e) => setMirror(e.target.checked)} className="mt-1 size-4" />
+              <span>
+                <span className="font-medium">Print mirrored.</span> Tick this if your transfer paper says to print mirrored.
+                The page is flipped left to right so the tag reads the right way round once it is ironed on.
               </span>
+            </label>
+          )}
+          <p className="text-sm text-muted text-pretty">{spec.howTo}</p>
+        </section>
+
+        <section aria-labelledby="prev-h" className="flex flex-col gap-3">
+          <h2 id="prev-h" className="text-lg font-semibold text-ink-900">Preview</h2>
+          <div className="grid items-start gap-4 sm:grid-cols-[auto_1fr]">
+            {preview && (
+              <figure className="flex flex-col gap-1">
+                <div
+                  role="img"
+                  aria-label={`${spec.name}, ${look} look, enlarged`}
+                  className="overflow-hidden rounded-card border border-hairline bg-[#E8E9EC] p-3"
+                  style={{ width: preview.w * zoomPx + 24, maxWidth: '100%' }}
+                  dangerouslySetInnerHTML={{ __html: pageToSvg(preview, { responsive: true }) }}
+                />
+                <figcaption className="text-sm text-muted">One tag, {spec.sizeLabel}, shown {zoom} times real size
+                  {spec.panels === 2 && '. The lower half is printed upside down so it reads the right way up once folded.'}
+                </figcaption>
+              </figure>
+            )}
+            {sheet && (
+              <figure className="flex flex-col gap-1">
+                <div
+                  role="img"
+                  aria-label={`The ${paper.name} page with ${count} copies`}
+                  className="mx-auto w-full max-w-[22rem] overflow-hidden rounded-card border border-hairline bg-white shadow-card"
+                  dangerouslySetInnerHTML={{ __html: pageToSvg(sheet, { responsive: true }) }}
+                />
+                <figcaption className="text-center text-sm text-muted">
+                  The page: {count} {count === 1 ? 'copy' : 'copies'} on {paper.name}
+                </figcaption>
+              </figure>
+            )}
+          </div>
+          {!isNative() && (
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={busy !== null || !sheet}
+                onClick={() => void run('pdf', () => saveTagPdf(sheet!, fileBase + '.pdf', 'Save your tags'))}
+                className={buttonClasses({ variant: 'secondary' })}
+              >
+                <Download size={16} strokeWidth={1.75} aria-hidden />
+                {busy === 'pdf' ? 'Preparing…' : 'Download PDF'}
+              </button>
             </div>
-          </div>
+          )}
+          <p className="text-sm text-muted text-pretty">
+            {isNative()
+              ? 'Print or share opens the share sheet: print it, save it to Files or AirDrop it to a computer. '
+              : 'Print at 100% (actual size), with no scaling or "fit to page", or the tags will not be the size shown. '}
+            You can print tags again at any time.
+          </p>
+        </section>
 
-          <div className="mt-6 flex items-center gap-2 border-t border-dashed border-black/20 pt-4 text-sm text-[#52545B]">
-            <Scissors size={16} strokeWidth={1.75} aria-hidden />
-            <span>Cut it out. Tape it on, slip it into a tag holder, or stick it inside a lid.</span>
+        <section aria-labelledby="order-h" className="flex flex-col gap-3 rounded-card border border-hairline bg-paper p-4">
+          <h2 id="order-h" className="text-lg font-semibold text-ink-900">Get a print-ready file</h2>
+          <p className="text-sm text-ink-700 text-pretty">
+            One tag at exact size ({spec.w} x {spec.h} in) with {BLEED_IN} in of bleed on every side ({printReadySize(spec).w.toFixed(3)} x{' '}
+            {printReadySize(spec).h.toFixed(3)} in in all). You can upload it to any online sticker printer to have it made on
+            waterproof vinyl. Choose the shape you want cut when you order: the corners here are square so the printer's cutter
+            decides.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={busy !== null || !printReady}
+              onClick={() => void run('png', () => saveTagPng(printReady!, `${fileBase}-print-ready.png`))}
+              className={buttonClasses({ variant: 'secondary' })}
+            >
+              <ImageDown size={16} strokeWidth={1.75} aria-hidden />
+              {busy === 'png' ? 'Preparing…' : 'PNG, 600 dpi'}
+            </button>
+            <button
+              type="button"
+              disabled={busy !== null || !printReady}
+              onClick={() => void run('pdf2', () => saveTagPdf(printReady!, `${fileBase}-print-ready.pdf`, 'Save your sticker file'))}
+              className={buttonClasses({ variant: 'secondary' })}
+            >
+              <Download size={16} strokeWidth={1.75} aria-hidden />
+              {busy === 'pdf2' ? 'Preparing…' : 'PDF with bleed'}
+            </button>
           </div>
-        </article>
-      </div>
+        </section>
 
-      <div className="no-print mx-auto mt-6 flex max-w-2xl flex-col gap-4">
-        <p className="px-1 text-sm text-muted text-pretty">
-          {isNative()
-            ? 'Print opens the share sheet: print it, save it to Files or AirDrop it to a computer.'
-            : 'Print, or choose "Save as PDF" in the print window to keep a copy.'}{' '}
-          Sticker paper or thick paper lasts longest; clear tape over it keeps rain off. You can print
-          this tag again at any time.
+        <p className="text-sm text-ink-700 text-pretty">
+          Want it to last through rain, washing machines and school bags?{' '}
+          <Link to="/make-it-last" className="font-medium text-ink-900 underline underline-offset-4">
+            Make it last
+          </Link>
+          .
         </p>
         <Link to="/app" className={buttonClasses({ variant: 'secondary', size: 'lg', block: true, className: 'sm:w-auto sm:self-start' })}>
           Done

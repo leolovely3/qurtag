@@ -26,8 +26,13 @@ const mounts: [string, Handlers][] = [
   ['/api/jobs', jobs as Handlers],
 ];
 
+/** The same rule as the short code rewrite in vercel.json: /<5 or 6 letters and digits holding a digit> goes to /api/fn?go=<code>. */
+const SHORT_PATH = /^\/((?=[A-Za-z]*[2-9])[2-9A-HJ-KM-NP-Za-hj-km-np-z]{5,6})$/;
+
 async function serve(req: IncomingMessage, res: ServerResponse) {
-  const url = req.url ?? '/';
+  const raw = req.url ?? '/';
+  const short = SHORT_PATH.exec(raw.split('?')[0]);
+  const url = short ? `/api/fn?go=${short[1]}` : raw;
   const mount = mounts.find(([prefix]) => url === prefix || url.startsWith(`${prefix}/`) || url.startsWith(`${prefix}?`));
   const method = req.method ?? 'GET';
   const handler = mount?.[1][method] as ((r: Request) => Promise<Response>) | undefined;

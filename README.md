@@ -8,7 +8,8 @@ a page opens with no app and no account, shows a finder-safe card for the item, 
 them send a note. The owner reads it in the inbox at /app and replies; the finder reads the
 reply on the same tag page. Neither side sees the other's email or phone number.
 
-The landing page is at `/`, the app at `/app`, a tag's page at `/find/<tag code>`.
+The landing page is at `/`, the app at `/app`, a tag's page at `/find/<tag code>`, and a tag's short address at
+`/<short code>` (for example qurtag.com/k7m2p), which sends the visitor to the same page.
 
 Run by Impact Consulting AI LLC, a Florida limited liability company. Contact:
 info@impactconsulting.ai.
@@ -231,6 +232,41 @@ by any request; only `server_support_create` writes and only the Super Admin fun
 - With `RESEND_API_KEY` set, a notice goes to info@impactconsulting.ai with reply-to set to the sender.
   Without it the message is only stored.
 
+## Tag styles, short codes and print-ready files
+
+**Styles** (tag page, `src/routes/app/TagPrint.tsx`): six styles, each in three looks (Clean, Bold, Playful), on US
+Letter or A4 with several copies a page.
+
+| Style | One piece | Copies on Letter / A4 | Notes |
+| --- | --- | --- | --- |
+| Small sticker | 1 x 1 in | 48 / 54 | cut marks |
+| Label strip | 2.625 x 1 in | 30 / 18 | on Letter the standard 30 per sheet address label sheet (3 across, 10 down), no marks |
+| Key fob insert | 1 x 1.4 in, two sides | 18 / 18 | front QR, back short code and address; fold line; the back is printed upside down so it reads upright once folded |
+| Wallet card | 3.375 x 2.125 in | 8 / 8 | cut marks |
+| Bag tag | 2.4 x 3.5 in folded | 3 / 3 | "If found" large; fold line |
+| Clothing strip | 2.5 x 1 in | 16 / 18 | iron-on transfer paper; "Print mirrored" flips the whole page |
+
+The sizes, grids and the QR rules are in `src/lib/tagLayout.ts`. The QR code is always error correction level H,
+printed at least 0.75 in (`MIN_QR_IN`; `qrSize` throws below it) with a quiet zone of at least 2 modules, black on white
+in every look. A tag is a list of shapes (`src/lib/tagScene.ts`) drawn as SVG (the preview and the PNG) and as vector PDF
+(`src/lib/tagPdf.ts`, Helvetica base fonts, no font file). `npx tsx scripts/qurtag/render-tags.mjs <folder>` writes every
+style and look as PDF and (with poppler) PNG; the unit tests decode the QR code of each at 300 dpi.
+
+**Print-ready file**: one piece at exact size with 0.125 in bleed on every side, as a 600 dpi PNG (resolution stamped in
+the file) and a PDF with trim and bleed boxes, for any online sticker printer. No vendor is named or linked.
+
+**Short codes** (`db/shortcodes.sql`, rollout step 10): every tag has `short_code`, 6 characters (5 are allowed) from
+`abcdefghjkmnpqrstuvwxyz23456789` (no 0, o, 1, l, i), at least one digit, lower case, unique. A trigger gives each new tag
+its code. `/<code>` (any case) is rewritten by `vercel.json` to `/api/fn?go=<code>` (`server/routes/shortcode.ts`) and
+answers 302 to `/find/<tag>`; an unknown, replaced or switched-off code answers an honest 404 page. The rewrite matches only
+5 or 6 characters that hold a digit, so it never catches a page of the site. Limits: 30 lookups a minute per network address
+and instance, and in the database 20 wrong guesses per visitor in 10 minutes and 600 in a minute in all, counted under a
+keyed hash of the address. The QR code still holds the full `/find/` address, so a printed tag never depends on the lookup.
+
+**Make it last** (`/make-it-last`, `src/routes/marketing/MakeItLast.tsx`): plain, brand-neutral advice on paper, covers,
+holders and clothing. It names no brand and links to no shop; the same page opens inside the iPhone app. The app does not
+sell tags.
+
 ## Features that are switched off
 
 `src/lib/features.ts` hides code built for a bigger plan that cannot work yet: cash rewards,
@@ -245,8 +281,8 @@ deployed.
 ```bash
 npm install
 npm run typecheck     # app, Vite config and server code
-npm run test:unit     # the finder routes, the payment code, and the push code (Apple token, alert text, requests), with stand-ins
-npm run test:e2e      # the whole loop, memberships, webhooks, Family and push alerts (with a stand-in Apple server), on a throwaway local Postgres (needs Docker)
+npm run test:unit     # the finder routes, the payment code, the push code, the tag layout maths and drawn tags (QR codes decoded back), the short code route, with stand-ins
+npm run test:e2e      # the whole loop, memberships, webhooks, Family, push alerts (with a stand-in Apple server) and short codes, on a throwaway local Postgres (needs Docker)
 npm run build
 ```
 
@@ -260,8 +296,8 @@ favicons, the web app icons, `public/brand/*.svg`, the share image `public/og.pn
 `Wordmark` component draws (`src/components/brand/logoPaths.ts`).
 
 Stack: React 18, TypeScript, Vite, Tailwind, React Router 7, Better Auth 1.7.7, pg,
-postgrest-js. QR codes are drawn in the browser (`qrcode.react`); the tag page prints from
-the browser, or saves as PDF from the print dialog. Colours are CSS variables (`src/index.css`)
+postgrest-js. QR codes are made in the browser (`qrcode.react`) and drawn by `src/lib/tagStyles.ts`; the tag page
+prints a vector page of tags, or saves it as a PDF. Colours are CSS variables (`src/index.css`)
 with a dark set under `.dark`, so every page follows the theme without per-page dark rules.
 
 ## iPhone app
@@ -278,10 +314,10 @@ shell (`capacitor.config.ts`, `ios/`). The old Expo stub in `mobile/` is not use
 - The app opens to `/app`. Links to other sites open in Safari's sheet, which has a Done button back to the app.
 - The item photo picker offers Take Photo and the photo library, so `Info.plist` carries
   `NSCameraUsageDescription` and `NSPhotoLibraryUsageDescription`; iOS asks the first time either is
-  used. The app requests no location or NFC permission, and asks for notifications once, as described under "iPhone push notifications". "Print tag" draws the tag
-  (label and QR code) on the phone as a one-page PDF (`src/lib/tagPdf.ts`) and opens the iOS share
-  sheet through `@capacitor/share` and `@capacitor/filesystem`, which offers Print, Save to Files and
-  AirDrop. On the web it opens the browser's print dialog.
+  used. The app requests no location or NFC permission, and asks for notifications once, as described under "iPhone push notifications". The tag page's
+  "Print or share" makes the chosen page of tags on the phone as a vector PDF (`src/lib/tagPdf.ts`) and opens the
+  iOS share sheet through `@capacitor/share` and `@capacitor/filesystem` (`src/lib/saveFile.ts`), which offers Print,
+  Save to Files and AirDrop. On the web it opens the browser's print dialog, or downloads the PDF.
 - Terms, Privacy and Help, opened inside the app, show a plain header with a Back button instead of
   the website's menu (`src/components/layout/MarketingLayout.tsx`).
 - On a phone (the app, and the website under 768px wide) the signed-in screens use a bottom tab bar

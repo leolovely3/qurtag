@@ -15,7 +15,7 @@ const nav = [
 ];
 
 /** The pages the iPhone app shows on their own, without the marketing menu. */
-const APP_LEGAL_PATHS = ['/terms', '/privacy', '/help'];
+const APP_LEGAL_PATHS = ['/terms', '/privacy', '/help', '/make-it-last'];
 
 /**
  * In the iPhone app, Terms and Privacy open from the sign-in screen. They get a plain
@@ -24,7 +24,13 @@ const APP_LEGAL_PATHS = ['/terms', '/privacy', '/help'];
 function AppLegalShell() {
   const navigate = useNavigate();
   const location = useLocation();
-  const title = location.pathname.startsWith('/privacy') ? 'Privacy' : location.pathname.startsWith('/help') ? 'Help' : 'Terms';
+  const title = location.pathname.startsWith('/privacy')
+    ? 'Privacy'
+    : location.pathname.startsWith('/help')
+      ? 'Help'
+      : location.pathname.startsWith('/make-it-last')
+        ? 'Make it last'
+        : 'Terms';
 
   // Each page opens at its top, not where the sign-in page was scrolled to.
   useEffect(() => {

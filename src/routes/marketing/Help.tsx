@@ -42,7 +42,29 @@ const faqs: { q: string; a: ReactNode }[] = [
   },
   {
     q: 'What if my tag is damaged or lost?',
-    a: 'Open the item and print its tag again. If the old tag went missing and you want it to stop working, choose Make a new code: the old tag stops working at once.',
+    a: 'Open the item and print its tag again. If the old tag went missing and you want it to stop working, choose Make a new code: the old tag and its short code stop working at once.',
+  },
+  {
+    q: 'Which tag style should I print?',
+    a: 'Choose a style on the tag page. A small sticker or label strip suits bottles, lunchboxes and laptops, a key fob insert suits keys, a wallet card or bag tag suits bags, and a clothing strip suits jackets. Each comes in Clean, Bold and Playful looks, on US Letter or A4, with several copies on a page.',
+  },
+  {
+    q: 'What is the short code on my tag?',
+    a: 'A few letters and numbers printed beside the QR code, for example qurtag.com/k7m2p. Typing it into a browser opens the same page as scanning the code, so a scuffed tag can still be used. It is not case sensitive.',
+  },
+  {
+    q: 'How do I make my tag last?',
+    a: (
+      <>
+        Print on weatherproof sticker paper, or cover a paper tag with clear packing tape, and use a clear holder for bags. Our{' '}
+        <Link to="/make-it-last" className="text-ink-900 underline underline-offset-4">Make it last guide</Link>{' '}
+        has the details, including curved bottles and clothing.
+      </>
+    ),
+  },
+  {
+    q: 'Can I have my tags printed as stickers?',
+    a: 'Yes. On the tag page choose Get a print-ready file. You get a PNG and a PDF at exact size with bleed, which you can upload to any online sticker printer for waterproof vinyl. QuR Tag does not sell tags or stickers, so you choose the printer.',
   },
   {
     q: 'How do I mark an item as lost?',

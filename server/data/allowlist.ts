@@ -63,7 +63,7 @@ export const TABLES: Readonly<Record<string, TableRule>> = {
   },
   // Tags are made by create_item and replace_tag; an owner may switch one off or on.
   tags: {
-    columns: ['id', 'public_id', 'household_id', 'current_item_id', 'hardware_tier', 'status', 'activated_at', 'created_at'],
+    columns: ['id', 'public_id', 'short_code', 'household_id', 'current_item_id', 'hardware_tier', 'status', 'activated_at', 'created_at'],
     user: { ops: ['select', 'update'], write: ['status'] },
   },
   scans: {
