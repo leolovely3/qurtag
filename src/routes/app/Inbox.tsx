@@ -80,8 +80,8 @@ export function Inbox() {
           </div>
           <h2 className="text-xl font-semibold text-ink-900">No notes yet</h2>
           <p className="max-w-sm text-base text-muted text-pretty">
-            When someone scans one of your tags and writes to you, the note shows up here. Email alerts
-            are not switched on yet, so check back here when something is lost.
+            When someone scans one of your tags and writes to you, the note shows up here. Turn on
+            alerts in Settings to hear about it the moment it arrives.
           </p>
         </section>
       )}
