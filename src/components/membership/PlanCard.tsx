@@ -69,6 +69,7 @@ function PriceLines({ plan, prices }: { plan: Plan; prices?: Map<string, string>
       <p className="text-body text-ink-700">
         or {year} a year{!prices && <span className="text-muted"> (save {yearlySavingPercent(paid)}%)</span>}
       </p>
+      {!prices && <p className="text-caption text-muted">Plus applicable sales tax</p>}
     </div>
   );
 }

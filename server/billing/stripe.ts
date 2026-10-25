@@ -107,8 +107,18 @@ export async function createCheckoutSession(
   form.set('metadata[app]', 'qurtag');
   form.set('subscription_data[metadata][user_id]', input.userId);
   form.set('subscription_data[metadata][app]', 'qurtag');
-  if (input.customerId) form.set('customer', input.customerId);
-  else form.set('customer_email', input.email);
+  // Stripe Tax: tax is worked out from the billing address the person gives on the Checkout page.
+  // Subscriptions made by Checkout carry automatic tax, so renewals and plan changes made in the
+  // customer portal are taxed the same way with no further setting.
+  form.set('automatic_tax[enabled]', 'true');
+  form.set('billing_address_collection', 'required');
+  if (input.customerId) {
+    form.set('customer', input.customerId);
+    // Stripe requires these when an existing customer is passed with automatic tax, so the address they
+    // give is saved on the customer and used for tax.
+    form.set('customer_update[address]', 'auto');
+    form.set('customer_update[name]', 'auto');
+  } else form.set('customer_email', input.email);
   const session = await stripePost(env, f, 'checkout/sessions', form);
   if (typeof session.url !== 'string') throw new Error('stripe_no_url');
   return session.url;

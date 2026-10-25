@@ -36,7 +36,7 @@ export function Terms() {
             ]}
           />
           <P>
-            Prices are in US dollars and may not include tax. Plus and Family are subscriptions that renew
+            Prices are in US dollars and exclude any sales tax, which is shown at checkout. Plus and Family are subscriptions that renew
             automatically every month or every year, whichever you chose, until you cancel. You can cancel at any
             time; you keep your plan until the end of the period you already paid for, and nothing more is charged.
             Canceling does not delete anything you made.
