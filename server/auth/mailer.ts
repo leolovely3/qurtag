@@ -7,9 +7,8 @@
  *  - "capture": appends each message as one JSON line to QURTAG_MAIL_CAPTURE_FILE.
  *    The local tests read the links a person would have clicked from it.
  *  - Resend, when RESEND_API_KEY is set (server side only; never a VITE_ variable).
- *    From: RESEND_FROM_NAME and RESEND_FROM_EMAIL, by default
- *    "QuR Tag <noreply@impactconsulting.ai>" (impactconsulting.ai is a verified Resend
- *    domain of the company).
+ *    From: QURTAG_EMAIL_FROM, by default "QuR Tag <no-reply@qurtag.com>" (the domain must
+ *    be verified in Resend). Replies go to info@impactconsulting.ai.
  *  - Off otherwise: nothing is sent, and `mailConfigured()` is false. The sign-in
  *    service then confirms new accounts at once (there is no one to send the email),
  *    and the outbox marks its emails done unsent (the note is in the owner's inbox either way). Logs name only the kind
@@ -26,6 +25,10 @@ export interface Mail {
   html: string;
   replyTo?: string;
 }
+
+export const OPERATOR = 'Impact Consulting AI LLC';
+export const CONTACT_EMAIL = 'info@impactconsulting.ai';
+export const DEFAULT_FROM = 'QuR Tag <no-reply@qurtag.com>';
 
 export type MailSender = (mail: Mail) => Promise<void>;
 
@@ -55,7 +58,7 @@ export function resendSender(apiKey: string, from: string): MailSender {
         subject: mail.subject,
         text: mail.text,
         html: mail.html,
-        ...(mail.replyTo ? { reply_to: mail.replyTo } : {}),
+        reply_to: mail.replyTo ?? CONTACT_EMAIL,
         tags: [{ name: 'category', value: mail.kind.replace(/[^a-z0-9_-]/gi, '_') }],
       }),
       signal: AbortSignal.timeout(15_000),
@@ -71,8 +74,7 @@ export function senderFromEnv(env: NodeJS.ProcessEnv = process.env): MailSender 
     return captureSender(file);
   }
   if (env.RESEND_API_KEY) {
-    const from = `${env.RESEND_FROM_NAME || 'QuR Tag'} <${env.RESEND_FROM_EMAIL || 'noreply@impactconsulting.ai'}>`;
-    return resendSender(env.RESEND_API_KEY, from);
+    return resendSender(env.RESEND_API_KEY, env.QURTAG_EMAIL_FROM?.trim() || DEFAULT_FROM);
   }
   return offSender;
 }
@@ -93,21 +95,23 @@ export function signInMail(kind: 'verify-email' | 'reset-password', to: string, 
         }
       : {
           subject: 'Reset your QuR Tag password',
-          lead: 'Someone asked to reset the password for this email address on QuR Tag. The link works once, for one hour.',
-          button: 'Choose a new password',
-          after: 'If it was not you, ignore this email and your password stays the same.',
+          lead: 'Someone asked to reset the password for your QuR Tag account. The link works once and expires in 1 hour.',
+          button: 'Reset my password',
+          after: "If you didn't ask for this, ignore this email. Your password stays the same.",
         };
   const safe = escapeHtml(url);
   return {
     kind,
     to,
     subject: words.subject,
-    text: `${words.lead}\n\n${url}\n\n${words.after}\n`,
+    text: `QuR Tag\n\n${words.lead}\n\n${words.button}: ${url}\n\n${words.after}\n\n${OPERATOR}\n${CONTACT_EMAIL}\n`,
     html:
+      `<p style="font-size:20px;font-weight:600;margin:0 0 16px">QuR Tag</p>` +
       `<p>${escapeHtml(words.lead)}</p>` +
       `<p><a href="${safe}" style="display:inline-block;padding:10px 18px;background:#0A0B0F;color:#fff;border-radius:8px;text-decoration:none">${escapeHtml(words.button)}</a></p>` +
       `<p style="color:#555">Or open this link: ${safe}</p>` +
-      `<p style="color:#555">${escapeHtml(words.after)}</p>`,
+      `<p style="color:#555">${escapeHtml(words.after)}</p>` +
+      `<p style="color:#777;font-size:12px;margin-top:24px">${OPERATOR}<br>${CONTACT_EMAIL}</p>`,
   };
 }
 

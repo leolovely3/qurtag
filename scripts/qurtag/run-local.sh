@@ -79,6 +79,20 @@ for _ in $(seq 1 40); do
   sleep 0.5
 done
 
+# A second copy of the server with a fake email sender (messages appended to a file), for
+# the password reset tests. Same database and secret; email counts as set up there.
+MAIL_PORT=$((API_PORT + 1))
+QURTAG_LOCAL_PORT=$MAIL_PORT QURTAG_MAIL_MODE=capture QURTAG_MAIL_CAPTURE_FILE="$WORK/mail.jsonl" \
+  npx tsx scripts/qurtag/local-server.ts > "$WORK/mail-server.log" 2>&1 &
+mail_pid=$!
+trap 'kill $mail_pid 2>/dev/null || true; cleanup' EXIT
+for _ in $(seq 1 40); do
+  curl -s "http://127.0.0.1:$MAIL_PORT/api/auth/ok" >/dev/null 2>&1 && break
+  sleep 0.5
+done
+
+QURTAG_TEST_MAIL_BASE="http://127.0.0.1:$MAIL_PORT" \
+QURTAG_TEST_MAIL_FILE="$WORK/mail.jsonl" \
 QURTAG_TEST_BASE="http://127.0.0.1:$API_PORT" \
 QURTAG_TEST_ADMIN_DB="$ADMIN" \
 QURTAG_TEST_LOGIN_DB_AUTH="$QURTAG_DATABASE_URL" \
@@ -86,3 +100,8 @@ QURTAG_TEST_LOGIN_DB_DATA="$QURTAG_DATABASE_URL_DATA" \
 QURTAG_TEST_LOGIN_DB_SERVER="$QURTAG_DATABASE_URL_SERVER" \
 QURTAG_TEST_FACTORY_TOKEN="$FACTORY_TOKEN" \
   npx tsx scripts/qurtag/e2e.test.mjs || { echo "--- server log"; tail -40 "$WORK/server.log"; exit 1; }
+QURTAG_TEST_MAIL_BASE="http://127.0.0.1:$MAIL_PORT" \
+QURTAG_TEST_MAIL_FILE="$WORK/mail.jsonl" \
+QURTAG_TEST_BASE="http://127.0.0.1:$API_PORT" \
+QURTAG_TEST_ADMIN_DB="$ADMIN" \
+  npx tsx scripts/qurtag/reset.test.mjs || { echo "--- server logs"; tail -40 "$WORK/server.log" "$WORK/mail-server.log"; exit 1; }

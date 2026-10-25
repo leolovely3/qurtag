@@ -32,6 +32,7 @@ import { Trips } from '@/routes/app/Trips';
 import { FinderView } from '@/routes/finder/FinderView';
 import { StartSignIn } from '@/routes/start/SignIn';
 import { StartSetup } from '@/routes/start/Setup';
+import { ForgotPassword, ResetPassword } from '@/routes/auth/Reset';
 import { AuthCallback } from '@/routes/auth/Callback';
 
 export const router = createBrowserRouter([
@@ -54,6 +55,8 @@ export const router = createBrowserRouter([
     children: [
       { path: '/start', element: <StartSignIn /> },
       { path: '/start/setup', element: <StartSetup /> },
+      { path: '/forgot-password', element: <ForgotPassword /> },
+      { path: '/reset-password', element: <ResetPassword /> },
       { path: '/auth/callback', element: <AuthCallback /> },
     ],
   },

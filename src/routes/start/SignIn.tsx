@@ -164,8 +164,10 @@ export function StartSignIn() {
                       <Link to="/privacy" className="underline underline-offset-4">Privacy notice</Link>. You must be 18 or over.
                     </p>
                   ) : (
-                    <p className="text-caption text-muted">
-                      Forgot your password? Email info@impactconsulting.ai from the address you signed up with and we will help.
+                    <p className="text-caption">
+                      <Link to="/forgot-password" className="inline-flex min-h-11 items-center underline underline-offset-4 text-ink-700 hover:text-ink-900">
+                        Forgot password?
+                      </Link>
                     </p>
                   )}
                 </form>

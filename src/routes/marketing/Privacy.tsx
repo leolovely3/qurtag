@@ -10,7 +10,7 @@ export function Privacy() {
   return (
     <>
       <PageHero eyebrow="Privacy" title="Privacy policy" lede="What QuR Tag collects, why, who can see it, and how to get it deleted.">
-        <p className="text-caption text-muted">Last updated 25 October 2026</p>
+        <p className="text-caption text-muted">Last updated 26 October 2026</p>
       </PageHero>
       <PageBody>
         <Section title="Who we are">
@@ -92,9 +92,9 @@ export function Privacy() {
             items={[
               'Vercel Inc. hosts the website and runs our server code. Like any web host it keeps short-lived request logs, which include network addresses.',
               'Supabase Inc. runs the database where your account, items, tags and conversations are stored, in the United States.',
+              'Resend (Resend, Inc.) sends our email: the link to reset your password, and the emails that confirm your address or tell you a finder wrote. It receives your email address and the text of that email.',
             ]}
           />
-          <P>QuR Tag does not send email yet. If we switch on email alerts, we will name the provider here before we do.</P>
         </Section>
 
         <Section title="8. Cookies and browser storage">
