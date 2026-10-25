@@ -179,6 +179,25 @@ export function MarketingHome() {
         </Container>
       </section>
 
+      <section className="border-t border-hairline">
+        <Container size="xl">
+          <div className="flex max-w-2xl flex-col items-start gap-4 py-16 md:py-24">
+            <h2 className="text-3xl font-semibold tracking-[-0.02em] text-ink-900 text-balance sm:text-4xl">
+              Already use a tracker? Add a QuR Tag as the backup.
+            </h2>
+            <p className="text-body text-ink-700 text-pretty">
+              A Bluetooth tracker shows where your thing is. A QuR Tag helps an honest finder send it
+              back: they scan it with any phone camera, no app, and write you a note without ever
+              seeing your phone number or email. It needs no battery, so it keeps working after the
+              tracker's battery runs out.
+            </p>
+            <p className="text-body text-ink-700 text-pretty">
+              For the things that matter most, like luggage, backpacks and instrument cases, use both.
+            </p>
+          </div>
+        </Container>
+      </section>
+
       <CtaBand wide title="Make your first tag in a few minutes." body="It is free for up to three items. You need an email address, a printer and ordinary paper. Sticker paper or clear tape makes it last." />
     </>
   );

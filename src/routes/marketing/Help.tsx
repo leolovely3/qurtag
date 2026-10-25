@@ -34,6 +34,10 @@ const faqs: { q: string; a: ReactNode; paid?: boolean }[] = [
     a: 'No. It cannot find anything on its own. It works when a kind person finds your item and scans the tag.',
   },
   {
+    q: 'Do I need this if I already have a tracker?',
+    a: 'A Bluetooth tracker shows where your thing is. A QuR Tag helps an honest finder send it back: they scan it with any phone camera, with no app, and write you a note without seeing your phone number or email. It needs no battery, so it keeps working after a tracker\'s battery runs out. For the things that matter most, like luggage, backpacks and instrument cases, use both.',
+  },
+  {
     q: 'What does it cost?',
     paid: true,
     a: 'Free for up to three items, and you print your own tags. Plus ($19 a year) has no limit on items and keeps your full scan history. Family ($29 a year) is Plus for up to five people who share the items and the inbox.',
