@@ -341,7 +341,7 @@ function MembershipScreen() {
         </p>
         <p>
           On the web, payment is taken by Stripe. Cancel in Manage membership above. If you think you were charged by mistake, use{' '}
-          <button type="button" onClick={() => setAsking(true)} className="underline underline-offset-4 text-ink-900">Question about a charge?</button>
+          <button type="button" onClick={() => setAsking(true)} className="inline-flex min-h-[44px] items-center align-middle text-left underline underline-offset-4 text-ink-900">Question about a charge?</button>
           {' '}below, or email info@impactconsulting.ai if you cannot sign in.
         </p>
         <p>

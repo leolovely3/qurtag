@@ -91,7 +91,7 @@ export function StartSignIn() {
               </>
             ) : (
               <>
-                <div role="tablist" aria-label="Create an account or sign in" className="grid grid-cols-2 rounded-pill bg-ink-100 p-1">
+                <div role="tablist" aria-label="Create an account or sign in" className="grid grid-cols-2 gap-1 rounded-[1.5rem] bg-ink-100 p-1 ax:grid-cols-1">
                   {(['create', 'signin'] as const).map((m) => (
                     <button
                       key={m}
@@ -103,7 +103,7 @@ export function StartSignIn() {
                         setError(null);
                       }}
                       className={cn(
-                        'h-11 whitespace-nowrap rounded-pill text-sm font-medium transition-colors duration-150',
+                        'min-h-[44px] rounded-[1.25rem] px-3 py-2 text-sm font-medium leading-tight transition-colors duration-150',
                         mode === m ? 'bg-canvas text-ink-900 shadow-card' : 'text-ink-600 hover:text-ink-900',
                       )}
                     >

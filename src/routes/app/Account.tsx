@@ -104,7 +104,7 @@ export function Account() {
   const row =
     'flex min-h-14 w-full items-center gap-3 border-t border-hairline px-4 py-3 text-left transition-colors first:border-t-0 hover:bg-ink-50 active:bg-ink-50 disabled:opacity-60 focus-visible:outline-offset-[-2px]';
   const icon = (I: typeof Mail, danger = false) => (
-    <span className={cn('grid size-9 shrink-0 place-items-center rounded-card', danger ? 'bg-signal-50' : 'bg-ink-100')}>
+    <span className={cn('grid size-[36px] shrink-0 place-items-center ax:hidden rounded-card', danger ? 'bg-signal-50' : 'bg-ink-100')}>
       <I size={18} strokeWidth={1.75} className={danger ? 'text-signal-700' : 'text-ink-900'} aria-hidden />
     </span>
   );
@@ -114,7 +114,7 @@ export function Account() {
       <div className="flex flex-col gap-6">
         <div className="flex flex-col items-center gap-2 py-2">
           <Avatar size={72} />
-          <p className="text-sm text-muted">{user?.email}</p>
+          <p className="text-sm text-muted [overflow-wrap:anywhere]">{user?.email}</p>
         </div>
 
         <AppSection title="Your name" description="Shown on your account card. Finders never see it.">
@@ -130,7 +130,7 @@ export function Account() {
           <div className={cn(row, 'cursor-default hover:bg-transparent active:bg-transparent')}>
             {icon(Mail)}
             <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <span className="break-words text-base font-medium text-ink-900">{user?.email}</span>
+              <span className="text-base font-medium text-ink-900 [overflow-wrap:anywhere]">{user?.email}</span>
               <span className="text-sm text-muted text-pretty">The email you sign in with. To change it, write to info@impactconsulting.ai. Finders never see it.</span>
             </span>
           </div>

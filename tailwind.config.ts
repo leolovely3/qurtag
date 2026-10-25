@@ -1,5 +1,6 @@
 import type { Config } from 'tailwindcss';
 import animate from 'tailwindcss-animate';
+import plugin from 'tailwindcss/plugin';
 
 const config: Config = {
   darkMode: 'class',
@@ -158,7 +159,14 @@ const config: Config = {
       },
     },
   },
-  plugins: [animate],
+  plugins: [
+    animate,
+    // `ax:` at Accessibility text sizes, `axx:` at the very largest (src/lib/textSize.ts).
+    plugin(({ addVariant }) => {
+      addVariant('ax', ':is(html.text-ax) &');
+      addVariant('axx', ':is(html.text-axx) &');
+    }),
+  ],
 };
 
 export default config;

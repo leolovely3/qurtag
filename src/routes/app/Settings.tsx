@@ -269,7 +269,7 @@ export function Settings() {
                 : 'Light, always.'
           }
         >
-          <div role="radiogroup" aria-label="Theme" className="grid w-full grid-cols-3 rounded-pill bg-ink-100 p-1 sm:w-auto">
+          <div role="radiogroup" aria-label="Theme" className="grid w-full grid-cols-3 rounded-[1.5rem] bg-ink-100 p-1 sm:w-auto ax:grid-cols-1">
             {(
               [
                 { v: 'light', label: 'Light', icon: Sun },
@@ -284,7 +284,7 @@ export function Settings() {
                 aria-checked={theme.preference === opt.v}
                 onClick={() => theme.setPreference(opt.v)}
                 className={cn(
-                  'inline-flex h-11 items-center justify-center gap-1.5 whitespace-nowrap rounded-pill px-3 text-sm font-medium transition-colors duration-150',
+                  'inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-[1.25rem] px-3 py-2 text-sm font-medium transition-colors duration-150',
                   theme.preference === opt.v
                     ? 'bg-canvas text-ink-900 shadow-card'
                     : 'text-ink-600 hover:text-ink-900',
@@ -308,7 +308,7 @@ export function Settings() {
           ].map((l) => (
             <li key={l.to}>
               <Link to={l.to} className="flex min-h-14 items-center gap-3 px-4 py-2 transition-colors hover:bg-ink-50 focus-visible:outline-offset-[-2px] active:bg-ink-50">
-                <span className="grid size-9 shrink-0 place-items-center rounded-card bg-ink-100">
+                <span className="grid size-[36px] shrink-0 place-items-center ax:hidden rounded-card bg-ink-100">
                   <l.icon size={18} strokeWidth={1.75} className="text-ink-900" aria-hidden />
                 </span>
                 <span className="flex-1 text-base font-medium text-ink-900">{l.label}</span>
@@ -361,14 +361,14 @@ function ActionRow({
 }) {
   const inner = (
     <>
-      <span className={cn('grid size-9 shrink-0 place-items-center rounded-card', tone === 'danger' ? 'bg-signal-50' : 'bg-ink-100')}>
+      <span className={cn('grid size-[36px] shrink-0 place-items-center ax:hidden rounded-card', tone === 'danger' ? 'bg-signal-50' : 'bg-ink-100')}>
         <Icon size={18} strokeWidth={1.75} className={tone === 'danger' ? 'text-signal-700' : 'text-ink-900'} aria-hidden />
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5 text-left">
         <span className={cn('text-base font-medium', tone === 'danger' ? 'text-signal-700' : 'text-ink-900')}>{title}</span>
         {body && <span className="text-sm text-muted text-pretty">{body}</span>}
       </span>
-      {to && <ChevronRight size={20} strokeWidth={1.75} className="shrink-0 text-ink-300" aria-hidden />}
+      {to && <ChevronRight size={20} strokeWidth={1.75} className="shrink-0 text-ink-300 axx:hidden" aria-hidden />}
     </>
   );
   const cls =
@@ -395,7 +395,7 @@ function Row({ icon: Icon, title, body, children }: RowProps) {
   return (
     <div className="flex flex-col gap-3 border-t border-hairline px-4 py-4 first:border-t-0 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex min-w-0 items-start gap-3">
-        <div className="grid size-9 shrink-0 place-items-center rounded-card bg-ink-100">
+        <div className="grid size-[36px] shrink-0 place-items-center ax:hidden rounded-card bg-ink-100">
           <Icon size={18} strokeWidth={1.75} className="text-ink-900" aria-hidden />
         </div>
         <div className="flex min-w-0 flex-col gap-0.5">

@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { PageHero, PageBody, Section, P, Bullets, CtaBand, DocLink } from './parts';
 
 /**
@@ -7,9 +6,6 @@ import { PageHero, PageBody, Section, P, Bullets, CtaBand, DocLink } from './par
  * and the iPhone app show this same page (Help and the tag page link to it).
  */
 export function MakeItLast() {
-  useEffect(() => {
-    document.title = 'Make your QuR Tag last | QuR Tag';
-  }, []);
   return (
     <>
       <PageHero

@@ -1,5 +1,6 @@
 import { Link, Outlet } from 'react-router-dom';
 import { Wordmark } from '@/components/brand/Wordmark';
+import { usePathTitle } from '@/lib/pageTitle';
 
 /**
  * Finder layout. Used for the post-scan page.
@@ -7,6 +8,7 @@ import { Wordmark } from '@/components/brand/Wordmark';
  * Calm under stress.
  */
 export function FinderLayout() {
+  usePathTitle();
   return (
     <div className="min-h-screen bg-canvas text-ink-900 antialiased flex flex-col">
       <a href="#main-content" className="skip-link">Skip to content</a>
@@ -25,7 +27,7 @@ export function FinderLayout() {
       </main>
       <footer className="border-t border-hairline">
         <div className="mx-auto flex w-full max-w-2xl flex-wrap items-center justify-between gap-x-4 px-4 py-2 text-sm text-muted sm:px-6">
-          <span>
+          <span className="min-w-0 max-w-full [overflow-wrap:anywhere]">
             Questions? <a href="mailto:info@impactconsulting.ai" className="text-ink-700 underline underline-offset-4">info@impactconsulting.ai</a>
           </span>
           <Link to="/help" className="inline-flex min-h-11 items-center font-medium text-ink-700 transition-colors hover:text-ink-900">

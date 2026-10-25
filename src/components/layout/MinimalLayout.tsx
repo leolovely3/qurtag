@@ -1,11 +1,13 @@
 import { Link, Outlet } from 'react-router-dom';
 import { Wordmark } from '@/components/brand/Wordmark';
 import { isNative } from '@/lib/platform';
+import { usePathTitle } from '@/lib/pageTitle';
 
 /**
  * For focused flows (sign in, callback, onboarding). Quiet shell.
  */
 export function MinimalLayout() {
+  usePathTitle();
   return (
     <div className="min-h-screen flex flex-col bg-canvas text-ink-900 antialiased">
       <header className="border-b border-hairline">

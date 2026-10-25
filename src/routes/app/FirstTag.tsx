@@ -270,7 +270,7 @@ export function FirstTag() {
         {s.step === 1 && (
           <>
             <h2 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900 text-balance">What do you want to tag first?</h2>
-            <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="What to tag first">
+            <div className="grid grid-cols-2 gap-2 ax:grid-cols-1" role="radiogroup" aria-label="What to tag first">
               {PICKS.map((p) => {
                 const Icon = ICONS[p.icon];
                 const on = s.pick === p.id;
@@ -283,7 +283,7 @@ export function FirstTag() {
                     )}
                   >
                     <input type="radio" name="pick" className="sr-only" checked={on} onChange={() => choose(p)} />
-                    <span className="grid size-10 shrink-0 place-items-center rounded-card bg-ink-100">
+                    <span className="grid size-[40px] shrink-0 place-items-center rounded-card bg-ink-100 ax:hidden">
                       <Icon size={20} strokeWidth={1.75} className="text-ink-900" aria-hidden />
                     </span>
                     <span className="text-base font-medium leading-tight text-ink-900">{p.label}</span>
@@ -382,7 +382,7 @@ export function FirstTag() {
               Change style
             </button>
             {changeStyle && (
-              <div role="radiogroup" aria-label="Tag style" className="grid gap-2 sm:grid-cols-2">
+              <div role="radiogroup" aria-label="Tag style" className="grid gap-2 sm:grid-cols-2 ax:grid-cols-1">
                 {STYLES.map((st) => (
                   <label
                     key={st.id}

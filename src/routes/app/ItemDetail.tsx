@@ -359,7 +359,7 @@ export function ItemDetail() {
         <AppSection title="Tag">
           <div className="flex flex-col gap-4 p-4">
             <div className="flex items-center gap-3">
-              <span className="grid size-11 shrink-0 place-items-center rounded-card bg-ink-100">
+              <span className="grid size-[44px] shrink-0 place-items-center rounded-card bg-ink-100 ax:hidden">
                 <TagIcon size={20} strokeWidth={1.75} className="text-ink-900" aria-hidden />
               </span>
               <div className="flex min-w-0 flex-col">
@@ -525,7 +525,7 @@ export function ItemDetail() {
               {(showAllScans ? scans : scans.slice(0, 5)).map((scan) => (
                 <li key={scan.id} className="flex items-center justify-between gap-3 px-4 py-3">
                   <div className="flex min-w-0 items-center gap-3">
-                    <span className="grid size-9 shrink-0 place-items-center rounded-pill bg-ink-100">
+                    <span className="grid size-[36px] shrink-0 place-items-center ax:hidden rounded-pill bg-ink-100">
                       <MapPin size={16} strokeWidth={1.75} className="text-ink-900" aria-hidden />
                     </span>
                     <div className="flex min-w-0 flex-col">

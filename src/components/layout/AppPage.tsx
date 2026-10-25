@@ -4,6 +4,7 @@ import { ChevronLeft } from 'lucide-react';
 import { AccountButton, HelpButton } from '@/components/account/Account';
 import { Wordmark } from '@/components/brand/Wordmark';
 import { cn } from '@/lib/cn';
+import { usePageTitle } from '@/lib/pageTitle';
 
 /**
  * The frame of every screen inside the app (/app and the screens nested under it).
@@ -40,24 +41,28 @@ const widths = {
 } as const;
 
 export function AppPage({ title, back, action, subtitle, help, width = 'normal', children, className }: AppPageProps) {
+  usePageTitle(title);
   if (back) {
     return (
       <div className={cn('w-full', className)}>
-        <header className="no-print sticky top-0 z-30 border-b border-hairline bg-canvas/90 backdrop-blur-xl supports-[backdrop-filter]:bg-canvas/80">
+        {/* At Accessibility text sizes the bar stacks (src/lib/textSize.ts): Back and the action on
+            the first row, the title on its own row underneath, left aligned and wrapping whole
+            words, and it scrolls with the page so a tall bar never covers the screen. */}
+        <header className="no-print sticky top-0 z-30 border-b border-hairline bg-canvas/90 backdrop-blur-xl supports-[backdrop-filter]:bg-canvas/80 ax:relative ax:top-auto">
           <div className={cn('mx-auto w-full px-2 md:px-8', widths[width])}>
-            <div className="grid h-12 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 md:flex md:h-14 md:gap-3">
+            <div className="grid h-12 grid-cols-[minmax(max-content,1fr)_minmax(0,auto)_minmax(max-content,1fr)] items-center gap-2 md:flex md:h-14 md:gap-3 ax:flex ax:h-auto ax:flex-wrap ax:justify-between ax:gap-x-2 ax:gap-y-0 ax:pb-2 md:ax:h-auto">
               <Link
                 to={back.to}
-                className="inline-flex h-11 min-w-0 items-center gap-0.5 justify-self-start rounded-pill pl-1 pr-3 text-base text-ink-900 hover:bg-ink-50 md:-ml-3 md:text-sm md:text-muted md:hover:text-ink-900"
+                className="inline-flex h-11 min-w-0 max-w-full items-center gap-0.5 justify-self-start rounded-pill pl-1 pr-3 text-base text-ink-900 hover:bg-ink-50 md:-ml-3 md:text-sm md:text-muted md:hover:text-ink-900 ax:h-auto ax:min-h-[44px]"
               >
                 <ChevronLeft size={22} strokeWidth={2} className="shrink-0" aria-hidden />
                 <span className="truncate">{back.label}</span>
               </Link>
-              <span aria-hidden className="hidden h-4 w-px bg-hairline-strong md:block" />
-              <h1 className="max-w-[48vw] truncate text-center text-base font-semibold text-ink-900 md:max-w-none md:flex-1 md:text-left">
+              <span aria-hidden className="hidden h-4 w-px bg-hairline-strong md:block ax:!hidden" />
+              <h1 className="max-w-[48vw] truncate text-center text-base font-semibold text-ink-900 md:max-w-none md:flex-1 md:text-left ax:order-last ax:max-w-none ax:basis-full ax:whitespace-normal ax:px-2 ax:text-left ax:text-[min(1.25rem,9vw)] ax:leading-tight">
                 {title}
               </h1>
-              <div className="flex min-w-0 items-center justify-self-end">{action}</div>
+              <div className="flex min-w-0 items-center justify-self-end ax:ml-auto">{action}</div>
             </div>
           </div>
         </header>
