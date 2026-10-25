@@ -264,11 +264,18 @@ test('checkout: asks Stripe for the right price and marks the subscription as th
   assert.equal(sent.body.get('subscription_data[metadata][app]'), 'qurtag');
   assert.equal(sent.body.get('customer_email'), 'me@example.com');
   assert.equal(sent.body.get('success_url'), 'https://www.qurtag.com/app/membership?checkout=success');
+  assert.equal(sent.body.get('automatic_tax[enabled]'), 'true');
+  assert.equal(sent.body.get('billing_address_collection'), 'required');
+  assert.equal(sent.body.get('customer_update[address]'), null, 'a new customer is not updated');
   // A known customer is reused, not asked for again.
   const again = harness(FULL, () => [{ a: account({ stripe_customer_id: 'cus_7' }) }]);
   await again.routes.checkout(call('billing-checkout', { plan: 'plus', interval: 'month' }, signedIn));
   assert.equal(again.fetched[0].body.get('customer'), 'cus_7');
   assert.equal(again.fetched[0].body.get('customer_email'), null);
+  assert.equal(again.fetched[0].body.get('automatic_tax[enabled]'), 'true');
+  assert.equal(again.fetched[0].body.get('billing_address_collection'), 'required');
+  assert.equal(again.fetched[0].body.get('customer_update[address]'), 'auto');
+  assert.equal(again.fetched[0].body.get('customer_update[name]'), 'auto');
 });
 
 test('checkout: refuses to start a second membership', async () => {
