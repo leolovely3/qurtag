@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
 import { Camera, Lock, MessageCircle, Printer, Smartphone } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
-import { useTheme } from '@/lib/theme';
+import { useEffect, useState } from 'react';
+import { ThemedImage } from '@/components/brand/ThemedImage';
 import { Lede } from '@/components/brand/Typography';
 import { HowVisuals } from './HowVisuals';
-import { audienceFor, HERO } from '@/lib/audience';
+import { audienceFor, HERO, type Audience } from '@/lib/audience';
 import { CHANNEL_KEY, channelFromSearch } from '@/lib/measures';
 import { PrimaryLink, SecondaryLink, CtaBand } from './parts';
 
@@ -50,8 +51,13 @@ function storedChannel(): string | null {
 }
 
 export function MarketingHome() {
-  const theme = useTheme();
-  const hero = HERO[audienceFor(storedChannel())];
+  // The page written at build time has the general words. A visit from a campaign for parents swaps in
+  // theirs once the page is up, so the browser's first draw matches the written page exactly.
+  const [audience, setAudience] = useState<Audience>('general');
+  useEffect(() => {
+    setAudience(audienceFor(storedChannel()));
+  }, []);
+  const hero = HERO[audience];
   return (
     <>
       <section className="relative overflow-hidden">
@@ -84,15 +90,13 @@ export function MarketingHome() {
             <div className="flex justify-center">
               {/* A real screen from the app, light or dark to match the visitor. */}
               <div className="w-[17.5rem] rounded-[2.75rem] bg-[#050608] p-2.5 shadow-device ring-1 ring-hairline-strong sm:w-[19rem]">
-                <picture>
-                  <img
-                    src={theme.resolved === 'dark' ? '/how/inbox-dark.webp' : '/how/inbox-light.webp'}
-                    width={780}
-                    height={1560}
-                    alt="The QuR Tag app on a phone: the owner of a blue water bottle reads a note from the person who found it at the gym, and replies."
-                    className="block h-auto w-full rounded-[2.125rem]"
-                  />
-                </picture>
+                <ThemedImage
+                  base="inbox"
+                  width={780}
+                  height={1560}
+                  alt="The QuR Tag app on a phone: the owner of a blue water bottle reads a note from the person who found it at the gym, and replies."
+                  className="h-auto w-full rounded-[2.125rem]"
+                />
               </div>
             </div>
           </div>

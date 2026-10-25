@@ -1,10 +1,8 @@
 import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
+import { createRoot, hydrateRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import { router } from './router';
-import { AuthProvider } from './lib/auth';
-import { ToastProvider } from './components/ui/Toast';
-import { ThemeProvider } from './lib/theme';
+import { AppProviders } from './AppProviders';
 import { installBootGuard } from './lib/bootGuard';
 import { installPreloadErrorHandler } from './lib/chunkRecovery';
 import { installExternalLinks } from './lib/externalLinks';
@@ -12,6 +10,10 @@ import { isNative } from './lib/platform';
 import { installTextSizeClasses } from './lib/textSize';
 import { captureChannel } from './lib/measures';
 import { startErrorReports } from './lib/errors';
+import '@fontsource/inter/latin-400.css';
+import '@fontsource/inter/latin-500.css';
+import '@fontsource/inter/latin-600.css';
+import '@fontsource/inter/latin-700.css';
 import './index.css';
 
 // The iPhone app follows the phone's text size at every size, the Accessibility ones included
@@ -40,14 +42,20 @@ installExternalLinks(document, window, {
   },
 });
 
-createRoot(document.getElementById('root')!).render(
+const root = document.getElementById('root')!;
+const app = (
   <StrictMode>
-    <ThemeProvider>
-      <AuthProvider>
-        <ToastProvider>
-          <RouterProvider router={router} />
-        </ToastProvider>
-      </AuthProvider>
-    </ThemeProvider>
-  </StrictMode>,
+    <AppProviders>
+      <RouterProvider router={router} />
+    </AppProviders>
+  </StrictMode>
 );
+
+// A public page arrives already written out (scripts/seo/prerender.mjs), so the browser picks it up
+// rather than drawing it again. The iPhone app and every signed-in screen start from an empty page.
+if (root.childElementCount > 0 && !isNative()) {
+  hydrateRoot(root, app);
+} else {
+  root.replaceChildren();
+  createRoot(root).render(app);
+}

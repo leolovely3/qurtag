@@ -69,7 +69,11 @@ interface ToasterProps {
 }
 
 function Toaster({ toasts, onDismiss }: ToasterProps) {
-  if (typeof document === 'undefined') return null;
+  // Drawn only once the page is up in the browser: the page written at build time has no toast area,
+  // and a portal drawn during hydration would not match it.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted || typeof document === 'undefined') return null;
   return createPortal(
     <div
       aria-live="polite"
