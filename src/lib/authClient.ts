@@ -1,8 +1,11 @@
 /**
  * The browser side of QuR Tag's own sign-in (server: server/auth/qurtagAuth.ts).
  *
- * - `authClient` is Better Auth's client. The session lives in an HttpOnly cookie the
- *   page cannot read.
+ * - `authClient` is Better Auth's client. On the web the session lives in an HttpOnly
+ *   cookie the page cannot read. The iPhone app's pages come from capacitor://localhost,
+ *   which cannot hold the site's cookie, so there the app keeps the session token the
+ *   server sends in its `set-auth-token` answer header and sends it back as
+ *   `Authorization: Bearer`; it calls the live site by full address (src/lib/platform.ts).
  * - `getDataPass()` returns a short-lived pass for the data API (/api/data), fetched
  *   from /api/auth/token and reused until a minute before it expires; null when nobody
  *   is signed in.
@@ -11,11 +14,48 @@
  */
 import { createAuthClient } from 'better-auth/client';
 import { jwtClient } from 'better-auth/client/plugins';
+import { isNative, serverUrl } from './platform';
+
+/** Where the iPhone app keeps its session token (the app's own storage; the web keeps none). */
+const TOKEN_KEY = 'qurtag.session-token';
+const phoneToken = {
+  get(): string | null {
+    if (!isNative()) return null;
+    try {
+      return window.localStorage.getItem(TOKEN_KEY);
+    } catch {
+      return null;
+    }
+  },
+  set(token: string): void {
+    if (!isNative()) return;
+    try {
+      window.localStorage.setItem(TOKEN_KEY, token);
+    } catch {
+      /* storage off: the next start signs in again */
+    }
+  },
+  clear(): void {
+    try {
+      window.localStorage.removeItem(TOKEN_KEY);
+    } catch {
+      /* nothing kept */
+    }
+  },
+};
 
 export const authClient = createAuthClient({
-  baseURL: `${window.location.origin}/api/auth`,
+  baseURL: serverUrl('/api/auth'),
   plugins: [jwtClient()],
-  fetchOptions: { credentials: 'include' },
+  fetchOptions: {
+    // The iPhone app carries the session as a bearer token, never a cookie across origins.
+    credentials: isNative() ? 'omit' : 'include',
+    auth: { type: 'Bearer', token: () => phoneToken.get() ?? undefined },
+    onSuccess: (ctx) => {
+      const token = ctx.response.headers.get('set-auth-token');
+      if (token) phoneToken.set(token);
+    },
+  },
 });
 
 let cached: { token: string; expiresAt: number } | null = null;
@@ -47,4 +87,10 @@ export async function getDataPass(): Promise<string | null> {
 /** Forget the cached pass, for example straight after signing out. */
 export function clearDataPass(): void {
   cached = null;
+}
+
+/** Forget the pass and, in the iPhone app, the kept session token: after signing out, and before a new sign-in. */
+export function forgetSession(): void {
+  cached = null;
+  phoneToken.clear();
 }

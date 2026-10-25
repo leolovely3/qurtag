@@ -7,6 +7,8 @@
  * A finder can also keep a link to their conversation (the token after # in the
  * address, which browsers never send to a server) to open it on another device.
  */
+import { serverUrl } from './platform';
+
 export interface FinderItem {
   name: string;
   photo: string | null;
@@ -56,7 +58,7 @@ export function tokenFromHash(hash: string): string | null {
 
 async function call<T>(path: string, body: unknown): Promise<{ ok: true; data: T } | { ok: false; status: number; message: string }> {
   try {
-    const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const r = await fetch(serverUrl(path), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const j = (await r.json().catch(() => ({}))) as T & { message?: string };
     if (!r.ok) return { ok: false, status: r.status, message: j?.message || 'Something went wrong. Please try again.' };
     return { ok: true, data: j };

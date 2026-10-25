@@ -12,7 +12,7 @@
  * agree within one deployment.
  *
  * Trusted pages: the site's address, the live site, the preview's branch address
- * (VERCEL_BRANCH_URL), local development, and any
+ * (VERCEL_BRANCH_URL), local development, the iPhone app's own local page, and any
  * extra ones in QURTAG_AUTH_TRUSTED_ORIGINS (comma separated).
  */
 
@@ -24,9 +24,10 @@ export const USER_ROLE = 'qurtag_user';
 export const PRODUCTION_ORIGINS = ['https://www.qurtag.com', 'https://qurtag.com'];
 
 /**
- * Local development (Vite dev and preview). QuR Tag has no phone app.
+ * Local development (Vite dev and preview) and the iPhone app. Capacitor serves the
+ * iOS app's pages from capacitor://localhost. QuR Tag has no Android app.
  */
-export const LOCAL_ORIGINS = ['http://localhost:5173', 'http://localhost:4173'];
+export const LOCAL_ORIGINS = ['http://localhost:5173', 'http://localhost:4173', 'capacitor://localhost'];
 
 function list(value: string | undefined): string[] {
   return (value ?? '')

@@ -5,6 +5,7 @@ import { Container } from '@/components/ui/Container';
 import { Input } from '@/components/ui/Input';
 import { Eyebrow } from '@/components/brand/Typography';
 import { useAuth } from '@/lib/auth';
+import { isNative } from '@/lib/platform';
 import { cn } from '@/lib/cn';
 
 type Mode = 'create' | 'signin';
@@ -17,7 +18,7 @@ export function StartSignIn() {
   const { user, loading, signUp, signIn } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const [mode, setMode] = useState<Mode>(params.get('mode') === 'signin' ? 'signin' : 'create');
+  const [mode, setMode] = useState<Mode>(params.get('mode') === 'signin' || (isNative() && params.get('mode') !== 'create') ? 'signin' : 'create');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

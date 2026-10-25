@@ -6,6 +6,7 @@ import { Container } from '@/components/ui/Container';
 import { Wordmark } from '@/components/brand/Wordmark';
 import { Eyebrow } from '@/components/brand/Typography';
 import { useAuth } from '@/lib/auth';
+import { isNative, openOutside, publicUrl } from '@/lib/platform';
 import { fetchItemById, fetchTagById } from '@/lib/queries';
 import type { Item, Tag } from '@/lib/database.types';
 
@@ -45,7 +46,7 @@ export function TagPrint() {
 
   const finderUrl = useMemo(() => {
     if (!tag) return '';
-    return `${window.location.origin}/find/${tag.public_id}`;
+    return publicUrl(`/find/${tag.public_id}`);
   }, [tag]);
 
   if (loading || fetching) {
@@ -87,15 +88,16 @@ export function TagPrint() {
         </Link>
         <div className="flex items-center gap-3">
           <span className="text-caption text-muted hidden sm:inline">
-            Press print, then "Save as PDF" to keep a copy.
+            {isNative() ? 'Printing opens in Safari, where you sign in again.' : 'Press print, then "Save as PDF" to keep a copy.'}
           </span>
           <button
             type="button"
-            onClick={() => window.print()}
+            // The app's own page cannot print; Safari prints the same page from the site.
+            onClick={() => (isNative() ? void openOutside(publicUrl(`/app/tags/${tag.id}/print`)) : window.print())}
             className="inline-flex h-10 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-4 hover:bg-ink-700 transition-colors duration-qurtag"
           >
             <Printer size={14} strokeWidth={1.75} />
-            Print tag
+            {isNative() ? 'Print in Safari' : 'Print tag'}
           </button>
         </div>
       </div>

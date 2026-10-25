@@ -116,3 +116,33 @@
     @apply gap-2.5;
   }
 }
+
+/*
+ * The iPhone app: the web view fills the whole screen (capacitor.config.ts), so the
+ * page keeps clear of the status bar and the home indicator itself. `native-app` is set
+ * on <html> by src/main.tsx. A strip in the page colour sits behind the status bar so
+ * scrolled content never shows under the clock, and sticky headers start below it.
+ */
+html.native-app body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+html.native-app body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-top);
+  background: inherit;
+  z-index: 60;
+}
+html.native-app .sticky {
+  top: env(safe-area-inset-top);
+}
+html.native-app .fixed.inset-0 {
+  padding-top: max(1rem, env(safe-area-inset-top));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}

@@ -75,3 +75,20 @@ server functions on 127.0.0.1:56861), then in another Terminal
 Stack: React 18, TypeScript, Vite, Tailwind, React Router 7, Better Auth 1.7.7, pg,
 postgrest-js. QR codes are drawn in the browser (`qrcode.react`); the tag page prints from
 the browser, or saves as PDF from the print dialog.
+
+## iPhone app
+
+The iPhone app (bundle id `app.impactconsultingai.qurtag`) is this web app in a Capacitor
+shell (`capacitor.config.ts`, `ios/`). The old Expo stub in `mobile/` is not used.
+
+- `npm run cap:sync` builds the web app and copies it into `ios/`; `npm run cap:ios` also opens Xcode.
+- The app loads its pages from `capacitor://localhost`, so it calls the live site by full
+  address (`src/lib/platform.ts`). The server answers that origin with CORS including
+  credentials (`server/auth/phoneCors.ts`, the data API) and Better Auth trusts it
+  (`server/auth/origins.ts`). The session is a bearer token kept on the phone (Better Auth's
+  `bearer` plugin), never a cookie across origins.
+- The app opens to `/app`. Links to other sites open in Safari's sheet, which has a Done button back to the app.
+- The app requests no camera, location, NFC or photo-library permission. Printing a tag opens
+  the print page in Safari, because the app's own page cannot print.
+- Version and build number are `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` in
+  `ios/App/App.xcodeproj/project.pbxproj`.

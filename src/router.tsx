@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate, type RouteObject } from 'react-router-dom';
 import { FEATURES } from '@/lib/features';
+import { isNative } from '@/lib/platform';
 
 import { MarketingLayout } from '@/components/layout/MarketingLayout';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -37,7 +38,8 @@ export const router = createBrowserRouter([
   {
     element: <MarketingLayout />,
     children: [
-      { path: '/', element: <MarketingHome /> },
+      // The iPhone app opens to the app itself (sign in, or the owner's items), not the marketing page.
+      { path: '/', element: isNative() ? <Navigate to="/app" replace /> : <MarketingHome /> },
       { path: '/how-it-works', element: <HowItWorks /> },
       { path: '/pricing', element: <Pricing /> },
       { path: '/security', element: <SecurityPage /> },

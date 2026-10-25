@@ -12,9 +12,17 @@
     "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.server.json",
     "test:unit": "tsx --test scripts/qurtag/unit/*.test.ts",
     "test:e2e": "bash scripts/qurtag/run-local.sh",
-    "dev:local": "QURTAG_LOCAL_SERVE=1 bash scripts/qurtag/run-local.sh"
+    "dev:local": "QURTAG_LOCAL_SERVE=1 bash scripts/qurtag/run-local.sh",
+    "cap:sync": "npm run build && npx cap sync ios",
+    "cap:ios": "npm run cap:sync && npx cap open ios"
   },
   "dependencies": {
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/browser": "^8.0.5",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/ios": "^8.5.3",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.4",
     "@supabase/postgrest-js": "1.21.4",
     "better-auth": "1.7.7",
     "class-variance-authority": "^0.7.0",
@@ -30,6 +38,7 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.3",
     "@eslint/js": "^9.0.0",
     "@types/node": "^22.0.0",
     "@types/pg": "8.20.0",
