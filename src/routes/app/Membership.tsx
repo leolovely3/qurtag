@@ -349,9 +349,9 @@ function MembershipScreen() {
           some.
         </p>
         <p>
-          <Link to="/terms" className="underline underline-offset-4 text-ink-900">Terms</Link>
+          <Link to="/app/terms" className="underline underline-offset-4 text-ink-900">Terms</Link>
           {' · '}
-          <Link to="/privacy" className="underline underline-offset-4 text-ink-900">Privacy</Link>
+          <Link to="/app/privacy" className="underline underline-offset-4 text-ink-900">Privacy</Link>
         </p>
       </section>
     </div>

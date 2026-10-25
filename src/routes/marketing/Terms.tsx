@@ -1,5 +1,4 @@
-import { Link } from 'react-router-dom';
-import { PageHero, PageBody, Section, P, Bullets, ContactLink } from './parts';
+import { PageHero, PageBody, Section, P, Bullets, ContactLink, DocLink } from './parts';
 
 export function Terms() {
   return (
@@ -13,7 +12,7 @@ export function Terms() {
             QuR Tag is run by Impact Consulting AI LLC, a Florida limited liability company ("we", "us").
             These terms apply to everyone who uses qurtag.com: owners who make an account and finders who
             scan a tag. By using QuR Tag you agree to them. Our{' '}
-            <Link to="/privacy" className="text-ink-900 underline underline-offset-4">privacy policy</Link> explains
+            <DocLink to="/privacy" className="text-ink-900 underline underline-offset-4">privacy policy</DocLink> explains
             how we handle information.
           </P>
         </Section>
@@ -51,7 +50,7 @@ export function Terms() {
           <P>
             Refunds for purchases made in the iPhone app are handled by Apple, under Apple's rules, at
             reportaproblem.apple.com. If you think you were charged by mistake on the web, use the Contact us form (in{' '}
-            <Link to="/help" className="text-ink-900 underline underline-offset-4">Help</Link>, or "Question about a charge?" on the Membership page),
+            <DocLink to="/help" className="text-ink-900 underline underline-offset-4">Help</DocLink>, or "Question about a charge?" on the Membership page),
             or email <ContactLink /> if you cannot sign in. If we change a price, we will tell you before the new price
             applies to your next renewal.
           </P>

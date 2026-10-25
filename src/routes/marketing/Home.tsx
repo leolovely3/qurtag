@@ -3,6 +3,7 @@ import { Camera, Lock, MessageCircle, Printer, Smartphone } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
 import { useTheme } from '@/lib/theme';
 import { Lede } from '@/components/brand/Typography';
+import { HowVisuals } from './HowVisuals';
 import { PrimaryLink, SecondaryLink, CtaBand } from './parts';
 
 const audiences = [
@@ -78,14 +79,30 @@ export function MarketingHome() {
               <div className="w-[17.5rem] rounded-[2.75rem] bg-[#050608] p-2.5 shadow-device ring-1 ring-hairline-strong sm:w-[19rem]">
                 <picture>
                   <img
-                    src={theme.resolved === 'dark' ? '/screens/app-conversation-dark.png' : '/screens/app-conversation-light.png'}
-                    width={390}
-                    height={780}
+                    src={theme.resolved === 'dark' ? '/how/inbox-dark.webp' : '/how/inbox-light.webp'}
+                    width={780}
+                    height={1560}
                     alt="The QuR Tag app on a phone: the owner of a blue water bottle reads a note from the person who found it at the gym, and replies."
                     className="block h-auto w-full rounded-[2.125rem]"
                   />
                 </picture>
               </div>
+            </div>
+          </div>
+        </Container>
+      </section>
+
+      <section className="border-t border-hairline">
+        <Container size="xl">
+          <div className="flex flex-col gap-10 py-16 md:py-24">
+            <div className="flex max-w-2xl flex-col gap-3">
+              <h2 className="text-3xl font-semibold tracking-[-0.02em] text-ink-900 text-balance sm:text-4xl">
+                How it works
+              </h2>
+            </div>
+            <HowVisuals />
+            <div>
+              <SecondaryLink to="/how-it-works">See both sides in full</SecondaryLink>
             </div>
           </div>
         </Container>

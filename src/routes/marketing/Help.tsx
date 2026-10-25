@@ -1,5 +1,4 @@
-import { PageHero, PageBody, Section, P, CtaBand, ContactLink } from './parts';
-import { Link } from 'react-router-dom';
+import { PageHero, PageBody, Section, P, CtaBand, ContactLink, DocLink } from './parts';
 import { ContactForm } from '@/components/support/ContactForm';
 import type { ReactNode } from 'react';
 import { useMembershipsAvailable } from '@/lib/useMembershipsAvailable';
@@ -75,7 +74,7 @@ const faqs: { q: string; a: ReactNode; paid?: boolean }[] = [
     a: (
       <>
         Print on weatherproof sticker paper, or cover a paper tag with clear packing tape, and use a clear holder for bags. Our{' '}
-        <Link to="/make-it-last" className="text-ink-900 underline underline-offset-4">Make it last guide</Link>{' '}
+        <DocLink to="/make-it-last" className="text-ink-900 underline underline-offset-4">Make it last guide</DocLink>{' '}
         has the details, including curved bottles and clothing.
       </>
     ),
@@ -122,7 +121,7 @@ export function Help() {
         <Section title="Still stuck?">
           <P>
             If you cannot sign in, email <ContactLink />. For how we handle your data, see{' '}
-            <Link to="/privacy" className="text-ink-900 underline underline-offset-4">Privacy</Link>.
+            <DocLink to="/privacy" className="text-ink-900 underline underline-offset-4">Privacy</DocLink>.
           </P>
         </Section>
       </PageBody>

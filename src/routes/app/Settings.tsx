@@ -350,9 +350,9 @@ export function Settings() {
         <ul className="divide-y divide-hairline">
           {[
             { to: '/app/tags', label: 'Your tags', icon: TagIcon },
-            { to: '/help', label: 'Help and questions', icon: CircleHelp },
-            { to: '/privacy', label: 'Privacy', icon: Lock },
-            { to: '/terms', label: 'Terms', icon: FileText },
+            { to: '/app/help', label: 'Help and questions', icon: CircleHelp },
+            { to: '/app/privacy', label: 'Privacy', icon: Lock },
+            { to: '/app/terms', label: 'Terms', icon: FileText },
           ].map((l) => (
             <li key={l.to}>
               <Link to={l.to} className="flex min-h-14 items-center gap-3 px-4 py-2 transition-colors hover:bg-ink-50 focus-visible:outline-offset-[-2px] active:bg-ink-50">

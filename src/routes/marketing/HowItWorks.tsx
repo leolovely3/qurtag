@@ -1,3 +1,4 @@
+import { HowVisuals } from './HowVisuals';
 import { PageHero, PageBody, Section, P, Steps, CtaBand } from './parts';
 
 const owner = [
@@ -23,6 +24,11 @@ export function HowItWorks() {
         title="A QR tag, a note, a reply."
         lede="No app for the finder, no phone numbers swapped. Here are both sides of it."
       />
+      <section className="border-t border-hairline">
+        <div className="mx-auto w-full max-w-6xl px-6 py-12 md:px-10 md:py-16 lg:px-16">
+          <HowVisuals />
+        </div>
+      </section>
       <PageBody>
         <Section title="If you own the thing">
           <Steps items={owner} />
