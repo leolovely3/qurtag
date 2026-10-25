@@ -13,6 +13,10 @@
  * - The quiet zone is the empty margin the code needs on every side to be found. The standard
  *   asks for 4 modules; the two smallest styles have room for 2 or 3, and MIN_QUIET_MODULES (2)
  *   is the least any style may use.
+ * - The small sticker is 1.25 in square, not 1 in. A 0.75 in code with its quiet zone is 0.87 in
+ *   across, which leaves 0.1 in of a 1 in sticker: too little for a line of lettering a person can
+ *   read from arm's length. At 1.25 in the line "LOST? SCAN ME" is about 9 pt bold (capitals
+ *   2.3 mm high) and the QR code is unchanged.
  * - The label strip fits the standard 30 per sheet address label sheet on Letter (3 across, 10
  *   down, labels 2 5/8 by 1 in), so the printer puts each tag exactly on a label. Every other
  *   style prints as a grid with cut marks, because no single sheet size is common for it.
@@ -74,13 +78,13 @@ export const STYLES: StyleSpec[] = [
   {
     id: 'sticker',
     name: 'Small sticker',
-    sizeLabel: '1 in (2.5 cm) square',
+    sizeLabel: '1.25 in (3.2 cm) square',
     suits: 'Bottles, chargers, glasses cases, remotes',
-    w: 1,
-    h: 1,
+    w: 1.25,
+    h: 1.25,
     panels: 1,
     qr: 0.75,
-    quiet: 2,
+    quiet: 3,
     gap: 0.2,
     margin: 0.5,
     howTo: 'Print on sticker paper and cut along the marks. Several copies print, so you have spares.',
@@ -108,12 +112,12 @@ export const STYLES: StyleSpec[] = [
     id: 'fob',
     name: 'Key fob insert',
     sizeLabel: '1 x 1.4 in (25 x 36 mm), two sides',
-    suits: 'Key rings and bag zips with a clear photo holder',
+    suits: 'Key rings and bag zippers with a clear photo holder',
     w: 1,
     h: 2.8,
     panels: 2,
     qr: 0.75,
-    quiet: 3,
+    quiet: 2,
     gap: 0.16,
     margin: 0.5,
     howTo: 'Cut along the marks, fold on the dashed line with the printing outside, and slide it into the holder.',
@@ -124,7 +128,7 @@ export const STYLES: StyleSpec[] = [
     id: 'wallet',
     name: 'Wallet card',
     sizeLabel: '3.375 x 2.125 in (credit card size)',
-    suits: 'Bag tags, wallets, walkers, pushchairs',
+    suits: 'Bag tags, wallets, walkers, strollers',
     w: 3.375,
     h: 2.125,
     panels: 1,
@@ -156,7 +160,7 @@ export const STYLES: StyleSpec[] = [
     id: 'clothing',
     name: 'Clothing strip',
     sizeLabel: '2.5 x 1 in (64 x 25 mm)',
-    suits: 'Jackets, school clothes, sports kit (iron-on transfer paper)',
+    suits: 'Jackets, school clothes, sports uniforms (iron-on transfer paper)',
     w: 2.5,
     h: 1,
     panels: 1,

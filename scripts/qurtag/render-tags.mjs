@@ -6,7 +6,8 @@
  * For each style and look it writes the Letter and A4 sheets and the print-ready file as PDF,
  * then (with `pdftoppm` from poppler, if installed) one PNG per PDF page, which is what a printer
  * would put on paper. It also writes a preview SVG of one piece. The visual check in the QuR Tag
- * pull request is these files; scripts/qurtag/unit/tag-render.test.ts decodes the QR codes in them.
+ * pull request is these files (poppler may draw Helvetica-Bold as regular where no bold substitute font is installed; the
+ * PDF still names the bold face, and the SVG previews and macOS render it heavy); scripts/qurtag/unit/tag-render.test.ts decodes the QR codes in them.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';

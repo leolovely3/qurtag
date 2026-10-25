@@ -32,7 +32,7 @@ test('there are six styles and three looks', () => {
 });
 
 test('the stated sizes', () => {
-  assert.deepEqual([styleById('sticker').w, styleById('sticker').h], [1, 1]);
+  assert.deepEqual([styleById('sticker').w, styleById('sticker').h], [1.25, 1.25]);
   assert.deepEqual([styleById('strip').w, styleById('strip').h], [2.625, 1]);
   assert.deepEqual(panelSize(styleById('fob')), { w: 1, h: 1.4 });
   assert.deepEqual([styleById('wallet').w, styleById('wallet').h], [3.375, 2.125]);
@@ -53,6 +53,16 @@ test('every style prints the QR code at least 0.75 in with its quiet zone, and i
   }
 });
 
+test('the small sticker is 1.25 in: the code with its quiet zone plus a readable line fits, and 1 in would not', () => {
+  const s = styleById('sticker');
+  const zone = s.qr + 2 * quietZone(s, 37);
+  const line = textWidth('LOST? SCAN ME', 9, true);
+  assert.ok(s.qr >= MIN_QR_IN);
+  assert.ok(zone + 0.2 <= s.h - 0.092 + 1e-9, 'zone and a 0.2 in band fit down');
+  assert.ok(zone + 0.2 > 1 - 0.092, 'the same would not fit a 1 in sticker');
+  assert.ok(line <= s.w - 0.092 - 0.12 + 1e-9, 'a 9 pt line fits across');
+});
+
 test('a QR code under the minimum is refused', () => {
   const small: StyleSpec = { ...styleById('sticker'), qr: 0.7 };
   assert.throws(() => qrSize(small), RangeError);
@@ -69,7 +79,7 @@ test('the label strip on Letter is the standard 30 per sheet address label sheet
 });
 
 test('copies per page, on both papers', () => {
-  const expected: Record<string, [number, number]> = { sticker: [48, 54], strip: [30, 18], fob: [18, 18], wallet: [8, 8], bag: [3, 3], clothing: [16, 18] };
+  const expected: Record<string, [number, number]> = { sticker: [35, 35], strip: [30, 18], fob: [18, 18], wallet: [8, 8], bag: [3, 3], clothing: [16, 18] };
   for (const s of STYLES) {
     const [letter, a4] = expected[s.id];
     assert.equal(gridFor(s, 'letter').count, letter, `${s.id} letter`);

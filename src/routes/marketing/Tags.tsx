@@ -13,12 +13,12 @@ export function Tags() {
         <Section title="Six styles to choose from">
           <Bullets
             items={[
-              'Small sticker, 1 inch square: bottles, chargers, glasses cases, remotes.',
+              'Small sticker, 1.25 inch square: bottles, chargers, glasses cases, remotes.',
               'Label strip, 2.625 x 1 inch: lunchboxes, instrument cases, laptops. On US Letter it lines up with the standard 30 per sheet address label sheet.',
-              'Key fob insert, about 1 x 1.4 inches, printed on both sides: key rings and zip pulls with a clear photo holder.',
+              'Key fob insert, about 1 x 1.4 inches, printed on both sides: key rings and zipper pulls with a clear photo holder.',
               'Wallet card, credit card size: bag tags, wallets, walkers.',
               'Bag tag, a bigger fold-over card with "If found" in large letters: backpacks, gym bags and luggage.',
-              'Clothing strip for iron-on transfer paper, with a mirrored option: jackets, school clothes, sports kit.',
+              'Clothing strip for iron-on transfer paper, with a mirrored option: jackets, school clothes, sports uniforms.',
             ]}
           />
           <P>
@@ -31,7 +31,7 @@ export function Tags() {
             items={[
               "A QR code that opens your item's page when a finder scans it with their phone camera. It is never printed smaller than about 0.75 inch (2 cm), and it keeps a clear border so phones read it first time.",
               'A short code printed beside it, such as qurtag.com/k7m2p. Anyone can type it, so the tag still works if the QR code gets scuffed.',
-              'The words "If found, scan", so a stranger knows what to do.',
+              'A bold line such as "LOST? SCAN ME" and an orange QuR Tag frame, so a stranger knows what to do from arm\'s length.',
             ]}
           />
         </Section>

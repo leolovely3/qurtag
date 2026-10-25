@@ -280,9 +280,9 @@ export function TagPrint() {
 
         <section aria-labelledby="prev-h" className="flex flex-col gap-3">
           <h2 id="prev-h" className="text-lg font-semibold text-ink-900">Preview</h2>
-          <div className="grid items-start gap-4 sm:grid-cols-[auto_1fr]">
+          <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 sm:grid-cols-[auto_minmax(0,1fr)]">
             {preview && (
-              <figure className="flex flex-col gap-1">
+              <figure className="flex min-w-0 flex-col gap-1">
                 <div
                   role="img"
                   aria-label={`${spec.name}, ${look} look, enlarged`}
@@ -296,7 +296,7 @@ export function TagPrint() {
               </figure>
             )}
             {sheet && (
-              <figure className="flex flex-col gap-1">
+              <figure className="flex min-w-0 flex-col gap-1">
                 <div
                   role="img"
                   aria-label={`The ${paper.name} page with ${count} copies`}

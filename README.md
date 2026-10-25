@@ -269,12 +269,16 @@ Letter or A4 with several copies a page.
 
 | Style | One piece | Copies on Letter / A4 | Notes |
 | --- | --- | --- | --- |
-| Small sticker | 1 x 1 in | 48 / 54 | cut marks |
+| Small sticker | 1.25 x 1.25 in | 35 / 35 | cut marks; bold "LOST? SCAN ME" line above the code (1 in leaves no room for a line a person can read) |
 | Label strip | 2.625 x 1 in | 30 / 18 | on Letter the standard 30 per sheet address label sheet (3 across, 10 down), no marks |
-| Key fob insert | 1 x 1.4 in, two sides | 18 / 18 | front QR, back short code and address; fold line; the back is printed upside down so it reads upright once folded |
+| Key fob insert | 1 x 1.4 in, two sides | 18 / 18 | front "IF FOUND, SCAN ME" and QR, back short code and address; fold line; the back is printed upside down so it reads upright once folded |
 | Wallet card | 3.375 x 2.125 in | 8 / 8 | cut marks |
 | Bag tag | 2.4 x 3.5 in folded | 3 / 3 | "If found" large; fold line |
-| Clothing strip | 2.5 x 1 in | 16 / 18 | iron-on transfer paper; "Print mirrored" flips the whole page |
+| Clothing strip | 2.5 x 1 in | 16 / 18 | "IF FOUND, SCAN ME" in large capitals; iron-on transfer paper; "Print mirrored" flips the whole page |
+
+Every style has a thin orange QuR Tag frame (with a black keyline on the yellow Playful plate). Heavy lines are set in
+Helvetica-Bold; the PDF names that face, but `pdftoppm` without a Helvetica Bold substitute draws it regular, so check
+weight in the SVG previews or a Quartz/Chrome render.
 
 The sizes, grids and the QR rules are in `src/lib/tagLayout.ts`. The QR code is always error correction level H,
 printed at least 0.75 in (`MIN_QR_IN`; `qrSize` throws below it) with a quiet zone of at least 2 modules, black on white

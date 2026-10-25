@@ -74,7 +74,7 @@ export function StartSetup() {
     toast.show({
       kind: 'success',
       title: 'Item saved',
-      body: `Tag ${result.publicId} is ready. Print it next.`,
+      body: 'Your tag is ready. Print it next.',
     });
     const next = `/app/tags/${result.tagId}/print`;
     if (await shouldExplainPush()) setPrimerFor({ item: name.trim(), next });

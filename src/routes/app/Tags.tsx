@@ -10,6 +10,7 @@ import { fetchItems, fetchPrimaryHouseholdId, fetchTags } from '@/lib/queries';
 import type { Item, Tag } from '@/lib/database.types';
 import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/lib/cn';
+import { shortAddress } from '@/lib/tagLayout';
 
 const STATUS: Record<Tag['status'], string> = {
   active: 'Working',
@@ -98,7 +99,7 @@ export function Tags() {
                   <div className="min-w-0">
                     <p className="break-words text-base font-medium text-ink-900">{item?.name ?? 'No item'}</p>
                     <p className="text-sm text-muted">
-                      <span className="font-mono">{tag.public_id}</span> ·{' '}
+                      {tag.short_code ? <><span className="font-mono">{shortAddress(tag.short_code)}</span> ·{' '}</> : null}
                       <span className={cn(tag.status === 'active' ? 'text-verdigris-700' : 'text-muted')}>{STATUS[tag.status]}</span>
                     </p>
                   </div>

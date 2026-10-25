@@ -23,7 +23,7 @@ export function MakeItLast() {
           <Bullets
             items={[
               'Small sticker or label strip: bottles, chargers, glasses cases, remotes, lunchboxes, instrument cases and laptops.',
-              'Key fob insert: a key ring or zip pull with a clear photo holder.',
+              'Key fob insert: a key ring or zipper pull with a clear photo holder.',
               'Wallet card: slides into a clear card holder for a bag, a wallet or a walker.',
               'Bag tag: backpacks, gym bags and luggage.',
               'Clothing strip: jackets and school clothes, on iron-on transfer paper.',
@@ -53,7 +53,7 @@ export function MakeItLast() {
               'Clear credit card luggage tag holders take a wallet card or a bag tag and keep rain off it. Pick one with a strap or loop that closes.',
               'Keychain photo inserts hold a key fob insert on both sides. Fold the insert once and slide it in.',
               'Adhesive label pockets stick to the inside of a bag or a case and let you swap the paper tag later.',
-              'Zip ties and split rings hold a tag on a bag handle or a zip pull. A zip tie is harder to lose than a clip, and a split ring stays on a key ring.',
+              'Zip ties and split rings hold a tag on a bag handle or a zipper pull. A zip tie is harder to lose than a clip, and a split ring stays on a key ring.',
               'Use thick paper or light card for anything that hangs, so it does not curl.',
             ]}
           />
