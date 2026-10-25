@@ -4,7 +4,7 @@ const owner = [
   { title: 'Make an account', body: 'Sign up with your email and a password. It is free for up to two items.' },
   { title: 'Add an item', body: 'Give it a name, such as "Blue water bottle". You can add a photo and a short note, for example "Small thank-you if you return it". The note is only words you write. No money moves through QuR Tag.' },
   { title: 'Print the tag', body: 'Print the QR tag on plain paper or sticker paper. Stick it on, tie it on or tuck it inside. Print it again whenever you need to.' },
-  { title: 'Check your QuR Tag inbox', body: 'When a finder writes to you, the note waits in your inbox on the site. Open it, read it and reply. We do not send email or phone alerts yet, so look in your inbox now and then.' },
+  { title: 'Get the note and reply', body: 'When a finder writes to you, the note waits in your QuR Tag inbox. Open it, read it and reply. The QuR Tag iPhone app, coming soon to the App Store, alerts you the moment a note arrives and lets you reply from the alert.' },
   { title: 'Mark it lost if it goes missing', body: 'Switch the item to "lost" and its tag page says the item is missing, so a finder knows you are looking.' },
 ];
 
