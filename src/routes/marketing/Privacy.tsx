@@ -38,10 +38,10 @@ export function Privacy() {
             items={[
               'Account: your email address, the first name you give us, and your password, which is stored only as a secure hash.',
               'Sign-in records: when you sign in, the network (IP) address and browser type of that sign-in, kept with the session so we can keep accounts safe.',
-              'Items you add (up to two on the Free plan): the name, an optional description, an optional photo (we shrink it on your device before it is saved), an optional note for the finder, an optional private note, and whether you marked it lost.',
+              'Items you add (up to three on the Free plan): the name, an optional description, an optional photo (we shrink it on your device before it is saved), an optional note for the finder, an optional private note, and whether you marked it lost.',
               'Tags: the code of each tag you make and whether it is switched on.',
               'Conversations: the notes you and a finder write to each other, and when they were read.',
-              'Membership, if you buy one: which plan you have, whether it is monthly or yearly, whether it renews, when it ends, and the reference numbers Stripe or Apple give the subscription. We do not receive or keep your card number.',
+              'Membership, if you buy one: which plan you have, whether it renews, when it ends, and the reference numbers Stripe or Apple give the subscription. We do not receive or keep your card number.',
               'Messages you send through the Contact us form: the text, the topic, the email address to reply to, and, if you were signed in, your account and plan. We keep them until the question is dealt with and as long after as we need to answer follow-ups.',
               'Notifications, if you allow them in the iPhone app: your phone\'s device token (a code Apple gives the app so that our server can send it alerts), whether the app is a test or a live build, and the notification choices you make in Settings. We keep the token until you sign out, delete your account, or Apple tells us it no longer works.',
               'Family, if you use it: the email address you invite, until the invite is used, canceled or has expired (and for 30 days after), and the names and email addresses of the people in the family, which they can all see.',

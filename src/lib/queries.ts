@@ -676,8 +676,8 @@ export async function createItemWithPrintableTag(input: {
     if (error?.message === 'item_limit') {
       return {
         error: membershipsAvailableInApp()
-          ? 'You have reached the limit of your plan (2 items on Free). Delete an item, or upgrade on the Membership page, to add another.'
-          : 'Free accounts can tag up to two items.',
+          ? 'You have reached the limit of your plan (3 items on Free). Delete an item, or upgrade on the Membership page, to add another.'
+          : 'Free accounts can tag up to three items.',
       };
     }
     console.error('[QuR Tag] createItemWithPrintableTag', error);

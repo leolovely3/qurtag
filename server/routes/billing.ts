@@ -7,7 +7,7 @@
  *                                     "Coming soon" instead of a button that cannot work. Also
  *                                     `email`: whether email is set up (RESEND_API_KEY), so Settings
  *                                     does not promise email alerts that cannot be sent.
- *   POST /api/fn/billing-checkout     { plan, interval }  signed in. Starts a Stripe Checkout
+ *   POST /api/fn/billing-checkout     { plan, interval? }  signed in; yearly is the only interval. Starts a Stripe Checkout
  *                                     page and answers its address.
  *   POST /api/fn/billing-portal       signed in. Opens Stripe's customer portal (change card,
  *                                     switch plan, cancel) and answers its address.
@@ -164,8 +164,8 @@ export function createBillingRoutes(opts: BillingOptions = {}) {
     if (account instanceof Response) return account;
     const body = await readJson(request);
     const plan = str(body?.plan);
-    const interval = str(body?.interval);
-    if ((plan !== 'plus' && plan !== 'family') || (interval !== 'month' && interval !== 'year')) {
+    const interval = str(body?.interval) ?? 'year';
+    if ((plan !== 'plus' && plan !== 'family') || interval !== 'year') {
       return json(400, { error: 'bad_request', message: 'Pick a plan.' });
     }
     const product = PRODUCTS.find((p) => p.plan === plan && p.interval === interval)!;
@@ -291,7 +291,10 @@ export function createBillingRoutes(opts: BillingOptions = {}) {
   }
 
   async function run(action: Action): Promise<{ result: string }> {
-    if (action.kind === 'ignore') return { result: `ignored: ${action.why}` };
+    if (action.kind === 'ignore') {
+      if (action.log) console.error(`qurtag billing: ignored a subscription event (${action.why})`);
+      return { result: `ignored: ${action.why}` };
+    }
     if (action.kind === 'link') {
       const { rows } = await query('select qurtag.server_link_stripe_customer($1, $2) as ok', [action.userId, action.customer]);
       return { result: rows[0]?.ok ? 'linked' : 'ignored: no such account' };

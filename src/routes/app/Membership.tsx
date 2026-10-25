@@ -167,11 +167,10 @@ function MembershipScreen() {
   const manage = (() => {
     if (!membership || !paidPlan) return null;
     const name = PLAN_INFO[paidPlan].name;
-    const how = membership.billing_interval === 'year' ? 'yearly' : 'monthly';
     let status: string;
     if (membership.status === 'canceling') status = `Auto-renew is off. Your ${name} plan ends on ${when(membership.period_end)}.`;
     else if (membership.status === 'billing_issue') status = `The last payment did not go through. Update your payment method to keep ${name}.`;
-    else status = `Billed ${how}. Renews on ${when(membership.period_end)}.`;
+    else status = `Billed yearly. Renews on ${when(membership.period_end)}.`;
     const source = membership.provider === 'apple' ? 'Bought in the iPhone app, with Apple.' : 'Bought on the web, with Stripe.';
     return { name, status, source };
   })();
@@ -260,39 +259,38 @@ function MembershipScreen() {
           const showBuy = !paidPlan;
           return (
             <PlanCard key={plan} plan={plan} current={membership?.plan === plan} prices={native && prices && prices.size ? prices : undefined}>
-              {showBuy &&
-                (['month', 'year'] as const).map((interval) => {
-                  const key = `${plan}_${interval}`;
-                  const product = productFor(plan, interval);
-                  const label = interval === 'month' ? 'Pay monthly' : 'Pay yearly';
-                  if (native) {
-                    const price = store?.get(product.appleId);
-                    if (!iapAvailable() || (store && !price)) {
-                      return (
-                        <button key={key} type="button" className={secondary} disabled>
-                          {label}: coming soon
-                        </button>
-                      );
-                    }
+              {showBuy && (() => {
+                const interval = 'year' as const;
+                const key = `${plan}_${interval}`;
+                const product = productFor(plan, interval);
+                if (native) {
+                  const price = store?.get(product.appleId);
+                  if (!iapAvailable() || (store && !price)) {
                     return (
-                      <button key={key} type="button" className={interval === 'year' ? primary : secondary} disabled={!price || !!busy} onClick={() => void buyOnPhone(plan, interval)}>
-                        {busy === key ? 'Opening the App Store...' : `${label}${price ? `, ${price.priceString}` : ''}`}
-                      </button>
-                    );
-                  }
-                  if (web && !web[key]) {
-                    return (
-                      <button key={key} type="button" className={secondary} disabled>
-                        {label}: coming soon
+                      <button type="button" className={secondary} disabled>
+                        Coming soon
                       </button>
                     );
                   }
                   return (
-                    <button key={key} type="button" className={interval === 'year' ? primary : secondary} disabled={!web || !!busy} onClick={() => void buyOnWeb(plan, interval)}>
-                      {busy === key ? 'Opening...' : `${label}, ${priceLabel(product.cents)}`}
+                    <button type="button" className={primary} disabled={!price || !!busy} onClick={() => void buyOnPhone(plan, interval)}>
+                      {busy === key ? 'Opening the App Store...' : `Pay ${price ? `${price.priceString} ` : ''}a year`}
                     </button>
                   );
-                })}
+                }
+                if (web && !web[key]) {
+                  return (
+                    <button type="button" className={secondary} disabled>
+                      Coming soon
+                    </button>
+                  );
+                }
+                return (
+                  <button type="button" className={primary} disabled={!web || !!busy} onClick={() => void buyOnWeb(plan, interval)}>
+                    {busy === key ? 'Opening...' : `Pay ${priceLabel(product.cents)} a year`}
+                  </button>
+                );
+              })()}
             </PlanCard>
           );
         })}
@@ -331,7 +329,7 @@ function MembershipScreen() {
 
       <section aria-label="Billing terms" className="border-t border-hairline pt-qurtag-5 flex flex-col gap-2 text-caption text-muted text-pretty">
         <p>
-          Plus and Family are subscriptions that renew automatically, every month or every year depending on what you choose, until you
+          Plus and Family are subscriptions that renew automatically every year until you
           cancel. You can cancel at any time, and you keep your plan until the end of the period you already paid for. Canceling stops the
           next payment; it does not delete anything you made.
         </p>

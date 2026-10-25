@@ -58,7 +58,7 @@ export async function probeOfferings(userId: string): Promise<void> {
 
 export interface StorePrice {
   productId: string;
-  /** The price as Apple formats it for the person's country, for example "$2.99". */
+  /** The price as Apple formats it for the person's country, for example "$19.00". */
   priceString: string;
   /** Apple's own name for the package, passed back to purchase. */
   packageRef: unknown;

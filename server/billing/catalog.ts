@@ -7,18 +7,19 @@
  * The prices here are the US dollar prices set in Stripe and in App Store Connect. The
  * iPhone shows the price StoreKit reports for the person's country; the web shows these.
  *
- * Free: 2 items, 1 person, scan history of the last 30 days.
+ * Free: 3 items, 1 person, scan history of the last 30 days.
  * Plus: unlimited items, 1 person, the full scan history.
  * Family: Plus for up to 5 people who share the items and the inbox.
  */
 export type PaidPlan = 'plus' | 'family';
 export type Plan = 'free' | PaidPlan;
-export type Interval = 'month' | 'year';
+/** Both paid plans are yearly only, auto-renewing. */
+export type Interval = 'year';
 
 /** How many people one Family plan covers (the owner and four others). */
 export const FAMILY_SEATS = 5;
 /** Items on the Free plan. */
-export const FREE_ITEM_LIMIT = 2;
+export const FREE_ITEM_LIMIT = 3;
 /** Days of scan history on the Free plan. */
 export const FREE_SCAN_DAYS = 30;
 
@@ -36,10 +37,8 @@ export interface Product {
 }
 
 export const PRODUCTS: readonly Product[] = [
-  { plan: 'plus', interval: 'month', cents: 299, appleId: 'app.impactconsultingai.qurtag.plus.monthly', stripeEnv: 'STRIPE_PRICE_PLUS_MONTHLY' },
   { plan: 'plus', interval: 'year', cents: 1900, appleId: 'app.impactconsultingai.qurtag.plus.yearly', stripeEnv: 'STRIPE_PRICE_PLUS_YEARLY' },
-  { plan: 'family', interval: 'month', cents: 499, appleId: 'app.impactconsultingai.qurtag.family.monthly', stripeEnv: 'STRIPE_PRICE_FAMILY_MONTHLY' },
-  { plan: 'family', interval: 'year', cents: 3900, appleId: 'app.impactconsultingai.qurtag.family.yearly', stripeEnv: 'STRIPE_PRICE_FAMILY_YEARLY' },
+  { plan: 'family', interval: 'year', cents: 2900, appleId: 'app.impactconsultingai.qurtag.family.yearly', stripeEnv: 'STRIPE_PRICE_FAMILY_YEARLY' },
 ];
 
 export function productFor(plan: PaidPlan, interval: Interval): Product {
@@ -54,16 +53,9 @@ export function dollars(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`;
 }
 
-/** A price as people write it: $19 for whole dollars, $2.99 otherwise. */
+/** A price as people write it: $19 for whole dollars, $19.50 otherwise. */
 export function priceLabel(cents: number): string {
   return cents % 100 === 0 ? `$${cents / 100}` : dollars(cents);
-}
-
-/** The yearly price as a share saved against paying monthly for 12 months, rounded down. */
-export function yearlySavingPercent(plan: PaidPlan): number {
-  const m = productFor(plan, 'month').cents * 12;
-  const y = productFor(plan, 'year').cents;
-  return Math.floor(((m - y) / m) * 100);
 }
 
 export interface PlanInfo {

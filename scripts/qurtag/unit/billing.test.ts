@@ -6,7 +6,7 @@
  */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { dollars, productByAppleId, PRODUCTS, yearlySavingPercent, PLAN_INFO } from '../../../server/billing/catalog.ts';
+import { dollars, FREE_ITEM_LIMIT, priceLabel, productByAppleId, PRODUCTS, PLAN_INFO } from '../../../server/billing/catalog.ts';
 import { actionForRevenueCatEvent, sentSecret } from '../../../server/billing/revenuecat.ts';
 import { actionForStripeEvent, signStripePayload, verifyStripeSignature } from '../../../server/billing/stripe.ts';
 // The routes read their per-minute limits when loaded; these tests make more calls than a person would.
@@ -18,9 +18,7 @@ const USER = '11111111-2222-4333-8444-555555555555';
 const SESSION = '66666666-7777-4888-9999-000000000000';
 const SECRET = 'whsec_unit';
 const PRICES = {
-  STRIPE_PRICE_PLUS_MONTHLY: 'price_pm',
   STRIPE_PRICE_PLUS_YEARLY: 'price_py',
-  STRIPE_PRICE_FAMILY_MONTHLY: 'price_fm',
   STRIPE_PRICE_FAMILY_YEARLY: 'price_fy',
 };
 const FULL = { QURTAG_AUTH_URL: 'https://www.qurtag.com', STRIPE_SECRET_KEY: 'sk_test_unit', STRIPE_WEBHOOK_SECRET: SECRET, REVENUECAT_WEBHOOK_AUTH: 'rc_secret', ...PRICES } as NodeJS.ProcessEnv;
@@ -28,23 +26,24 @@ const EMPTY = { QURTAG_AUTH_URL: 'https://www.qurtag.com' } as NodeJS.ProcessEnv
 
 // ------------------------------------------------------------------ the catalog
 
-test('the prices are the founder\'s', () => {
+test('the prices are the founder\'s: two plans, yearly only', () => {
   const by = (id: string) => PRODUCTS.find((p) => p.appleId === id)!.cents;
-  assert.equal(by('app.impactconsultingai.qurtag.plus.monthly'), 299);
   assert.equal(by('app.impactconsultingai.qurtag.plus.yearly'), 1900);
-  assert.equal(by('app.impactconsultingai.qurtag.family.monthly'), 499);
-  assert.equal(by('app.impactconsultingai.qurtag.family.yearly'), 3900);
-  assert.equal(dollars(299), '$2.99');
+  assert.equal(by('app.impactconsultingai.qurtag.family.yearly'), 2900);
   assert.equal(dollars(1900), '$19.00');
-  assert.equal(PRODUCTS.length, 4);
-  assert.equal(new Set(PRODUCTS.map((p) => p.stripeEnv)).size, 4);
+  assert.equal(dollars(2900), '$29.00');
+  assert.equal(priceLabel(2900), '$29');
+  assert.equal(PRODUCTS.length, 2);
+  assert.ok(PRODUCTS.every((p) => p.interval === 'year'));
+  assert.deepEqual(PRODUCTS.map((p) => p.stripeEnv), ['STRIPE_PRICE_PLUS_YEARLY', 'STRIPE_PRICE_FAMILY_YEARLY']);
   assert.equal(productByAppleId('app.impactconsultingai.qurtag.family.yearly')?.plan, 'family');
+  assert.equal(productByAppleId('app.impactconsultingai.qurtag.plus.monthly'), undefined, 'a monthly product is not ours any more');
   assert.equal(productByAppleId('something.else'), undefined);
 });
 
-test('the savings quoted for paying yearly are true', () => {
-  assert.equal(yearlySavingPercent('plus'), 47);
-  assert.equal(yearlySavingPercent('family'), 34);
+test('Free is three items', () => {
+  assert.equal(FREE_ITEM_LIMIT, 3);
+  assert.ok(PLAN_INFO.free.includes.some((l) => l.startsWith('Up to 3 items')));
 });
 
 test('the plan descriptions make only the claims the code backs', () => {
@@ -85,7 +84,7 @@ function subEvent(over: Record<string, unknown> = {}, type = 'customer.subscript
         status: 'active',
         cancel_at_period_end: false,
         metadata: { app: 'qurtag', user_id: USER },
-        items: { data: [{ price: { id: 'price_fm' }, current_period_end: 1_800_086_400, ...itemOver }] },
+        items: { data: [{ price: { id: 'price_fy' }, current_period_end: 1_800_086_400, ...itemOver }] },
         ...over,
       },
     },
@@ -100,7 +99,7 @@ test('Stripe: subscription statuses become the plan states', () => {
   };
   const active = apply(subEvent());
   assert.equal(active.plan, 'family');
-  assert.equal(active.interval, 'month');
+  assert.equal(active.interval, 'year');
   assert.equal(active.status, 'active');
   assert.equal(active.userId, USER);
   assert.equal(active.customer, 'cus_1');
@@ -116,9 +115,9 @@ test('Stripe: subscription statuses become the plan states', () => {
 });
 
 test('Stripe: the period end is read from the item or from the subscription', () => {
-  const a = actionForStripeEvent(FULL, subEvent({ current_period_end: 1_800_000_500, items: { data: [{ price: { id: 'price_pm' } }] } }));
+  const a = actionForStripeEvent(FULL, subEvent({ current_period_end: 1_800_000_500, items: { data: [{ price: { id: 'price_py' } }] } }));
   assert.equal(a.kind === 'apply' && a.apply.periodEnd.getTime(), 1_800_000_500_000);
-  assert.throws(() => actionForStripeEvent(FULL, subEvent({ items: { data: [{ price: { id: 'price_pm' } }] } })), /period end/);
+  assert.throws(() => actionForStripeEvent(FULL, subEvent({ items: { data: [{ price: { id: 'price_py' } }] } })), /period end/);
 });
 
 test('Stripe: what is not ours is ignored, and what is ours but unreadable throws', () => {
@@ -126,7 +125,10 @@ test('Stripe: what is not ours is ignored, and what is ours but unreadable throw
   assert.equal(actionForStripeEvent(FULL, subEvent({ status: 'incomplete' })).kind, 'ignore');
   assert.equal(actionForStripeEvent(FULL, { id: 'e', type: 'invoice.paid', data: { object: {} } }).kind, 'ignore');
   assert.equal(actionForStripeEvent(FULL, 'nonsense').kind, 'ignore');
-  assert.throws(() => actionForStripeEvent(FULL, subEvent({ items: { data: [{ price: { id: 'price_unknown' }, current_period_end: 1 }] } })), /price/);
+  // A price the server does not know (a retired one) is logged and leaves the plan unchanged, not retried forever.
+  const unknown = actionForStripeEvent(FULL, subEvent({ items: { data: [{ price: { id: 'price_unknown' }, current_period_end: 1 }] } }));
+  assert.equal(unknown.kind, 'ignore');
+  assert.equal(unknown.kind === 'ignore' && unknown.log, true);
   assert.throws(() => actionForStripeEvent(EMPTY, subEvent()), /price/, 'with the price settings missing, a QuR Tag subscription is retried, not dropped');
 });
 
@@ -144,7 +146,7 @@ test('Stripe: checkout.session.completed links the customer', () => {
 function rc(over: Record<string, unknown> = {}) {
   return {
     event: {
-      id: 'rc_1', type: 'INITIAL_PURCHASE', app_user_id: USER, original_app_user_id: USER, product_id: 'app.impactconsultingai.qurtag.plus.monthly',
+      id: 'rc_1', type: 'INITIAL_PURCHASE', app_user_id: USER, original_app_user_id: USER, product_id: 'app.impactconsultingai.qurtag.plus.yearly',
       store: 'APP_STORE', original_transaction_id: '100', transaction_id: '100', expiration_at_ms: 1_800_086_400_000, event_timestamp_ms: 1_800_000_000_000, ...over,
     },
   };
@@ -158,7 +160,7 @@ test('RevenueCat: events become plan states', () => {
   assert.equal(get({})?.status, 'active');
   assert.equal(get({})?.provider, 'apple');
   assert.equal(get({})?.plan, 'plus');
-  assert.equal(get({})?.interval, 'month');
+  assert.equal(get({})?.interval, 'year');
   assert.equal(get({ type: 'RENEWAL' })?.status, 'active');
   assert.equal(get({ type: 'UNCANCELLATION' })?.status, 'active');
   assert.equal(get({ type: 'CANCELLATION', cancel_reason: 'UNSUBSCRIBE' })?.status, 'canceling');
@@ -219,14 +221,14 @@ const call = (path: string, body: unknown, headers: Record<string, string> = {})
 const account = (over: Record<string, unknown> = {}) => ({ user_id: USER, email: 'me@example.com', name: 'Me', household_id: 'h', stripe_customer_id: null, live_providers: [], live_stripe_customer: null, ...over });
 const signedIn = { authorization: 'Bearer good' };
 
-test('config: with no settings no plan can be bought; with them all four can', async () => {
+test('config: with no settings no plan can be bought; with them both can', async () => {
   const none = await harness(EMPTY).routes.config(call('billing-config', {}));
   const a = (await none.json()) as { available: Record<string, boolean> };
-  assert.deepEqual(Object.values(a.available), [false, false, false, false]);
-  const some = await harness({ ...EMPTY, STRIPE_SECRET_KEY: 'sk', STRIPE_PRICE_PLUS_MONTHLY: 'p' } as NodeJS.ProcessEnv).routes.config(call('billing-config', {}));
-  assert.deepEqual(((await some.json()) as { available: Record<string, boolean> }).available, { plus_month: true, plus_year: false, family_month: false, family_year: false });
+  assert.deepEqual(Object.values(a.available), [false, false]);
+  const some = await harness({ ...EMPTY, STRIPE_SECRET_KEY: 'sk', STRIPE_PRICE_PLUS_YEARLY: 'p' } as NodeJS.ProcessEnv).routes.config(call('billing-config', {}));
+  assert.deepEqual(((await some.json()) as { available: Record<string, boolean> }).available, { plus_year: true, family_year: false });
   const all = await harness(FULL).routes.config(call('billing-config', {}));
-  assert.deepEqual(Object.values(((await all.json()) as { available: Record<string, boolean> }).available), [true, true, true, true]);
+  assert.deepEqual(Object.values(((await all.json()) as { available: Record<string, boolean> }).available), [true, true]);
   // Email availability follows RESEND_API_KEY.
   const noMail = (await (await harness(EMPTY).routes.config(call('billing-config', {}))).json()) as { email: boolean };
   assert.equal(noMail.email, false);
@@ -237,14 +239,14 @@ test('config: with no settings no plan can be bought; with them all four can', a
 
 test('checkout: needs a signed-in person, a real plan, and the settings', async () => {
   const h = harness(FULL, () => [{ a: account() }]);
-  assert.equal((await h.routes.checkout(call('billing-checkout', { plan: 'plus', interval: 'month' }))).status, 401);
-  assert.equal((await h.routes.checkout(call('billing-checkout', { plan: 'plus', interval: 'month' }, { authorization: 'Bearer forged' }))).status, 401);
-  assert.equal((await h.routes.checkout(call('billing-checkout', { plan: 'gold', interval: 'month' }, signedIn))).status, 400);
+  assert.equal((await h.routes.checkout(call('billing-checkout', { plan: 'plus', interval: 'year' }))).status, 401);
+  assert.equal((await h.routes.checkout(call('billing-checkout', { plan: 'plus', interval: 'year' }, { authorization: 'Bearer forged' }))).status, 401);
+  assert.equal((await h.routes.checkout(call('billing-checkout', { plan: 'gold', interval: 'year' }, signedIn))).status, 400);
   assert.equal((await h.routes.checkout(call('billing-checkout', { plan: 'plus', interval: 'week' }, signedIn))).status, 400);
-  assert.equal((await h.routes.checkout(call('billing-checkout', { plan: 'plus', interval: 'month' }, { ...signedIn, origin: 'https://evil.example' }))).status, 403);
+  assert.equal((await h.routes.checkout(call('billing-checkout', { plan: 'plus', interval: 'year' }, { ...signedIn, origin: 'https://evil.example' }))).status, 403);
   assert.equal(h.fetched.length, 0);
   const closed = harness(EMPTY, () => [{ a: account() }]);
-  const r = await closed.routes.checkout(call('billing-checkout', { plan: 'plus', interval: 'month' }, signedIn));
+  const r = await closed.routes.checkout(call('billing-checkout', { plan: 'plus', interval: 'year' }, signedIn));
   assert.equal(r.status, 503);
   assert.equal(closed.fetched.length, 0, 'with no settings nothing is sent to Stripe');
 });
@@ -269,7 +271,7 @@ test('checkout: asks Stripe for the right price and marks the subscription as th
   assert.equal(sent.body.get('customer_update[address]'), null, 'a new customer is not updated');
   // A known customer is reused, not asked for again.
   const again = harness(FULL, () => [{ a: account({ stripe_customer_id: 'cus_7' }) }]);
-  await again.routes.checkout(call('billing-checkout', { plan: 'plus', interval: 'month' }, signedIn));
+  await again.routes.checkout(call('billing-checkout', { plan: 'plus', interval: 'year' }, signedIn));
   assert.equal(again.fetched[0].body.get('customer'), 'cus_7');
   assert.equal(again.fetched[0].body.get('customer_email'), null);
   assert.equal(again.fetched[0].body.get('automatic_tax[enabled]'), 'true');
@@ -280,11 +282,11 @@ test('checkout: asks Stripe for the right price and marks the subscription as th
 
 test('checkout: refuses to start a second membership', async () => {
   const apple = harness(FULL, () => [{ a: account({ live_providers: ['apple'] }) }]);
-  const a = await apple.routes.checkout(call('billing-checkout', { plan: 'plus', interval: 'month' }, signedIn));
+  const a = await apple.routes.checkout(call('billing-checkout', { plan: 'plus', interval: 'year' }, signedIn));
   assert.equal(a.status, 409);
   assert.equal(((await a.json()) as { error: string }).error, 'managed_on_iphone');
   const stripe = harness(FULL, () => [{ a: account({ live_providers: ['stripe'] }) }]);
-  const s = await stripe.routes.checkout(call('billing-checkout', { plan: 'plus', interval: 'month' }, signedIn));
+  const s = await stripe.routes.checkout(call('billing-checkout', { plan: 'plus', interval: 'year' }, signedIn));
   assert.equal(((await s.json()) as { error: string }).error, 'use_portal');
   assert.equal(apple.fetched.length + stripe.fetched.length, 0);
 });

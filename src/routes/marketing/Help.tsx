@@ -37,7 +37,7 @@ const faqs: { q: string; a: ReactNode; paid?: boolean }[] = [
   {
     q: 'What does it cost?',
     paid: true,
-    a: 'Free for up to two items, and you print your own tags. Plus ($2.99 a month or $19 a year) has no limit on items and keeps your full scan history. Family ($4.99 a month or $39 a year) is Plus for up to five people who share the items and the inbox.',
+    a: 'Free for up to three items, and you print your own tags. Plus ($19 a year) has no limit on items and keeps your full scan history. Family ($29 a year) is Plus for up to five people who share the items and the inbox.',
   },
   {
     q: 'How do I cancel?',
@@ -47,7 +47,7 @@ const faqs: { q: string; a: ReactNode; paid?: boolean }[] = [
   {
     q: 'What happens to my items if I go back to Free?',
     paid: true,
-    a: 'Nothing is deleted. Your two oldest items stay editable. The rest stay, and you can read them, print their tags and delete them, but not change them until you upgrade or delete some. Finders can still scan their tags and write to you.',
+    a: 'Nothing is deleted. Your three oldest items stay editable. The rest stay, and you can read them, print their tags and delete them, but not change them until you upgrade or delete some. Finders can still scan their tags and write to you.',
   },
   {
     q: 'How does Family work?',

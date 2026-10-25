@@ -72,7 +72,7 @@ const REASON_TEXT: Record<string, string> = {
 
 export function reasonText(message: string | undefined, fallback = 'Something went wrong. Please try again.'): string {
   if (!membershipsAvailableInApp()) {
-    if (message === 'item_limit') return 'Free accounts can tag up to two items.';
+    if (message === 'item_limit') return 'Free accounts can tag up to three items.';
     if (message === 'read_only_item') return 'This item is over the free limit, so it cannot be changed. Delete an item to edit it again.';
   }
   return (message && REASON_TEXT[message]) || fallback;
