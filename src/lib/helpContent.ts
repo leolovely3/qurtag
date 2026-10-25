@@ -43,7 +43,7 @@ export const HELP: HelpSection[] = [
       {
         id: 'test-tag',
         q: 'How do I test my tag?',
-        a: 'Scan the printed tag with your phone camera once it is on. If your item\'s page opens, the tag works at the size it printed. Your own scan shows in your scan history, like a finder\'s. With no tag yet, Test on the Tags screen shows the page a finder sees without counting anything, but it does not check the paper tag.',
+        a: 'Scan the printed tag with your phone camera once it is on. If your item\'s page opens, the tag works at the size it printed. If your phone\'s browser is signed in to QuR Tag, your own scan is not counted as a finder\'s scan; if not, it shows in your scan history like a finder\'s. With no tag yet, Test on the Tags screen shows the page a finder sees without counting anything, but it does not check the paper tag.',
         action: { label: 'Your tags', to: '/app/tags' },
       },
       {
@@ -143,7 +143,7 @@ export const HELP: HelpSection[] = [
       {
         id: 'report-block',
         q: 'How do I report or block a finder?',
-        a: 'Open the conversation in your inbox. To report one note, choose Report under it, pick a reason and send. The note is hidden from you at once, and we review every report within 24 hours. To stop a finder writing to you, choose Block this finder: they cannot write again and are only told the conversation is closed. You can unblock in Settings, under Blocked finders. A note with offensive words or a threat arrives held back so you choose whether to read it.',
+        a: 'Open the conversation in your inbox. To report one note, choose Report under it, pick a reason and send. The note is hidden from you at once, and we review every report within 24 hours. To stop a finder writing to you, choose Block this finder: that conversation is closed to them and they are only told it is closed. If they scan the tag again from another phone or browser they could start a new conversation, so to stop all new notes, switch the tag off in Tags. If a note threatens you or a child, do not meet alone, do not share your address, and contact your local police if you feel unsafe. You can unblock in Settings, under Blocked finders. A note with offensive words or a threat arrives held back so you choose whether to read it.',
         action: { label: 'Open your inbox', to: '/app/inbox' },
       },
       {

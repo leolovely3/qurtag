@@ -28,7 +28,8 @@ export function FinderLayout() {
       <footer className="border-t border-hairline">
         <div className="mx-auto flex w-full max-w-2xl flex-wrap items-center justify-between gap-x-4 px-4 py-2 text-sm text-muted sm:px-6">
           <span className="min-w-0 max-w-full [overflow-wrap:anywhere]">
-            Questions? <a href="mailto:info@impactconsulting.ai" className="text-ink-700 underline underline-offset-4">info@impactconsulting.ai</a>
+            QuR Tag is run by Impact Consulting AI LLC. Questions?{' '}
+            <a href="mailto:info@impactconsulting.ai" className="text-ink-700 underline underline-offset-4">info@impactconsulting.ai</a>
           </span>
           <Link to="/help" className="inline-flex min-h-11 items-center font-medium text-ink-700 transition-colors hover:text-ink-900">
             Help

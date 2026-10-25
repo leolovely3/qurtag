@@ -170,7 +170,12 @@ export async function sendOwnerReply(input: { threadId: string; body: string }):
   return true;
 }
 
-export async function fetchThreadById(threadId: string): Promise<Thread | null> {
+/**
+ * One conversation, or null when it is not in the owner's inbox. With throwOnError a failed
+ * request (no signal, server busy) throws instead, so the screen can say "could not load"
+ * rather than "not in your inbox".
+ */
+export async function fetchThreadById(threadId: string, opts: { throwOnError?: boolean } = {}): Promise<Thread | null> {
   const { data, error } = await supabase
     .from('threads')
     .select('*')
@@ -178,6 +183,7 @@ export async function fetchThreadById(threadId: string): Promise<Thread | null> 
     .maybeSingle();
   if (error) {
     console.error('[QuR Tag] fetchThreadById', error);
+    if (opts.throwOnError) throw new Error('could not load the conversation');
     return null;
   }
   return (data as Thread | null) ?? null;
@@ -648,9 +654,14 @@ export async function showHeldNote(messageId: string): Promise<boolean> {
   return !error;
 }
 
+/** Fired on window when the owner's unread count may have changed. */
+export const UNREAD_CHANGED = 'qurtag:unread-changed';
+
 export async function markThreadReadByOwner(threadId: string): Promise<void> {
   const { error } = await supabase.rpc('mark_thread_read', { p_thread_id: threadId });
   if (error) console.error('[QuR Tag] markThreadReadByOwner', error);
+  // The Inbox badge counts again now, not at its next poll.
+  else if (typeof window !== 'undefined') window.dispatchEvent(new Event(UNREAD_CHANGED));
 }
 
 /* ─────────────── items + tags ─────────────── */

@@ -422,7 +422,9 @@ shell (`capacitor.config.ts`, `ios/`). The old Expo stub in `mobile/` is not use
   (`src/routes/app/FirstTag.tsx`; skippable, resumes from Items; style chosen by `src/lib/tagRecommend.ts`). Print (or Save the
   PDF) is the main action of the print step, with "I have printed it" after it. The test step asks the owner to scan the printed
   tag with the phone camera and say whether the item's page opened; the finder page's test mode (`/find/<code>#test=1`: no scan
-  recorded, nothing sent) is the fallback for someone with no tag yet, worded as "the page a finder sees". The last step is the
+  recorded, nothing sent) is the fallback for someone with no tag yet, worded as "the page a finder sees". A visit by someone signed in on that browser to a tag of their own household is not recorded as a scan either
+  (the page asks the data API, under row security, whether the tag is theirs; `shouldRecordScan` in `src/lib/finder.ts`), so an
+  owner's own camera scan stays out of the scan history and the measures when their phone's browser is signed in. The last step is the
   iPhone's alerts in the app and, on the web when email is on, the email check below. Items shows a Getting started card (add,
   print, stick on, scan the printed tag; alerts in the app) until its steps are done or skipped; "I stuck it on" and "It opened"
   are buttons with a separate Skip, and opening the test view does not tick the scan step. The card is hidden for someone who
