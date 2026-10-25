@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { Backpack, Bell, Check, Glasses, GlassWater, Guitar, KeyRound, Laptop, Lock, Printer, ScanLine, Share, Sparkles } from 'lucide-react';
+import { Backpack, Bell, Check, Glasses, GlassWater, Guitar, KeyRound, Laptop, Lock, ScanLine, Sparkles } from 'lucide-react';
 import { AppPage } from '@/components/layout/AppPage';
 import { buttonClasses } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -13,9 +13,11 @@ import { markPushExplained, pushPermission, turnOnPush } from '@/lib/nativePush'
 import { isNative, publicUrl } from '@/lib/platform';
 import { createItemWithPrintableTag, fetchItems, fetchPrimaryHouseholdId, fetchTagById } from '@/lib/queries';
 import { PICKS, recommendStyle, type Pick, type PickId } from '@/lib/tagRecommend';
-import { LOOKS, STYLES, PAPERS, copiesOnPage, defaultPaper, gridFor, styleById, type StyleId } from '@/lib/tagLayout';
+import { STYLES, defaultCopies, defaultPaper, styleById, type StyleId } from '@/lib/tagLayout';
+import { PrintArea, PrintChoices } from '@/components/print/PrintChoices';
+import { rememberTagStyle } from '@/lib/printPrefs';
+import { recordTagPrint } from '@/lib/measures';
 import { OWNER_TEST_KEY, SKIP_KEY } from '@/lib/gettingStarted';
-import { saveTagPdf } from '@/lib/tagExport';
 import { pageToSvg } from '@/lib/tagSvg';
 import { buildPreview, buildSheet } from '@/lib/tagStyles';
 import { recordStep } from '@/lib/useGettingStarted';
@@ -85,7 +87,6 @@ export function FirstTag() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [changeStyle, setChangeStyle] = useState(false);
-  const [busy, setBusy] = useState(false);
   const [tested, setTested] = useState(false);
   const [alerts, setAlerts] = useState<'unknown' | 'granted' | 'denied'>('unknown');
   const native = isNative();
@@ -164,7 +165,7 @@ export function FirstTag() {
   const { preview, sheet } = useMemo(() => {
     if (!finderUrl) return { preview: null, sheet: null };
     try {
-      const count = copiesOnPage(spec, paperId, gridFor(spec, paperId).count);
+      const count = defaultCopies(spec, paperId);
       return { preview: buildPreview(styleId, 'clean', data), sheet: buildSheet(styleId, 'clean', data, { paper: paperId, copies: count }) };
     } catch {
       return { preview: null, sheet: null };
@@ -218,20 +219,6 @@ export function FirstTag() {
     window.scrollTo(0, 0);
   }
 
-  async function printOrShare() {
-    if (!sheet || !user) return;
-    setBusy(true);
-    try {
-      if (native) await saveTagPdf(sheet, `qurtag-${styleId}-clean.pdf`, 'Print your tags');
-      else window.print();
-      recordStep(user.id, 'print');
-    } catch (err) {
-      if (!/cancel/i.test(err instanceof Error ? err.message : '')) setError('The tag could not be prepared. Please try again.');
-    } finally {
-      setBusy(false);
-    }
-  }
-
   function finish() {
     if (user) save(user.id, null);
     toast.show({ kind: 'success', title: 'You are set up', body: 'Your tag is ready for the day someone finds your thing.' });
@@ -267,15 +254,7 @@ export function FirstTag() {
       back={{ to: '/app', label: 'Items' }}
       width="narrow"
     >
-      <style>{`@media print { body { background: white !important; } @page { size: ${PAPERS[paperId].w}in ${PAPERS[paperId].h}in; margin: 0; } }`}</style>
-      {sheet && (
-        <div
-          aria-hidden
-          className="hidden bg-white print:fixed print:left-0 print:top-0 print:z-[200] print:block print:overflow-hidden"
-          style={{ width: `${PAPERS[paperId].w}in`, height: `${PAPERS[paperId].h}in` }}
-          dangerouslySetInnerHTML={{ __html: pageToSvg(sheet) }}
-        />
-      )}
+      <PrintArea sheet={sheet} paper={paperId} />
       <div className="no-print flex flex-col gap-5">
         <div className="flex items-center justify-between gap-3">
           <div role="progressbar" aria-valuemin={1} aria-valuemax={total} aria-valuenow={s.step} aria-label="Progress" className="flex flex-1 gap-1.5">
@@ -396,6 +375,9 @@ export function FirstTag() {
                 <figcaption className="text-center text-sm text-muted">Your tag: {spec.sizeLabel}.</figcaption>
               </figure>
             )}
+            <p className="rounded-card border border-hairline bg-paper px-4 py-3 text-sm text-ink-700 text-pretty">
+              <span className="font-medium text-ink-900">You will need:</span> {spec.needs} {spec.noHolder}
+            </p>
             <button type="button" onClick={() => setChangeStyle((v) => !v)} aria-expanded={changeStyle} className={buttonClasses({ variant: 'secondary', block: true })}>
               Change style
             </button>
@@ -417,11 +399,7 @@ export function FirstTag() {
               </div>
             )}
             {next('Continue', () => {
-              try {
-                window.localStorage.setItem('qurtag.tagstyle', JSON.stringify({ style: styleId, look: LOOKS[0].id, paper: paperId }));
-              } catch {
-                /* nothing to remember */
-              }
+              if (s.created) rememberTagStyle(s.created.tagId, styleId);
               go(5);
             })}
           </>
@@ -430,15 +408,17 @@ export function FirstTag() {
         {s.step === 5 && (
           <>
             <h2 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900 text-balance">{native ? 'Print or share your tag' : 'Print your tag'}</h2>
-            <button type="button" onClick={() => void printOrShare()} disabled={busy || !sheet} className={buttonClasses({ variant: 'secondary', size: 'lg', block: true })}>
-              {native ? <Share size={18} aria-hidden /> : <Printer size={18} aria-hidden />}
-              {busy ? 'Preparing…' : native ? 'Print or share' : 'Print'}
-            </button>
+            <PrintChoices
+              sheet={sheet}
+              fileName={`qurtag-${styleId}-clean.pdf`}
+              linkPath={`/app/tags/${s.created?.tagId}/print`}
+              onDone={(c) => {
+                if (user) recordStep(user.id, 'print');
+                recordTagPrint({ style: styleId, look: 'clean', paper: paperId, action: c });
+              }}
+            />
             <p className="text-sm text-muted text-pretty">
-              {native
-                ? 'Print or share opens the share sheet: print it, save it to Files or AirDrop it to a computer.'
-                : 'Print at 100% (actual size), with no scaling or "fit to page".'}{' '}
-              The page has spare copies.{' '}
+              The page has a few spare copies.{' '}
               <Link to={`/app/tags/${s.created?.tagId}/print`} className="font-medium text-ink-900 underline underline-offset-4">More choices</Link>
             </p>
             <div className={card}>
@@ -450,10 +430,16 @@ export function FirstTag() {
               </ul>
               <Link to="/app/make-it-last" className="text-sm font-medium text-ink-900 underline underline-offset-4">More in Make it last</Link>
             </div>
-            {next('I have printed it', () => {
-              if (user) recordStep(user.id, 'print');
-              go(6);
-            })}
+            <button
+              type="button"
+              onClick={() => {
+                if (user) recordStep(user.id, 'print');
+                go(6);
+              }}
+              className={buttonClasses({ variant: 'secondary', size: 'lg', block: true })}
+            >
+              I have printed it
+            </button>
           </>
         )}
 

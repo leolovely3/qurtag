@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Printer, Tag as TagIcon } from 'lucide-react';
+import { Layers, Printer, Tag as TagIcon } from 'lucide-react';
 import { AppPage } from '@/components/layout/AppPage';
 import { buttonClasses } from '@/components/ui/Button';
 import { ThreadRowSkeleton } from '@/components/ui/Skeleton';
@@ -72,6 +72,12 @@ export function Tags() {
         Each item gets a tag with its own code. Print it as often as you like, or switch it off if you
         no longer want it to work.
       </p>
+      {tags.filter((t) => t.status === 'active').length > 1 && (
+        <Link to="/app/tags/sheet" className={buttonClasses({ variant: 'secondary', className: 'mb-4' })}>
+          <Layers size={16} strokeWidth={1.75} aria-hidden />
+          Print several items on one page
+        </Link>
+      )}
 
       {loading ? (
         <div className="overflow-hidden rounded-modal border border-hairline bg-canvas divide-y divide-hairline" aria-busy="true" aria-label="Loading your tags">

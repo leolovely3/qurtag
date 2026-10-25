@@ -29,9 +29,19 @@ export function MakeItLast() {
             ]}
           />
           <P>
-            Choose it on the tag page, in the app or on the website. The page prints several copies, so you have spares for the
-            next bottle, the next bag, or the one that goes through the wash.
+            Choose it on the tag page, in the app or on the website. The page prints a few spare copies for the one that goes
+            through the wash, and Print several items on one page puts the bottle, the bag and the keys on one sheet.
           </P>
+        </Section>
+
+        <Section title="No printer at home?">
+          <Bullets
+            items={[
+              'Save the PDF on the tag page and print it at a library, a print shop or an office supply store. Ask for 100% (actual size).',
+              'Or email the PDF to yourself and print it on a computer at work or at a friend’s.',
+              'Inside the Facebook or Instagram app, printing usually does nothing. Open the page in Safari or Chrome first.',
+            ]}
+          />
         </Section>
 
         <Section title="Stickers that stay stuck">
@@ -87,7 +97,7 @@ export function MakeItLast() {
               'Print at 100% (actual size), never "fit to page". The code must stay at least about 0.75 inch (2 cm) wide.',
               'Keep it black on white, and do not fold, crease or crop the white edge around the code.',
               'Scan it yourself with your phone camera once it is on. If it opens your item’s page, you are done.',
-              'The short code printed beside it, such as qurtag.com/k7m2p, works if the code gets scuffed. Anyone can type it.',
+              'The short code printed beside it, such as qurtag.com/k7m2p4, works if the code gets scuffed. Anyone can type it.',
             ]}
           />
         </Section>

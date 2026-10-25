@@ -33,6 +33,7 @@ import { ItemDetail } from '@/routes/app/ItemDetail';
 import { Items } from '@/routes/app/Items';
 import { Settings } from '@/routes/app/Settings';
 import { TagPrint } from '@/routes/app/TagPrint';
+import { TagSheet } from '@/routes/app/TagSheet';
 import { Tags as AppTags } from '@/routes/app/Tags';
 import { Trips } from '@/routes/app/Trips';
 import { FinderView } from '@/routes/finder/FinderView';
@@ -76,6 +77,7 @@ export const router = createBrowserRouter([
       // Adding an item and printing its tag are app screens: tab bar, title and Back.
       { path: '/start/setup', element: <StartSetup /> },
       { path: '/app/tags/:tagId/print', element: <TagPrint /> },
+      { path: '/app/tags/sheet', element: <TagSheet /> },
       { path: '/app/items', element: <Items /> },
       { path: '/app/items/:itemId', element: <ItemDetail /> },
       { path: '/app/tags', element: <AppTags /> },

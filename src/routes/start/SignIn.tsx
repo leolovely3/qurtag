@@ -72,6 +72,11 @@ export function StartSignIn() {
             ? 'Make an account, name a thing, print its tag. If someone finds it, they scan the tag and send you a note.'
             : 'Read notes from finders, reply, and print your tags.'}
         </p>
+        {mode === 'create' && (
+          <p className="max-w-sm text-sm text-muted text-pretty">
+            You will need a printer and ordinary paper. Sticker paper or clear tape makes it last.
+          </p>
+        )}
       </div>
           <div className="flex flex-col gap-5 rounded-modal border border-hairline bg-canvas p-5 shadow-card sm:p-6">
             {checkEmail ? (

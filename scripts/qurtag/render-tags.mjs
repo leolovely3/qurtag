@@ -22,7 +22,7 @@ const dpi = process.argv[3] ?? '100';
 if (!out) throw new Error('Usage: render-tags.mjs <folder> [dpi]');
 mkdirSync(out, { recursive: true });
 
-const data = { finderUrl: 'https://www.qurtag.com/find/Hk3vX9mRtB2q', shortCode: 'k7m2p', itemName: 'Blue water bottle' };
+const data = { finderUrl: 'https://www.qurtag.com/find/Hk3vX9mRtB2q', shortCode: 'k7m2p4', itemName: 'Blue water bottle' };
 const written = [];
 for (const style of STYLES) {
   for (const look of LOOKS) {
@@ -39,7 +39,7 @@ for (const style of STYLES) {
     writeFileSync(join(out, `${base}-piece.svg`), pageToSvg(buildPreview(style.id, look.id, data)));
   }
 }
-const long = { ...data, itemName: "Grandma's blue walking stick with the red handle" };
+const long = { ...data, itemName: "Grandma's blue walking stick with the red handle", showName: true };
 for (const id of ['wallet', 'bag']) {
   for (const look of LOOKS) {
     const name = `${id}-${look.id}-longname-printready`;

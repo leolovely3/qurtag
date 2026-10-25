@@ -67,10 +67,15 @@ import {
 export interface TagData {
   /** The address the QR code opens (the finder page). */
   finderUrl: string;
-  /** The short code, for example k7m2p. Missing before the database change is applied. */
+  /** The short code, for example k7m2p4. Missing before the database change is applied. */
   shortCode?: string | null;
-  /** The item's name; printed only on the larger styles and only if a PDF base font can print it. */
+  /** The item's name; printed on the sheet's margin, and on the tag itself only with `showName`. */
   itemName?: string | null;
+  /**
+   * Print "On: <item name>" on the wallet card and the bag tag. Off unless the owner ticks it: a
+   * name such as "Maya's backpack" on a child's bag tells any stranger the child's name.
+   */
+  showName?: boolean;
 }
 
 interface Bleed {
@@ -155,6 +160,7 @@ function addressText(c: Ctx, x: number, y: number, maxW: number, maxPt: number, 
  * Empty if there is no name or it has letters a PDF base font cannot print.
  */
 function nameLines(c: Ctx, maxW: number, pt: number, maxLines: number): string[] {
+  if (!c.data.showName) return [];
   const name = c.data.itemName?.trim();
   if (!name || !isPlainText(name)) return [];
   const cut = (t: string) => {
@@ -169,27 +175,34 @@ function nameLines(c: Ctx, maxW: number, pt: number, maxLines: number): string[]
 
 // ---------------------------------------------------------------- the styles
 
-/** The small sticker: a heavy one line request on top, the QR code below it, the short address beside it. */
+/**
+ * The small sticker: a heavy one line request on top, the QR code below it with the QuR mark beside
+ * it, and the short address across the bottom, horizontal and as large as the width allows (about
+ * 8 pt), so a cautious finder sees whose tag it is and can type the address instead of scanning.
+ * To make room for that line the code keeps a quiet zone of 2 modules (MIN_QUIET_MODULES) inside
+ * the white panel, which is white beyond it as well in every look.
+ */
 function sticker(c: Ctx): Item[] {
   const { items, p } = frame(c, 0.05);
   const colors = blockColors(c.look);
   const q = c.qrIn;
   const zone = q + 2 * c.quiet;
-  const bandH = 0.22;
+  const bandH = 0.19;
   if (colors.fill) items.push(rectItem(p.x, p.y, p.w, bandH, { fill: colors.fill }, [p.r, p.r, 0, 0]));
-  const pt = fitSize(STICKER_LINE, p.w - 0.12, 14, true);
+  const pt = fitSize(STICKER_LINE, p.w - 0.1, 14, true);
   items.push(textItem(c.w / 2, p.y + bandH / 2 + cap(pt) / 2, STICKER_LINE, pt, colors.fg, { bold: true, anchor: 'middle' }));
-  // The quiet zone is white and sits just below the band, with the leftover height shared above and below.
-  const slack = p.h - bandH - zone;
-  const zy = p.y + bandH + slack / 2;
-  const x = p.x + 0.012 + c.quiet;
+  const zy = p.y + bandH;
+  const x = p.x + 0.01 + c.quiet;
   const y = zy + c.quiet;
   items.push(...qrItems(c.qr, x, y, q, c.quiet));
+  // The QuR mark in the column to the right of the code, level with its middle.
+  const colLeft = x + q + c.quiet;
+  const colRight = p.x + p.w - 0.02;
+  const mark = Math.min(0.24, colRight - colLeft - 0.02);
+  items.push(...markItems((colLeft + colRight) / 2 - mark / 2, y + q / 2 - mark / 2, mark));
   if (c.addr) {
-    const stripLeft = x + q + c.quiet;
-    const cx = (stripLeft + p.x + p.w) / 2;
-    const apt = fitSize(c.addr, q, 6.5, true);
-    items.push(textItem(cx + cap(apt) / 2, y + q / 2, c.addr, apt, INK, { bold: true, anchor: 'middle', rot: -90 }));
+    const apt = Math.min(8.5, fitSize(c.addr, p.w - 0.08, 8.5, true));
+    items.push(textItem(c.w / 2, zy + zone + 0.012 + cap(apt), c.addr, apt, INK, { bold: true, anchor: 'middle' }));
   }
   return items;
 }
@@ -440,21 +453,86 @@ export interface SheetOptions {
   mirror?: boolean;
 }
 
-/** A Letter or A4 page of copies. */
+/** One item's tags on a shared sheet: its data and how many copies of it. */
+export interface SheetEntry {
+  data: TagData;
+  copies: number;
+}
+
+/**
+ * The copies each entry really gets on one page: in order, never more than fit, a negative or
+ * fractional request read as whole copies, and an entry with none left out.
+ */
+export function fitEntries(styleId: StyleId, paper: PaperId, entries: SheetEntry[]): SheetEntry[] {
+  let room = gridFor(styleById(styleId), paper).count;
+  const out: SheetEntry[] = [];
+  for (const e of entries) {
+    const n = Math.max(0, Math.min(room, Math.floor(Number.isFinite(e.copies) ? e.copies : 0)));
+    if (n > 0) out.push({ data: e.data, copies: n });
+    room -= n;
+  }
+  return out;
+}
+
+/**
+ * The line in the sheet's top margin that says what is on the page, so sheets printed for several
+ * things are not mixed up: each item's name and its short address (the address is printed on every
+ * piece, so it tells the pieces apart after cutting). The margin is cut away; the name is never on a
+ * piece unless the owner asked for it.
+ */
+export function sheetLabel(entries: SheetEntry[]): string {
+  const parts = entries.map((e) => {
+    const name = e.data.itemName?.trim();
+    const addr = shortAddress(e.data.shortCode?.trim().toLowerCase());
+    const shown = name && isPlainText(name) ? name : '';
+    if (shown && addr) return `${shown} (${addr})`;
+    return shown || addr;
+  });
+  const list = parts.filter(Boolean);
+  return list.length ? `QuR Tag: ${list.join(', ')}` : '';
+}
+
+/** A Letter or A4 page of copies of one item's tag. */
 export function buildSheet(styleId: StyleId, look: LookId, data: TagData, opts: SheetOptions): Page {
+  const spec = styleById(styleId);
+  const n = copiesOnPage(spec, opts.paper, opts.copies);
+  return buildMixedSheet(styleId, look, [{ data, copies: n }], { paper: opts.paper, mirror: opts.mirror });
+}
+
+/** A Letter or A4 page holding the tags of several items in one style, in the order given. */
+export function buildMixedSheet(styleId: StyleId, look: LookId, entries: SheetEntry[], opts: { paper: PaperId; mirror?: boolean }): Page {
   const spec = styleById(styleId);
   const paper = PAPERS[opts.paper];
   const grid = gridFor(spec, opts.paper);
-  const n = copiesOnPage(spec, opts.paper, opts.copies);
-  const form = buildPiece(styleId, look, data);
+  const fitted = fitEntries(styleId, opts.paper, entries);
+  const forms: Record<string, Form> = {};
   const items: Item[] = [];
-  for (let i = 0; i < n; i++) {
-    const col = i % grid.cols;
-    const row = Math.floor(i / grid.cols);
-    const x = grid.x0 + col * grid.pitchX;
-    const y = grid.y0 + row * grid.pitchY;
-    items.push({ t: 'use', form: 'piece', x, y });
-    if (grid.marks) items.push(...cutMarks(x, y, spec.w, spec.h, spec.gap));
+  let i = 0;
+  fitted.forEach((e, k) => {
+    const form = k === 0 ? 'piece' : `piece${k}`;
+    forms[form] = buildPiece(styleId, look, e.data);
+    for (let c = 0; c < e.copies; c++, i++) {
+      const col = i % grid.cols;
+      const row = Math.floor(i / grid.cols);
+      const x = grid.x0 + col * grid.pitchX;
+      const y = grid.y0 + row * grid.pitchY;
+      items.push({ t: 'use', form, x, y });
+      if (grid.marks) items.push(...cutMarks(x, y, spec.w, spec.h, spec.gap));
+    }
+  });
+  const label = sheetLabel(fitted);
+  if (label) {
+    // In the top margin, clear of the first row and of the printer's unprintable edge.
+    const y = Math.max(0.28, Math.min(0.4, grid.y0 - (grid.marks ? 0.2 : 0.12)));
+    if (y + 0.05 < grid.y0) {
+      // One line at up to 7 pt; a long list wraps upward at 6 pt, as far as the margin allows.
+      const one = fitSize(label, paper.w - 1, 7, false);
+      const lines = one >= 6 ? [label] : wrapText(label, paper.w - 1, 6, false);
+      const pt = one >= 6 ? one : 6;
+      const room = Math.max(1, Math.floor((y - 0.2) / 0.1 + 1e-9) + 1);
+      const shown = lines.length <= room ? lines : [...lines.slice(0, room - 1), `${lines[room - 1]} ...`];
+      shown.forEach((ln, k) => items.push(textItem(paper.w / 2, y - (shown.length - 1 - k) * 0.1, ln, pt, MUTED, { anchor: 'middle' })));
+    }
   }
   if (!grid.labelSheet) {
     const note = spec.mirrorable && opts.mirror ? 'Printed mirrored for iron-on transfer paper. ' : '';
@@ -464,7 +542,7 @@ export function buildSheet(styleId: StyleId, look: LookId, data: TagData, opts: 
       .forEach((ln, i, all) => items.push(textItem(paper.w / 2, paper.h - 0.2 - (all.length - 1 - i) * 0.11, ln, 6.5, MUTED, { anchor: 'middle' })));
   }
   const content = spec.mirrorable && opts.mirror ? [mirrored(items, paper.w)] : items;
-  return { w: paper.w, h: paper.h, forms: { piece: form }, items: content };
+  return { w: paper.w, h: paper.h, forms, items: content };
 }
 
 /** One piece at exact size with bleed, in a page the size of the piece plus bleed. */

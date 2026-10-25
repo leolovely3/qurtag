@@ -61,8 +61,20 @@ export const HELP: HelpSection[] = [
       {
         id: 'which-style',
         q: 'Which tag style should I print?',
-        a: 'A small sticker or label strip suits bottles, lunchboxes, laptops and cases. A key fob insert suits keys. A bag tag suits backpacks, gym bags and luggage, a wallet card suits wallets and walkers, and a clothing strip suits jackets. Each comes in Clean, Bold and Playful looks, on US Letter or A4, with several copies on a page.',
+        a: 'A small sticker or label strip suits bottles, lunchboxes, laptops and cases. A key fob insert suits keys. A bag tag suits backpacks, gym bags and luggage, a wallet card suits wallets and walkers, and a clothing strip suits jackets. Each comes in Clean, Bold and Playful looks, on US Letter or A4. The key fob, wallet card and bag tag go in a clear holder (about $3); the tag page says what each style needs and how to do without.',
         action: { label: 'Print a tag', to: '/app/tags' },
+      },
+      {
+        id: 'no-printer',
+        q: 'I have no printer. What can I do?',
+        a: 'On the tag page choose Save the PDF, then print it at a library, a print shop or on any computer. Ask for 100% (actual size). In the Facebook or Instagram app printing usually does nothing: open the page in Safari or Chrome first.',
+        action: { label: 'Your tags', to: '/app/tags' },
+      },
+      {
+        id: 'several',
+        q: 'Can I print tags for several things on one page?',
+        a: 'Yes. On Tags choose Print several items on one page, tick the things and choose how many of each. They print in one style, and the top edge of the page lists each item with the short address printed on its tags, so you can tell them apart once cut.',
+        action: { label: 'Your tags', to: '/app/tags' },
       },
       {
         id: 'make-it-last',
@@ -85,7 +97,7 @@ export const HELP: HelpSection[] = [
       {
         id: 'short-code',
         q: 'What is the short code on my tag?',
-        a: 'A few letters and numbers printed beside the QR code, for example qurtag.com/k7m2p. Typing it into a browser opens the same page as scanning the code, so a scuffed tag can still be used. It is not case sensitive.',
+        a: 'A few letters and numbers printed beside the QR code, for example qurtag.com/k7m2p4. Typing it into a browser opens the same page as scanning the code, so a scuffed tag can still be used. It is not case sensitive.',
       },
     ],
   },
