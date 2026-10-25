@@ -136,13 +136,21 @@ function addressText(c: Ctx, x: number, y: number, maxW: number, maxPt: number, 
   return [textItem(x, y, c.addr, pt, color, { bold: true, anchor })];
 }
 
-/** Name of the thing, "On: Water bottle", cut to a width. Nothing if the name has letters a PDF base font cannot print. */
-function nameLine(c: Ctx, maxW: number, pt: number): string | null {
+/**
+ * "On: Blue water bottle" as at most `maxLines` lines no wider than `maxW`; a longer name is cut with "...".
+ * Empty if there is no name or it has letters a PDF base font cannot print.
+ */
+function nameLines(c: Ctx, maxW: number, pt: number, maxLines: number): string[] {
   const name = c.data.itemName?.trim();
-  if (!name || !isPlainText(name)) return null;
-  let s = `On: ${name}`;
-  while (s.length > 6 && textWidth(s, pt, false) > maxW) s = `${s.slice(0, -2).trimEnd()}…`.replace('…', '...');
-  return s;
+  if (!name || !isPlainText(name)) return [];
+  const cut = (t: string) => {
+    let x = t;
+    while (x.length > 1 && textWidth(`${x}...`, pt, true) > maxW) x = x.slice(0, -1).trimEnd();
+    return `${x}...`;
+  };
+  const lines = wrapText(`On: ${name}`, maxW, pt, true).flatMap((l) => (textWidth(l, pt, true) > maxW ? [cut(l)] : [l]));
+  if (lines.length <= maxLines) return lines;
+  return [...lines.slice(0, maxLines - 1), cut(lines.slice(maxLines - 1).join(' '))];
 }
 
 // ---------------------------------------------------------------- the styles
@@ -212,12 +220,12 @@ function wallet(c: Ctx): Item[] {
   items.push(textItem(tx, y, head2, hpt, colors.fg, { bold: true }));
   y += 0.2;
   const body = 'Scan to send the owner a note. No app needed. Your phone number stays private.';
-  for (const ln of wrapText(body, tw, 6.8, false).slice(0, 4)) {
+  for (const ln of wrapText(body, tw, 6.8, false).slice(0, 3)) {
     items.push(textItem(tx, y, ln, 6.8, colors.sub));
     y += 0.125;
   }
-  const nm = nameLine(c, tw, 6.8);
-  if (nm) items.push(textItem(tx, p.y + p.h - 0.14, nm, 6.8, colors.fg, { bold: true }));
+  const nm = nameLines(c, tw, 6.8, 2);
+  nm.forEach((ln, i) => items.push(textItem(tx, p.y + p.h - 0.12 - (nm.length - 1 - i) * 0.125, ln, 6.8, colors.fg, { bold: true })));
   const cx = p.x + bw + colW / 2;
   const qy = (c.h - q) / 2 - 0.1;
   items.push(...qrItems(c.qr, cx - q / 2, qy, q, c.quiet));
@@ -284,27 +292,29 @@ function bagBack(c: Ctx): Item[] {
   const pad = 0.22;
   const tw = p.w - 2 * pad;
   items.push(...lockupItems(pad + p.x - 0.05, p.y + 0.2, 0.42, { tagline: true }));
-  let y = p.y + 1.0;
+  let y = p.y + 0.95;
   const head = 'Thank you for helping.';
-  for (const ln of wrapText(head, tw, 13, true)) {
-    items.push(textItem(p.x + pad, y, ln, 13, INK, { bold: true }));
-    y += 0.22;
-  }
+  const hpt = fitSize(head, tw, 13, true);
+  items.push(textItem(p.x + pad, y, head, hpt, INK, { bold: true }));
+  y += 0.2;
   y += 0.06;
   const body =
-    "Scan the code on the other side with your phone camera, or go to the address below. You can send the owner a note. No app and no sign-up. Neither of you sees the other's phone number or email.";
+    "Scan the code on the other side with your phone camera, or go to the address below. You can send the owner a note. No app and no sign-up. Your phone number stays private.";
   for (const ln of wrapText(body, tw, 8.2, false)) {
     items.push(textItem(p.x + pad, y, ln, 8.2, '#34363D'));
     y += 0.155;
   }
   y += 0.12;
+  const nm = nameLines(c, tw, 8.2, 2);
+  // The name has its own space at the bottom; the address box never reaches into it.
+  const nameTop = p.y + p.h - 0.18 - (Math.max(nm.length, 1) - 1) * 0.15 - 0.17;
   if (c.code) {
+    y = Math.min(y, nameTop - 0.62);
     items.push(rectItem(p.x + pad, y, tw, 0.5, { fill: c.look === 'bold' ? INK : c.look === 'playful' ? YELLOW : WHITE, stroke: INK, sw: 0.015 }, 0.06));
     items.push(...addressText(c, c.w / 2, y + 0.32, tw - 0.1, 13, c.look === 'bold' ? WHITE : INK, 'middle'));
     y += 0.62;
   }
-  const nm = nameLine(c, tw, 8.2);
-  if (nm) items.push(textItem(p.x + pad, p.y + p.h - 0.2, nm, 8.2, INK, { bold: true }));
+  nm.forEach((ln, i) => items.push(textItem(p.x + pad, p.y + p.h - 0.18 - (nm.length - 1 - i) * 0.15, ln, 8.2, INK, { bold: true })));
   return items;
 }
 

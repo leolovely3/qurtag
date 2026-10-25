@@ -22,7 +22,7 @@ if (!out) throw new Error('Usage: render-tags.mjs <folder> [dpi]');
 mkdirSync(out, { recursive: true });
 
 const data = { finderUrl: 'https://www.qurtag.com/find/Hk3vX9mRtB2q', shortCode: 'k7m2p', itemName: 'Blue water bottle' };
-const written: string[] = [];
+const written = [];
 for (const style of STYLES) {
   for (const look of LOOKS) {
     const base = `${style.id}-${look.id}`;
@@ -30,12 +30,20 @@ for (const style of STYLES) {
       [`${base}-letter`, buildSheet(style.id, look.id, data, { paper: 'letter' })],
       [`${base}-a4`, buildSheet(style.id, look.id, data, { paper: 'a4' })],
       [`${base}-printready`, buildPrintReady(style.id, look.id, data)],
-    ] as const;
+    ];
     for (const [name, page] of pages) {
       writeFileSync(join(out, `${name}.pdf`), pageToPdf(page));
       written.push(name);
     }
     writeFileSync(join(out, `${base}-piece.svg`), pageToSvg(buildPreview(style.id, look.id, data)));
+  }
+}
+const long = { ...data, itemName: "Grandma's blue walking stick with the red handle" };
+for (const id of ['wallet', 'bag']) {
+  for (const look of LOOKS) {
+    const name = `${id}-${look.id}-longname-printready`;
+    writeFileSync(join(out, `${name}.pdf`), pageToPdf(buildPrintReady(id, look.id, long)));
+    written.push(name);
   }
 }
 writeFileSync(join(out, 'clothing-mirrored-letter.pdf'), pageToPdf(buildSheet('clothing', 'clean', data, { paper: 'letter', mirror: true })));

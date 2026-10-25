@@ -12,6 +12,7 @@ import { pageToPdf, toBase64 } from '../../../src/lib/tagPdf.ts';
 import { pageToSvg } from '../../../src/lib/tagSvg.ts';
 import { buildPiece, buildPreview, buildPrintReady, buildSheet } from '../../../src/lib/tagStyles.ts';
 import { parsePath, qrModules } from '../../../src/lib/tagScene.ts';
+import { textWidth } from '../../../src/lib/tagFont.ts';
 import { pngWithDpi } from '../../../src/lib/tagExport.ts';
 
 const data = { finderUrl: 'https://www.qurtag.com/find/Hk3vX9mRtB2q', shortCode: 'k7m2p', itemName: 'Blue water bottle' };
@@ -139,4 +140,38 @@ test('the PNG gets its dots per inch, so a printer knows the size', () => {
   assert.equal(out[49], 1);
   assert.deepEqual([...out.subarray(54)], [...png.subarray(33)], 'the rest is untouched');
   assert.equal(toBase64(Uint8Array.from([104, 105])), 'aGk=');
+});
+
+test('a long item name wraps or is cut, and no text overlaps other text or leaves its piece', () => {
+  const long = { ...data, itemName: "Grandma's blue walking stick with the red handle" };
+  const walk = (items: ReturnType<typeof buildPiece>['items'], m = [1, 0, 0, 1, 0, 0]): { x0: number; x1: number; y0: number; y1: number; t: string }[] =>
+    items.flatMap((i) => {
+      if (i.t === 'group') {
+        const g = i.m;
+        return walk(i.items, [m[0] * g[0], m[3] * g[3], 0, 0, m[0] * g[4] + m[4], m[3] * g[5] + m[5]]);
+      }
+      if (i.t !== 'text' || i.rot) return [];
+      const w = textWidth(i.text, i.pt, !!i.bold);
+      const sx = i.anchor === 'middle' ? i.x - w / 2 : i.anchor === 'end' ? i.x - w : i.x;
+      const ex = sx + w;
+      const X = [m[0] * sx + m[4], m[0] * ex + m[4]];
+      const Y = [m[3] * (i.y - (0.72 * i.pt) / 72) + m[5], m[3] * i.y + m[5]];
+      return [{ x0: Math.min(...X), x1: Math.max(...X), y0: Math.min(...Y), y1: Math.max(...Y), t: i.text }];
+    });
+  for (const id of ['wallet', 'bag'] as const) {
+    for (const l of LOOKS) {
+      const piece = buildPiece(id, l.id, long);
+      const boxes = walk(piece.items);
+      assert.ok(boxes.some((b) => b.t.startsWith('On:')), `${id} ${l.id} shows the name`);
+      boxes.forEach((b) => assert.ok(b.x0 >= 0 && b.x1 <= piece.w && b.y0 >= 0 && b.y1 <= piece.h, `${id} ${l.id} "${b.t}" stays inside`));
+      for (let a = 0; a < boxes.length; a++) {
+        for (let b = a + 1; b < boxes.length; b++) {
+          const p = boxes[a];
+          const q = boxes[b];
+          const overlap = p.x0 < q.x1 - 1e-6 && q.x0 < p.x1 - 1e-6 && p.y0 < q.y1 - 1e-6 && q.y0 < p.y1 - 1e-6;
+          assert.ok(!overlap, `${id} ${l.id}: "${p.t}" overlaps "${q.t}"`);
+        }
+      }
+    }
+  }
 });
