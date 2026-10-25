@@ -7,6 +7,7 @@ import { ItemRowSkeleton } from '@/components/ui/Skeleton';
 import { useAuth } from '@/lib/auth';
 import { countUnreadForHousehold, fetchItems, fetchPrimaryHouseholdId, fetchTags } from '@/lib/queries';
 import { fetchMembership, type Membership } from '@/lib/membership';
+import { useMembershipsAvailable } from '@/lib/useMembershipsAvailable';
 import type { Item, Tag } from '@/lib/database.types';
 import { cn } from '@/lib/cn';
 
@@ -124,17 +125,22 @@ export function AddItemButton({ membership }: { membership?: Membership | null }
 
 /** Under the list when the plan is full: what to do about it. */
 export function AddItemCard({ membership }: { count?: number; membership?: Membership | null }) {
+  const memberships = useMembershipsAvailable();
   if (!membership || membership.can_add_items) return null;
   return (
     <div className="mt-3 flex flex-col items-start gap-3 rounded-modal border border-hairline bg-paper p-4">
       <p className="text-sm text-ink-700 text-pretty">
-        {membership.item_limit === 2
-          ? 'QuR Tag is free for up to two items, and you have two. To tag something else, upgrade your plan or delete one first.'
-          : `Your plan covers ${membership.item_limit} items. To tag something else, delete one first.`}
+        {!memberships
+          ? 'Free accounts can tag up to two items.'
+          : membership.item_limit === 2
+            ? 'QuR Tag is free for up to two items, and you have two. To tag something else, upgrade your plan or delete one first.'
+            : `Your plan covers ${membership.item_limit} items. To tag something else, delete one first.`}
       </p>
-      <Link to="/app/membership" className={buttonClasses({ variant: 'secondary' })}>
-        See plans
-      </Link>
+      {memberships && (
+        <Link to="/app/membership" className={buttonClasses({ variant: 'secondary' })}>
+          See plans
+        </Link>
+      )}
     </div>
   );
 }
@@ -178,6 +184,7 @@ function MoreLinks() {
 }
 
 export function ItemsScreen() {
+  const memberships = useMembershipsAvailable();
   const { items, tagByItemId, unread, membership, readOnly, loading, failed } = useOwnerItems();
   const subtitle =
     loading || !membership
@@ -225,8 +232,13 @@ export function ItemsScreen() {
           {readOnly.size > 0 && (
             <p className="mb-4 rounded-card bg-ink-100 px-4 py-3 text-sm text-ink-700 text-pretty">
               {readOnly.size === 1 ? '1 item is' : `${readOnly.size} items are`} over your plan's limit, so{' '}
-              {readOnly.size === 1 ? 'it' : 'they'} can be read but not changed. Nothing was deleted.{' '}
-              <Link to="/app/membership" className="font-medium text-ink-900 underline underline-offset-4">See plans</Link>
+              {readOnly.size === 1 ? 'it' : 'they'} can be read but not changed. Nothing was deleted.
+              {memberships && (
+                <>
+                  {' '}
+                  <Link to="/app/membership" className="font-medium text-ink-900 underline underline-offset-4">See plans</Link>
+                </>
+              )}
             </p>
           )}
           <ItemList items={items} tagByItemId={tagByItemId} readOnly={readOnly} />

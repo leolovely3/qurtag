@@ -144,6 +144,9 @@ and a webhook to `https://www.qurtag.com/api/fn/revenuecat-webhook` with the Aut
 `REVENUECAT_WEBHOOK_AUTH`. Then build the app with the public key (`VITE_REVENUECAT_IOS_API_KEY`) and
 `npm run cap:sync`. The app signs RevenueCat in with the QuR Tag account id (`src/lib/iap.ts`). It shows
 Apple's own prices, a Restore purchases button, and no way to pay outside Apple.
+Until the key is set in the build and RevenueCat returns offerings, the app hides every membership screen, row, prompt and
+pricing link (`membershipsAvailableInApp()` in `src/lib/iap.ts`, the rule in `src/lib/membership-flag.ts`); the website is
+unchanged, and `/join/<token>` still works.
 
 Database changes are the rollout files 5 (memberships) and 6 (family) in
 `~/Claude/Rollouts/QurTag-rollout-schema` (copies of `db/membership.sql` and `db/family.sql`, each with an

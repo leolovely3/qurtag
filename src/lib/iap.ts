@@ -12,12 +12,48 @@
  */
 import { isNative } from './platform';
 import { PRODUCTS } from '../../server/billing/catalog';
+import { membershipsAvailable } from './membership-flag';
 
 export const iapKey = (import.meta.env.VITE_REVENUECAT_IOS_API_KEY as string | undefined)?.trim() || '';
 
 /** Whether this build can sell: it is the iPhone app and the key was set at build time. */
 export function iapAvailable(): boolean {
   return isNative() && !!iapKey;
+}
+
+/**
+ * Whether the app may show anything about memberships (the rule is in membership-flag.ts).
+ * Inside the app it turns true by itself once the key is set and offerings have loaded
+ * (probeOfferings); the screens follow it through useMembershipsAvailable.
+ */
+let offeringsLoaded = false;
+let probing = false;
+const listeners = new Set<() => void>();
+
+export function membershipsAvailableInApp(): boolean {
+  return membershipsAvailable({ native: isNative(), hasKey: !!iapKey, offeringsLoaded });
+}
+
+export function subscribeMemberships(fn: () => void): () => void {
+  listeners.add(fn);
+  return () => listeners.delete(fn);
+}
+
+/** Asks RevenueCat for offerings once the person is signed in; a failure leaves memberships hidden. */
+export async function probeOfferings(userId: string): Promise<void> {
+  if (!iapAvailable() || offeringsLoaded || probing) return;
+  probing = true;
+  try {
+    const prices = await iapPrices(userId);
+    if (prices.size > 0) {
+      offeringsLoaded = true;
+      listeners.forEach((fn) => fn());
+    }
+  } catch {
+    /* stays hidden; the next screen asks again */
+  } finally {
+    probing = false;
+  }
 }
 
 export interface StorePrice {

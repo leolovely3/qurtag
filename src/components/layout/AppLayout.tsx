@@ -10,6 +10,7 @@ import { useAuth } from '@/lib/auth';
 import { useIsSuperAdmin } from '@/lib/admin';
 import { countUnreadForHousehold, fetchPrimaryHouseholdId } from '@/lib/queries';
 import { fetchMembership, type Membership } from '@/lib/membership';
+import { useMembershipsAvailable } from '@/lib/useMembershipsAvailable';
 import { PLAN_INFO } from '../../../server/billing/catalog';
 import { cn } from '@/lib/cn';
 
@@ -80,7 +81,9 @@ export function AppLayout() {
   const [unreadKnown, setUnreadKnown] = useState(false);
   const [householdId, setHouseholdId] = useState<string | null>(null);
   const [membership, setMembership] = useState<Membership | null>(null);
-  const entries = isSuperAdmin ? [...nav, adminEntry] : nav;
+  const memberships = useMembershipsAvailable();
+  const base = memberships ? nav : nav.filter((e) => e.key !== 'membership');
+  const entries = isSuperAdmin ? [...base, adminEntry] : base;
 
   useEffect(() => {
     // Signed out: sign in, and come back to this page (an invite link, the Membership page).
@@ -156,19 +159,21 @@ export function AppLayout() {
           })}
         </nav>
         <div className="mt-auto flex flex-col gap-1 border-t border-hairline px-3 py-3">
-          <Link
-            to="/app/membership"
-            className="mb-1 flex flex-col gap-0.5 rounded-card px-3 py-2 transition-colors hover:bg-ink-50"
-          >
-            <span className="text-sm font-semibold text-ink-900">{membership ? `${PLAN_INFO[membership.items_plan].name} plan` : 'Plan'}</span>
-            <span className="text-sm text-muted">
-              {membership
-                ? membership.item_limit === null
-                  ? `${membership.items_used} items, no limit`
-                  : `${membership.items_used} of ${membership.item_limit} items`
-                : 'QuR Tag is free for up to two items.'}
-            </span>
-          </Link>
+          {memberships && (
+            <Link
+              to="/app/membership"
+              className="mb-1 flex flex-col gap-0.5 rounded-card px-3 py-2 transition-colors hover:bg-ink-50"
+            >
+              <span className="text-sm font-semibold text-ink-900">{membership ? `${PLAN_INFO[membership.items_plan].name} plan` : 'Plan'}</span>
+              <span className="text-sm text-muted">
+                {membership
+                  ? membership.item_limit === null
+                    ? `${membership.items_used} items, no limit`
+                    : `${membership.items_used} of ${membership.item_limit} items`
+                  : 'QuR Tag is free for up to two items.'}
+              </span>
+            </Link>
+          )}
           <Link
             to="/help"
             className="flex h-11 items-center gap-3 rounded-card px-3 text-sm font-medium text-ink-600 transition-colors hover:bg-ink-50 hover:text-ink-900"
