@@ -28,7 +28,8 @@
  * data access at once.
  */
 import { betterAuth } from 'better-auth';
-import { APIError } from 'better-auth/api';
+import { APIError, createAuthMiddleware } from 'better-auth/api';
+import { createHash } from 'node:crypto';
 import { bearer } from 'better-auth/plugins/bearer';
 import { jwt } from 'better-auth/plugins/jwt';
 import { PostgresDialect } from 'kysely';
@@ -48,6 +49,26 @@ function required(env: NodeJS.ProcessEnv, name: string): string {
 export interface QurtagAuthOverrides {
   pool?: pg.Pool;
   sendMail?: MailSender;
+}
+
+export const RESET_MESSAGE = 'If an account exists, we have sent a link.';
+export const RESET_UNAVAILABLE = "We couldn't send the email right now, please try again later.";
+const RESET_PER_EMAIL = 3;
+const RESET_WINDOW_MS = 3_600_000;
+
+/** Counts one reset request for an email address (kept as a hash) in the rate-limit table. */
+async function takeResetSlot(pool: pg.Pool, email: string): Promise<boolean> {
+  const key = 'reset-email:' + createHash('sha256').update(email).digest('hex');
+  const now = Date.now();
+  const { rows } = await pool.query<{ count: number }>(
+    `insert into qurtag.auth_rate_limits ("key", "count", "lastRequest") values ($1, 1, $2)
+     on conflict ("key") do update set
+       "count" = case when qurtag.auth_rate_limits."lastRequest" < $2 - $3 then 1 else qurtag.auth_rate_limits."count" + 1 end,
+       "lastRequest" = case when qurtag.auth_rate_limits."lastRequest" < $2 - $3 then $2 else qurtag.auth_rate_limits."lastRequest" end
+     returning "count"`,
+    [key, now, RESET_WINDOW_MS],
+  );
+  return rows[0].count <= RESET_PER_EMAIL;
 }
 
 export async function accountOk(pool: pg.Pool, userId: string): Promise<boolean> {
@@ -113,8 +134,15 @@ export function createQurtagAuth(env: NodeJS.ProcessEnv = process.env, overrides
       minPasswordLength: 8,
       revokeSessionsOnPasswordReset: true,
       resetPasswordTokenExpiresIn: 3600,
+      // Sent inside the request, so the email leaves at once (no outbox, no cron). A send
+      // that fails is logged by kind and domain only and answered like a success: an
+      // error here would exist only for real accounts and so reveal them.
       sendResetPassword: async ({ user, url }) => {
-        await sendMail(signInMail('reset-password', user.email, url));
+        try {
+          await sendMail(signInMail('reset-password', user.email, url));
+        } catch (e) {
+          console.error('reset-password email failed:', (e as Error).message, `(to a ${user.email.split('@')[1]} address)`);
+        }
       },
     },
     emailVerification: {
@@ -157,6 +185,23 @@ export function createQurtagAuth(env: NodeJS.ProcessEnv = process.env, overrides
       // Vercel sets x-real-ip and x-forwarded-for itself and drops any value the client sent.
       ipAddress: { ipAddressHeaders: ['x-real-ip', 'x-forwarded-for'] },
       database: { generateId: 'uuid' },
+    },
+
+    hooks: {
+      before: createAuthMiddleware(async (ctx) => {
+        if (ctx.path !== '/request-password-reset') return;
+        // No email service: say so to everyone alike, so this never depends on the account.
+        if (!mailConfigured(env)) {
+          console.error('reset-password requested but email is not set up (RESEND_API_KEY)');
+          throw new APIError('SERVICE_UNAVAILABLE', { code: 'EMAIL_NOT_AVAILABLE', message: RESET_UNAVAILABLE });
+        }
+        // Per email address: 3 requests an hour (per IP is the customRule above). Over the
+        // limit the answer is the usual success and nothing is sent.
+        const email = String((ctx.body as { email?: unknown } | undefined)?.email ?? '').trim().toLowerCase();
+        if (email && !(await takeResetSlot(pool, email))) {
+          return ctx.json({ status: true, message: RESET_MESSAGE });
+        }
+      }),
     },
 
     plugins: [

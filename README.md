@@ -35,16 +35,23 @@ the item's name, photo, the owner's note for the finder and the lost flag, plus 
 own conversation when the browser holds its secret token. The database keeps only the
 token's SHA-256. No policy in the schema is open to a visitor without a pass.
 
-Email is not set up. Until `RESEND_API_KEY` is set, new accounts are confirmed at once,
-"forgot password" sends nothing, and owners read notes in the inbox (the outbox finishes its
-rows unsent).
+Email goes through Resend, called from the server. Password reset ("Forgot password?" at
+`/forgot-password`, the link opens `/reset-password`) sends its email inside the request, not
+through the outbox. The link works once and expires in 1 hour; a reset ends every session of
+the account. Requests are limited to 3 per 5 minutes per IP address and 3 per hour per email
+address, and the answer is the same whether or not the account exists. Until `RESEND_API_KEY`
+is set, new accounts are confirmed at once, the forgot-password page says "We couldn't send
+the email right now, please try again later", and owners read notes in the inbox (the outbox
+finishes its rows unsent).
 
 ### Settings (Vercel, project `qurtag`)
 
 `QURTAG_DATABASE_URL`, `QURTAG_DATABASE_URL_DATA`, `QURTAG_DATABASE_URL_SERVER` (the three
 logins on the transaction pooler), `QURTAG_DATABASE_CA_CERT`, `QURTAG_AUTH_SECRET`,
 `QURTAG_AUTH_URL` (production: https://www.qurtag.com), `CRON_SECRET`. Values are kept in
-`~/Claude/Backups/QurTag/secrets.env` on the founder's Mac. Optional: `RESEND_API_KEY`.
+`~/Claude/Backups/QurTag/secrets.env` on the founder's Mac. Email: `RESEND_API_KEY` (server side only) and
+`QURTAG_EMAIL_FROM` (default `QuR Tag <no-reply@qurtag.com>`; the domain must be verified in
+Resend). Replies go to info@impactconsulting.ai.
 
 The rollout that creates the schema and logins in production is
 `~/Claude/Rollouts/QurTag-rollout-schema` (its README lists the steps).
