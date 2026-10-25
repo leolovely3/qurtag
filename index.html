@@ -8,6 +8,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="description" content="Print a free QR tag at home and put it on your things. When a kind stranger finds one, they scan it and write you a note. No app for the finder, and neither side sees the other's contact details." />
     <meta name="theme-color" content="#FFFFFF" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      // Pick the saved or system theme before the first paint, so a dark phone never flashes white.
+      try {
+        var p = localStorage.getItem('qurtag.theme');
+        var dark = p === 'dark' || ((p === null || p === 'system') && matchMedia('(prefers-color-scheme: dark)').matches);
+        if (dark) document.documentElement.classList.add('dark');
+      } catch (e) {}
+    </script>
 
     <!-- Open Graph -->
     <meta property="og:title" content="QuR Tag: a free QR tag so a kind stranger can message you" />

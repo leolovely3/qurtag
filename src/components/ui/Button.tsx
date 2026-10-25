@@ -11,16 +11,16 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const variants = {
   // Solid pill. Reserved for hero CTA and final-step actions.
   primary:
-    'bg-ink-900 text-canvas hover:bg-ink-700 dark:bg-canvas dark:text-ink-900 dark:hover:bg-ink-50',
+    'bg-ink-900 text-canvas hover:bg-ink-700',
   // Quiet pill with hairline border.
   secondary:
-    'bg-transparent text-ink-900 border border-hairline-strong hover:border-ink-900 dark:text-ink-50 dark:border-hairline-dark dark:hover:border-ink-50',
+    'bg-transparent text-ink-900 border border-hairline-strong hover:border-ink-900',
   // No chrome, just hover background.
   ghost:
-    'bg-transparent text-ink-700 hover:text-ink-900 hover:bg-ink-50 dark:text-ink-200 dark:hover:bg-ink-800 dark:hover:text-canvas',
+    'bg-transparent text-ink-700 hover:text-ink-900 hover:bg-ink-50',
   // Editorial text-link. No chrome at all. Used everywhere except hero CTAs.
   link:
-    'bg-transparent text-ink-900 dark:text-ink-50 hover:opacity-70 transition-opacity',
+    'bg-transparent text-ink-900 hover:opacity-70 transition-opacity',
 } as const;
 
 const sizes = {

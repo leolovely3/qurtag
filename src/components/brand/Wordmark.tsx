@@ -14,7 +14,7 @@ export function Wordmark({ className, variant = 'full' }: WordmarkProps) {
     return (
       <span
         className={cn(
-          'font-display font-semibold text-h5 tracking-[-0.035em] text-ink-900 dark:text-ink-50',
+          'font-display font-semibold text-h5 tracking-[-0.035em] text-ink-900',
           className,
         )}
         aria-label="QuR Tag"
@@ -26,13 +26,13 @@ export function Wordmark({ className, variant = 'full' }: WordmarkProps) {
   return (
     <span
       className={cn(
-        'font-display font-semibold text-h6 tracking-[-0.035em] text-ink-900 dark:text-ink-50',
+        'font-display font-semibold text-h6 tracking-[-0.035em] text-ink-900',
         className,
       )}
       aria-label="QuR Tag"
     >
       Q<span className="text-signal-500">u</span>R{' '}
-      <span className="text-verdigris-700 dark:text-verdigris-500">Tag</span>
+      <span className="text-verdigris-700">Tag</span>
     </span>
   );
 }

@@ -38,6 +38,7 @@ function applyTheme(resolved: ResolvedTheme) {
   if (resolved === 'dark') html.classList.add('dark');
   else html.classList.remove('dark');
   html.setAttribute('data-theme', resolved);
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', resolved === 'dark' ? '#0A0B0F' : '#FFFFFF');
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {

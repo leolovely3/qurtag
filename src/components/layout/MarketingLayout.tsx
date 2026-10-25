@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Menu, X } from 'lucide-react';
 import { Wordmark } from '@/components/brand/Wordmark';
 import { Container } from '@/components/ui/Container';
 import { cn } from '@/lib/cn';
+import { isNative } from '@/lib/platform';
 
 const nav = [
   { to: '/how-it-works', label: 'How it works' },
@@ -12,7 +13,57 @@ const nav = [
   { to: '/help', label: 'Help' },
 ];
 
+/** The pages the iPhone app shows on their own, without the marketing menu. */
+const APP_LEGAL_PATHS = ['/terms', '/privacy'];
+
+/**
+ * In the iPhone app, Terms and Privacy open from the sign-in screen. They get a plain
+ * header with a Back button to where the user came from, not the website's menu.
+ */
+function AppLegalShell() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const title = location.pathname.startsWith('/privacy') ? 'Privacy' : 'Terms';
+
+  function goBack() {
+    // react-router keeps the position in its history entry; at the first entry there is nowhere to go back to.
+    const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0;
+    if (idx > 0) navigate(-1);
+    else navigate('/app', { replace: true });
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col bg-canvas text-ink-900 antialiased">
+      <header className="sticky top-0 z-40 bg-canvas border-b border-hairline">
+        <div className="mx-auto max-w-3xl px-4 h-14 grid grid-cols-[1fr_auto_1fr] items-center">
+          <button
+            type="button"
+            onClick={goBack}
+            className="inline-flex h-11 items-center gap-1.5 -ml-2 px-2 text-body font-medium text-ink-900 justify-self-start"
+          >
+            <ArrowLeft size={18} strokeWidth={1.75} />
+            Back
+          </button>
+          <span className="text-body font-semibold">{title}</span>
+          <span />
+        </div>
+      </header>
+      <main id="main-content" className="flex-1">
+        <Outlet />
+      </main>
+    </div>
+  );
+}
+
 export function MarketingLayout() {
+  const { pathname } = useLocation();
+  if (isNative() && APP_LEGAL_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+    return <AppLegalShell />;
+  }
+  return <MarketingSite />;
+}
+
+function MarketingSite() {
   const [scrolled, setScrolled] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const location = useLocation();

@@ -11,10 +11,84 @@
   :root {
     color-scheme: light;
     --qurtag-ease: cubic-bezier(0.32, 0.72, 0, 1);
+    --ink-50: 247 247 248;
+    --ink-100: 238 238 240;
+    --ink-200: 213 214 217;
+    --ink-300: 168 169 174;
+    --ink-400: 118 120 127;
+    --ink-500: 82 84 91;
+    --ink-600: 52 54 61;
+    --ink-700: 30 32 38;
+    --ink-800: 19 21 26;
+    --ink-900: 10 11 15;
+    --ink-950: 5 6 8;
+    --signal-50: 255 240 235;
+    --signal-100: 255 224 214;
+    --signal-200: 255 192 172;
+    --signal-300: 255 159 130;
+    --signal-400: 255 126 88;
+    --signal-500: 255 92 46;
+    --signal-600: 225 69 21;
+    --signal-700: 174 52 17;
+    --signal-800: 124 37 12;
+    --signal-900: 73 22 7;
+    --verdigris-50: 241 245 243;
+    --verdigris-100: 220 230 226;
+    --verdigris-200: 184 205 196;
+    --verdigris-300: 141 174 159;
+    --verdigris-400: 97 141 123;
+    --verdigris-500: 63 90 82;
+    --verdigris-600: 50 73 66;
+    --verdigris-700: 40 58 53;
+    --verdigris-800: 30 44 41;
+    --verdigris-900: 22 31 29;
+    --canvas: 255 255 255;
+    --paper: 250 250 247;
+    --muted: 118 120 127;
+    --hairline: rgba(10, 11, 15, 0.08);
+    --hairline-strong: rgba(10, 11, 15, 0.14);
   }
 
+  /* Dark theme: the same names carry the inverted scale, so every page that uses
+     ink, canvas, paper, muted, signal or verdigris follows without its own dark rules. */
   .dark {
     color-scheme: dark;
+    --ink-50: 21 23 28;
+    --ink-100: 29 32 39;
+    --ink-200: 46 49 57;
+    --ink-300: 95 97 105;
+    --ink-400: 142 144 151;
+    --ink-500: 168 169 174;
+    --ink-600: 213 214 217;
+    --ink-700: 228 229 232;
+    --ink-800: 238 238 240;
+    --ink-900: 247 247 248;
+    --ink-950: 5 6 8;
+    --signal-50: 43 22 16;
+    --signal-100: 60 30 21;
+    --signal-200: 94 45 29;
+    --signal-300: 138 63 40;
+    --signal-400: 255 126 88;
+    --signal-500: 255 92 46;
+    --signal-600: 255 138 102;
+    --signal-700: 255 166 139;
+    --signal-800: 255 192 172;
+    --signal-900: 255 217 204;
+    --verdigris-50: 23 32 29;
+    --verdigris-100: 30 44 41;
+    --verdigris-200: 40 58 53;
+    --verdigris-300: 63 90 82;
+    --verdigris-400: 97 141 123;
+    --verdigris-500: 141 174 159;
+    --verdigris-600: 164 194 181;
+    --verdigris-700: 184 205 196;
+    --verdigris-800: 220 230 226;
+    --verdigris-900: 241 245 243;
+    --canvas: 10 11 15;
+    --paper: 16 18 23;
+    --muted: 158 160 167;
+    --hairline: rgba(255, 255, 255, 0.12);
+    --hairline-strong: rgba(255, 255, 255, 0.22);
   }
 
   html {
@@ -37,16 +111,8 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  .dark body {
-    @apply bg-ink-950 text-ink-50;
-  }
-
   ::selection {
     @apply bg-ink-900 text-canvas;
-  }
-
-  .dark ::selection {
-    @apply bg-canvas text-ink-900;
   }
 
   /* All display headings get the same tight, confident treatment. */
@@ -55,18 +121,10 @@
     font-feature-settings: 'cv11', 'ss03', 'cv02';
   }
 
-  .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
-    @apply text-ink-50;
-  }
-
   /* Focus ring that respects the type. */
   *:focus-visible {
     @apply outline-none ring-2 ring-ink-900/40 ring-offset-2 ring-offset-canvas;
     border-radius: 4px;
-  }
-
-  .dark *:focus-visible {
-    @apply ring-canvas/30 ring-offset-ink-950;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -89,6 +147,12 @@
 }
 
 @layer utilities {
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+  }
+
   .text-balance {
     text-wrap: balance;
   }
@@ -102,18 +166,57 @@
     border-color: theme('colors.hairline');
   }
 
-  .dark .border-hairline {
-    border-color: theme('colors.hairline-dark');
-  }
-
   /* Editorial link. Text + arrow + slow underline.
    * Replaces button chrome everywhere except primary CTAs. */
   .link-arrow {
-    @apply inline-flex items-center gap-1.5 font-sans font-medium text-ink-900 dark:text-ink-50;
+    @apply inline-flex items-center gap-1.5 font-sans font-medium text-ink-900;
     @apply transition-all duration-qurtag ease-qurtag;
   }
   .link-arrow:hover {
     @apply gap-2.5;
+  }
+}
+
+/* Paper is always printed light, whatever the screen theme. */
+@media print {
+  :root, .dark {
+    --ink-50: 247 247 248;
+    --ink-100: 238 238 240;
+    --ink-200: 213 214 217;
+    --ink-300: 168 169 174;
+    --ink-400: 118 120 127;
+    --ink-500: 82 84 91;
+    --ink-600: 52 54 61;
+    --ink-700: 30 32 38;
+    --ink-800: 19 21 26;
+    --ink-900: 10 11 15;
+    --ink-950: 5 6 8;
+    --signal-50: 255 240 235;
+    --signal-100: 255 224 214;
+    --signal-200: 255 192 172;
+    --signal-300: 255 159 130;
+    --signal-400: 255 126 88;
+    --signal-500: 255 92 46;
+    --signal-600: 225 69 21;
+    --signal-700: 174 52 17;
+    --signal-800: 124 37 12;
+    --signal-900: 73 22 7;
+    --verdigris-50: 241 245 243;
+    --verdigris-100: 220 230 226;
+    --verdigris-200: 184 205 196;
+    --verdigris-300: 141 174 159;
+    --verdigris-400: 97 141 123;
+    --verdigris-500: 63 90 82;
+    --verdigris-600: 50 73 66;
+    --verdigris-700: 40 58 53;
+    --verdigris-800: 30 44 41;
+    --verdigris-900: 22 31 29;
+    --canvas: 255 255 255;
+    --paper: 250 250 247;
+    --muted: 118 120 127;
+    --hairline: rgba(10, 11, 15, 0.08);
+    --hairline-strong: rgba(10, 11, 15, 0.14);
+    color-scheme: light;
   }
 }
 

@@ -36,7 +36,7 @@ export function Display({ children, level = 1, className, ...rest }: DisplayProp
   return (
     <Tag
       className={cn(
-        'font-display text-ink-900 dark:text-ink-50 font-semibold text-balance',
+        'font-display text-ink-900 font-semibold text-balance',
         sizes[level],
         className,
       )}
@@ -52,7 +52,7 @@ export function Lede({ children, className, as = 'p', ...rest }: TextProps) {
   return (
     <Tag
       className={cn(
-        'text-lede font-sans text-ink-500 dark:text-ink-200 text-pretty',
+        'text-lede font-sans text-ink-500 text-pretty',
         className,
       )}
       {...rest}
@@ -67,7 +67,7 @@ export function Body({ children, className, as = 'p', ...rest }: TextProps) {
   return (
     <Tag
       className={cn(
-        'text-body font-sans text-ink-700 dark:text-ink-100',
+        'text-body font-sans text-ink-700',
         className,
       )}
       {...rest}
