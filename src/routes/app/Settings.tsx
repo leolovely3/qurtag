@@ -10,7 +10,8 @@ import { useAuth } from '@/lib/auth';
 import { usePushSubscription, isPushSupported } from '@/lib/push';
 import { exportMyData, fetchHousehold, fetchPrimaryHouseholdId, updateHousehold } from '@/lib/queries';
 import { FEATURES } from '@/lib/features';
-import { isNative } from '@/lib/platform';
+import { saveFile } from '@/lib/saveFile';
+import { fetchEmailAvailable } from '@/lib/membership';
 import { Modal } from '@/components/ui/Modal';
 import { NotificationSettings } from '@/components/push/NotificationSettings';
 import type { Household } from '@/lib/database.types';
@@ -24,10 +25,16 @@ export function Settings() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
   const navigate = useNavigate();
   const { permission, subscribed, pending, subscribe, unsubscribe } = usePushSubscription(
     user?.id ?? null,
   );
+
+  useEffect(() => {
+    // Null (could not be asked) is treated as not available, so no row promises email that may not come.
+    void fetchEmailAvailable().then((v) => setEmailAvailable(v === true));
+  }, []);
 
   const [household, setHousehold] = useState<Household | null>(null);
   const toast = useToast();
@@ -122,17 +129,14 @@ export function Settings() {
     setExporting(true);
     try {
       const data = await exportMyData();
-      const blob = new Blob([JSON.stringify({ account: { email: user?.email, name: user?.name }, ...data }, null, 2)], {
-        type: 'application/json',
+      await saveFile({
+        filename: 'qurtag-my-data.json',
+        mime: 'application/json',
+        text: JSON.stringify({ account: { email: user?.email, name: user?.name }, ...data }, null, 2),
+        dialogTitle: 'Save your data',
       });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'qurtag-my-data.json';
-      a.click();
-      URL.revokeObjectURL(url);
     } catch {
-      toast.show({ kind: 'error', title: "Couldn't prepare your data", body: 'Try again in a moment.' });
+      toast.show({ kind: 'error', title: "Couldn't prepare your data", body: 'Your file was not saved. Try again in a moment.' });
     } finally {
       setExporting(false);
     }
@@ -268,19 +272,8 @@ export function Settings() {
         </Row>
         )}
 
-        <Row
-          icon={Mail}
-          title="Notes from finders"
-          body="Notes arrive in your QuR Tag inbox. Email alerts are not switched on yet, so check your inbox here, especially when something is lost."
-        />
+        <NotificationSettings emailAvailable={emailAvailable} />
       </AppSection>
-
-      {/* iPhone alerts: their own group, in the iPhone app only */}
-      {isNative() && (
-        <AppSection title="Alerts">
-          <NotificationSettings />
-        </AppSection>
-      )}
 
       {/* Appearance */}
       <AppSection title="Appearance">

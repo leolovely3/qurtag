@@ -4,7 +4,9 @@
  *
  *   POST /api/fn/billing-config       who may buy what right now (no sign-in): which of the
  *                                     four plans have a Stripe price set, so a page shows
- *                                     "Coming soon" instead of a button that cannot work.
+ *                                     "Coming soon" instead of a button that cannot work. Also
+ *                                     `email`: whether email is set up (RESEND_API_KEY), so Settings
+ *                                     does not promise email alerts that cannot be sent.
  *   POST /api/fn/billing-checkout     { plan, interval }  signed in. Starts a Stripe Checkout
  *                                     page and answers its address.
  *   POST /api/fn/billing-portal       signed in. Opens Stripe's customer portal (change card,
@@ -154,7 +156,7 @@ export function createBillingRoutes(opts: BillingOptions = {}) {
     const s = stripeSettings(env);
     const available: Record<string, boolean> = {};
     for (const p of PRODUCTS) available[`${p.plan}_${p.interval}`] = s.canSell(p);
-    return json(200, { available, portal: !!s.secret });
+    return json(200, { available, portal: !!s.secret, email: mailConfigured(env) });
   }
 
   async function checkout(request: Request): Promise<Response> {
