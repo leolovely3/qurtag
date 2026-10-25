@@ -146,3 +146,13 @@ html.native-app .fixed.inset-0 {
   padding-top: max(1rem, env(safe-area-inset-top));
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
+
+/* The iPhone app follows the phone's text size setting (Dynamic Type): the root font size
+   comes from the system body size, and Tailwind sizes are in rem, so the text scales with it. */
+@supports (font: -apple-system-body) {
+  html.native-app {
+    font: -apple-system-body;
+  }
+}
+html.native-app body { overflow-x: clip; }
+html.native-app h1, html.native-app h2, html.native-app h3, html.native-app p, html.native-app a, html.native-app label { overflow-wrap: anywhere; }

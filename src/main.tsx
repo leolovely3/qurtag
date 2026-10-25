@@ -11,7 +11,19 @@ import { installExternalLinks } from './lib/externalLinks';
 import { isNative } from './lib/platform';
 import './index.css';
 
-if (isNative()) document.documentElement.classList.add('native-app');
+if (isNative()) {
+  const root = document.documentElement;
+  root.classList.add('native-app');
+  // Text follows the phone's size setting (src/index.css), up to a limit: the largest
+  // accessibility sizes would push whole headings off the screen.
+  const MAX_ROOT_PX = 26;
+  const fitText = () => {
+    root.style.removeProperty('font-size');
+    if (parseFloat(getComputedStyle(root).fontSize) > MAX_ROOT_PX) root.style.fontSize = `${MAX_ROOT_PX}px`;
+  };
+  fitText();
+  document.addEventListener('visibilitychange', fitText);
+}
 
 // Never a blank screen: a start-up failure shows a message with a Reload button.
 installBootGuard();
