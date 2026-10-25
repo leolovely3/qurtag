@@ -10,6 +10,7 @@ import {
 import { authClient, clearDataPass, forgetSession } from './authClient';
 import { db } from './db';
 import { iapSignOut } from './iap';
+import { recordPlatform, signupChannel } from './measures';
 import { forgetPushDevice } from './nativePush';
 import { SKIP_KEY } from './gettingStarted';
 
@@ -89,6 +90,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => document.removeEventListener('visibilitychange', onVisible);
   }, [refresh]);
 
+  // Which platform this account uses (iPhone app or web), once a day at most; the account's id only
+  // starts the call, nothing about the person is sent.
+  const signedInId = user?.id;
+  useEffect(() => {
+    if (signedInId) recordPlatform();
+  }, [signedInId]);
+
   const signUp = useCallback<AuthContextValue['signUp']>(
     async ({ email, password, name }) => {
       const e = email.trim().toLowerCase();
@@ -100,7 +108,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
         name: name.trim() || e.split('@')[0],
         callbackURL: '/app/first-tag',
-      });
+        // The channel the visit came from, stored once on the account (src/lib/measures.ts).
+        ...(signupChannel() ? { signup_channel: signupChannel() } : {}),
+      } as Parameters<typeof authClient.signUp.email>[0]);
       if (error) return { ok: false, error: words(error, 'Could not create the account. Try again.') };
       await refresh();
       return { ok: true, needsConfirmation: !data?.token };

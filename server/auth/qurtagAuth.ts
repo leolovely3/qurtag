@@ -46,6 +46,13 @@ function required(env: NodeJS.ProcessEnv, name: string): string {
   return v;
 }
 
+/** A sign-up channel as the database accepts it (lowercase letters, digits, "-" and "_", 32 at most), else null. */
+export function cleanSignupChannel(raw: unknown): string | null {
+  if (typeof raw !== 'string') return null;
+  const s = raw.trim().toLowerCase();
+  return /^[a-z0-9][a-z0-9_-]{0,31}$/.test(s) ? s : null;
+}
+
 export interface QurtagAuthOverrides {
   pool?: pg.Pool;
   sendMail?: MailSender;
@@ -123,7 +130,11 @@ export function createQurtagAuth(env: NodeJS.ProcessEnv = process.env, overrides
     },
     trustedOrigins: trustedOrigins(env),
 
-    user: { modelName: 'auth_users' },
+    user: {
+      modelName: 'auth_users',
+      // The channel a person came from (db/measures.sql), sent once at sign-up. Never returned to a browser.
+      additionalFields: { signup_channel: { type: 'string', required: false, input: true, returned: false } },
+    },
     session: { modelName: 'auth_sessions' },
     account: { modelName: 'auth_identities' },
     verification: { modelName: 'auth_verifications' },
@@ -157,7 +168,13 @@ export function createQurtagAuth(env: NodeJS.ProcessEnv = process.env, overrides
       user: {
         create: {
           before: async (user) => ({
-            data: { ...user, email: user.email.toLowerCase(), ...(confirmEmail ? {} : { emailVerified: true }) },
+            data: {
+              ...user,
+              email: user.email.toLowerCase(),
+              ...(confirmEmail ? {} : { emailVerified: true }),
+              // Only a short lowercase label is kept; anything else is dropped, and the sign-up goes on.
+              signup_channel: cleanSignupChannel((user as { signup_channel?: unknown }).signup_channel),
+            },
           }),
         },
       },

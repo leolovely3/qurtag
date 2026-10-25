@@ -69,6 +69,34 @@ logins on the transaction pooler), `QURTAG_DATABASE_CA_CERT`, `QURTAG_AUTH_SECRE
 `QURTAG_EMAIL_FROM` (default `QuR Tag <no-reply@qurtag.com>`; the domain must be verified in
 Resend). Replies go to info@impactconsulting.ai.
 
+### Measures (first-party, aggregate)
+
+What people do is counted in QuR Tag's own database and nowhere else; the Privacy page promises no third-party
+analytics and no tracking cookies. `db/measures.sql` (rollout step 12; undo in `db/undo-measures.sql`) adds
+`threads.returned_at` (set by a trigger when the owner presses "I have it back"), `auth_users.signup_channel` (set once at
+sign-up, immutable), the tables `tag_print_events` and `app_platforms` (row security on, no right for any role the app
+uses; written only by `record_tag_print` and `record_app_platform`), and extends `qurtag.factory_metrics`, which the
+Company OS reads, with: `returned_total`, `returned_30d`; `accounts_at_free_limit`, `accounts_over_free_limit`;
+`tags_printed_total`, `accounts_that_printed`, `tags_printed_by_style` (and `tags_printed_<style>`); `scans_with_note_30d`,
+`scans_without_note_30d`, `scans_no_note_rate_30d`; `signups_by_channel` (`7d` and `30d`, per channel: `signups`, `activated`);
+`paid_members_total`, `paid_<plan>_<source>`; `iphone_accounts_total`, `push_enabled_accounts`, `push_opt_in_rate`.
+A scan counts as followed by a note when a conversation was opened on the same tag within an hour after it (a scan carries
+no visitor id by design). Print events count button presses (Print, a PDF or print-ready download), not copies.
+
+In the app: `src/lib/measures.ts` keeps `?ch=<channel>` (else `utm_source`) in the tab's `sessionStorage` (no cookie), sends it
+with the sign-up (the iPhone app uses `ios-app` when it has none), records prints and downloads from `TagPrint.tsx`, and
+records the platform after sign-in. Every call is fire and forget. Deploy order: run rollout step 12 first, then merge: the
+new site writes `signup_channel` at sign-up.
+
+### Error reports (Sentry)
+
+`src/lib/errors.ts` sends errors only, to the Sentry project `cairn`, from the website and the iPhone app: no user, cookies,
+IP address, request bodies, breadcrumbs, tracing or replay, and addresses and messages are scrubbed of tag, invite and reset
+codes. It stays off in automated browsers and on localhost (`src/lib/telemetryGate.ts`, copied from the Company OS template).
+`VITE_SENTRY_DSN` is set in Vercel (Production). The Vercel build reads it by itself; for an iPhone build, which is built on
+this Mac, pull it first: `vercel env pull .env.production.local --environment=production`, then `npm run cap:sync`. The
+Privacy page names Sentry (section 7).
+
 The rollout that creates the schema and logins in production is
 `~/Claude/Rollouts/QurTag-rollout-schema` (its README lists the steps).
 

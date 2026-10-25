@@ -10,6 +10,7 @@ import { useAuth } from '@/lib/auth';
 import { isNative, publicUrl } from '@/lib/platform';
 import { cn } from '@/lib/cn';
 import { saveTagPdf, saveTagPng } from '@/lib/tagExport';
+import { recordTagPrint, type PrintAction } from '@/lib/measures';
 import {
   BLEED_IN,
   LOOKS,
@@ -130,12 +131,18 @@ export function TagPrint() {
 
   const fileBase = `qurtag-${styleId}-${look}-${tag?.short_code ?? tag?.public_id ?? 'tag'}`;
 
-  async function run(kind: 'pdf' | 'png' | 'pdf2', work: () => Promise<void>) {
+  /** Counts the print or download (db/measures.sql): style, look and paper only, once the file was made. */
+  function counted(action: PrintAction) {
+    recordTagPrint({ style: styleId, look, paper: paperId, action });
+  }
+
+  async function run(kind: 'pdf' | 'png' | 'pdf2', work: () => Promise<void>, action: PrintAction) {
     setError('');
     setBusy(kind);
     try {
       await work();
       if (user) recordStep(user.id, 'print');
+      counted(action);
     } catch (err) {
       // Closing the share sheet without choosing anything is not a failure.
       const message = err instanceof Error ? err.message : '';
@@ -174,9 +181,10 @@ export function TagPrint() {
       type="button"
       disabled={busy !== null || !sheet}
       onClick={() => {
-        if (isNative()) void run('pdf', () => saveTagPdf(sheet!, fileBase + '.pdf', 'Print your tags'));
+        if (isNative()) void run('pdf', () => saveTagPdf(sheet!, fileBase + '.pdf', 'Print your tags'), 'print');
         else {
           if (user) recordStep(user.id, 'print');
+          counted('print');
           window.print();
         }
       }}
@@ -326,7 +334,7 @@ export function TagPrint() {
               <button
                 type="button"
                 disabled={busy !== null || !sheet}
-                onClick={() => void run('pdf', () => saveTagPdf(sheet!, fileBase + '.pdf', 'Save your tags'))}
+                onClick={() => void run('pdf', () => saveTagPdf(sheet!, fileBase + '.pdf', 'Save your tags'), 'download_pdf')}
                 className={buttonClasses({ variant: 'secondary' })}
               >
                 <Download size={16} strokeWidth={1.75} aria-hidden />
@@ -354,7 +362,7 @@ export function TagPrint() {
             <button
               type="button"
               disabled={busy !== null || !printReady}
-              onClick={() => void run('png', () => saveTagPng(printReady!, `${fileBase}-print-ready.png`))}
+              onClick={() => void run('png', () => saveTagPng(printReady!, `${fileBase}-print-ready.png`), 'download_print_ready_png')}
               className={buttonClasses({ variant: 'secondary' })}
             >
               <ImageDown size={16} strokeWidth={1.75} aria-hidden />
@@ -363,7 +371,7 @@ export function TagPrint() {
             <button
               type="button"
               disabled={busy !== null || !printReady}
-              onClick={() => void run('pdf2', () => saveTagPdf(printReady!, `${fileBase}-print-ready.pdf`, 'Save your sticker file'))}
+              onClick={() => void run('pdf2', () => saveTagPdf(printReady!, `${fileBase}-print-ready.pdf`, 'Save your sticker file'), 'download_print_ready_pdf')}
               className={buttonClasses({ variant: 'secondary' })}
             >
               <Download size={16} strokeWidth={1.75} aria-hidden />

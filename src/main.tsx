@@ -9,6 +9,8 @@ import { installBootGuard } from './lib/bootGuard';
 import { installPreloadErrorHandler } from './lib/chunkRecovery';
 import { installExternalLinks } from './lib/externalLinks';
 import { isNative } from './lib/platform';
+import { captureChannel } from './lib/measures';
+import { startErrorReports } from './lib/errors';
 import './index.css';
 
 if (isNative()) {
@@ -24,6 +26,11 @@ if (isNative()) {
   fitText();
   document.addEventListener('visibilitychange', fitText);
 }
+
+// Where the visit came from (?ch=, else utm_source), kept in this tab only (src/lib/measures.ts).
+captureChannel();
+// Errors to Sentry, with nothing personal (src/lib/errors.ts).
+startErrorReports(isNative());
 
 // Never a blank screen: a start-up failure shows a message with a Reload button.
 installBootGuard();
