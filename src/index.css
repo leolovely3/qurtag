@@ -44,9 +44,9 @@
     --verdigris-900: 22 31 29;
     --canvas: 255 255 255;
     --paper: 250 250 247;
-    --muted: 118 120 127;
-    --hairline: rgba(10, 11, 15, 0.08);
-    --hairline-strong: rgba(10, 11, 15, 0.14);
+    --muted: 104 106 113;
+    --hairline: rgba(10, 11, 15, 0.09);
+    --hairline-strong: rgba(10, 11, 15, 0.16);
   }
 
   /* Dark theme: the same names carry the inverted scale, so every page that uses
@@ -121,10 +121,22 @@
     font-feature-settings: 'cv11', 'ss03', 'cv02';
   }
 
-  /* Focus ring that respects the type. */
+  /* Keyboard focus: a solid 2px outline in the text colour, 2px clear of the control. An
+     outline follows the control's own corner radius, so pills stay pills. */
   *:focus-visible {
-    @apply outline-none ring-2 ring-ink-900/40 ring-offset-2 ring-offset-canvas;
-    border-radius: 4px;
+    outline: 2px solid rgb(var(--ink-900));
+    outline-offset: 2px;
+  }
+
+  ::placeholder {
+    color: rgb(var(--muted));
+    opacity: 1;
+  }
+
+  /* A sticky bar never hides the control that has focus (WCAG 2.4.11). */
+  html {
+    scroll-padding-top: 4rem;
+    scroll-padding-bottom: 6rem;
   }
 
   @media (prefers-reduced-motion: reduce) {

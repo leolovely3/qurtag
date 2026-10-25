@@ -10,6 +10,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { QRCodeSVG } from 'qrcode.react';
+import { LockupSvg } from '../components/brand/Wordmark';
 
 const DPI = 200;
 const PAGE_W = 8.5 * DPI;
@@ -73,30 +74,18 @@ export async function drawTagCanvas(tag: TagSheet): Promise<HTMLCanvasElement> {
   ctx.setLineDash([]);
 
   ctx.textBaseline = 'alphabetic';
-  ctx.fillStyle = INK;
-  ctx.font = `600 ${0.26 * DPI}px ${FONT}`;
-  ctx.fillText('QuR', margin + pad, top + pad + 0.22 * DPI);
-  const qurW = ctx.measureText('QuR ').width;
-  ctx.fillStyle = '#324942';
-  ctx.fillText('Tag', margin + pad + qurW, top + pad + 0.22 * DPI);
-
-  ctx.fillStyle = MUTED;
-  ctx.font = `400 ${0.14 * DPI}px ui-monospace, Menlo, monospace`;
-  ctx.textAlign = 'right';
-  ctx.fillText(`Tag ${tag.publicId}`, margin + cardW - pad, top + pad + 0.2 * DPI);
-  ctx.textAlign = 'left';
+  // The logo: the same drawing as on screen (src/components/brand/Wordmark.tsx).
+  const logoH = 0.5 * DPI;
+  const logo = await loadSvg(renderToStaticMarkup(createElement(LockupSvg, { height: 100 })));
+  ctx.drawImage(logo, margin + pad, top + pad - 0.05 * DPI, (logo.width / logo.height) * logoH, logoH);
 
   const textX = margin + pad;
   const textW = 2.8 * DPI;
-  let y = top + pad + 0.95 * DPI;
-  ctx.fillStyle = MUTED;
-  ctx.font = `600 ${0.13 * DPI}px ${FONT}`;
-  ctx.fillText('IF FOUND', textX, y);
-  y += 0.55 * DPI;
+  let y = top + pad + 1.2 * DPI;
   ctx.fillStyle = INK;
-  ctx.font = `700 ${0.42 * DPI}px ${FONT}`;
-  ctx.fillText('Please scan.', textX, y);
-  y += 0.45 * DPI;
+  ctx.font = `700 ${0.26 * DPI}px ${FONT}`;
+  ctx.fillText('If found, please scan.', textX, y);
+  y += 0.42 * DPI;
   ctx.fillStyle = '#1E2026';
   ctx.font = `400 ${0.17 * DPI}px ${FONT}`;
   const body =
@@ -109,7 +98,7 @@ export async function drawTagCanvas(tag: TagSheet): Promise<HTMLCanvasElement> {
     y += 0.12 * DPI;
     ctx.fillStyle = MUTED;
     ctx.font = `400 ${0.14 * DPI}px ${FONT}`;
-    const linked = wrap(ctx, `Linked to: ${tag.itemName}`, textW);
+    const linked = wrap(ctx, `On: ${tag.itemName}`, textW);
     for (const line of linked.slice(0, 2)) {
       ctx.fillText(line, textX, y);
       y += 0.21 * DPI;

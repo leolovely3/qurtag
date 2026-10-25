@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { LucideIcon } from 'lucide-react';
-import { Bell, BellOff, CreditCard, Download, Home, LogOut, Mail, Monitor, Moon, Sun, Trash2 } from 'lucide-react';
+import { Bell, BellOff, ChevronRight, CreditCard, CircleHelp, Download, FileText, Home, Lock, LogOut, Mail, Monitor, Moon, Sun, Tag as TagIcon, Trash2 } from 'lucide-react';
 import { useTheme } from '@/lib/theme';
 import { Eyebrow } from '@/components/brand/Typography';
+import { AppPage, AppSection } from '@/components/layout/AppPage';
 import { Input } from '@/components/ui/Input';
 import { useAuth } from '@/lib/auth';
 import { usePushSubscription, isPushSupported } from '@/lib/push';
@@ -148,21 +149,17 @@ export function Settings() {
   }
 
   return (
-    <div className="px-qurtag-5 md:px-qurtag-8 py-qurtag-8 max-w-3xl">
-      <div className="flex items-end justify-between mb-qurtag-8 gap-3">
-        <div className="flex flex-col gap-2">
-          <Eyebrow>Settings</Eyebrow>
-          <h1 className="font-display font-semibold text-ink-900 text-h3 sm:text-h2 tracking-[-0.028em] leading-[1.04] text-balance">
-            Your account.
-          </h1>
-        </div>
-        {saveState === 'saving' && (
-          <span className="text-caption text-muted">Saving…</span>
-        )}
-        {saveState === 'saved' && (
-          <span className="text-caption text-verdigris-700">Saved</span>
-        )}
-      </div>
+    <AppPage
+      title="Settings"
+      action={
+        saveState === 'saving' ? (
+          <span className="text-sm text-muted">Saving…</span>
+        ) : saveState === 'saved' ? (
+          <span className="text-sm text-verdigris-700">Saved</span>
+        ) : undefined
+      }
+    >
+      <div className="flex flex-col gap-6">
 
       {/* Return address (courier feature, hidden) */}
       {FEATURES.courier && (
@@ -225,8 +222,7 @@ export function Settings() {
       )}
 
       {/* Notifications */}
-      <section className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-qurtag-3 mb-qurtag-3">
-        <Eyebrow>Notifications</Eyebrow>
+      <AppSection title="Notifications">
 
         {FEATURES.push && (
         <Row
@@ -275,11 +271,10 @@ export function Settings() {
           title="Notes from finders"
           body="Notes arrive in your QuR Tag inbox. Email alerts are not switched on yet, so check your inbox here, especially when something is lost."
         />
-      </section>
+      </AppSection>
 
       {/* Appearance */}
-      <section className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-qurtag-3 mb-qurtag-3">
-        <Eyebrow>Appearance</Eyebrow>
+      <AppSection title="Appearance">
         <Row
           icon={theme.resolved === 'dark' ? Moon : Sun}
           title="Theme"
@@ -291,7 +286,7 @@ export function Settings() {
                 : 'Light, always.'
           }
         >
-          <div className="inline-flex rounded-pill border border-hairline-strong overflow-hidden">
+          <div role="radiogroup" aria-label="Theme" className="grid w-full grid-cols-3 rounded-pill bg-ink-100 p-1 sm:w-auto">
             {(
               [
                 { v: 'light', label: 'Light', icon: Sun },
@@ -302,63 +297,63 @@ export function Settings() {
               <button
                 key={opt.v}
                 type="button"
+                role="radio"
+                aria-checked={theme.preference === opt.v}
                 onClick={() => theme.setPreference(opt.v)}
                 className={cn(
-                  'inline-flex items-center gap-1.5 px-3 h-8 text-[11px] font-medium transition-colors duration-qurtag',
+                  'inline-flex h-11 items-center justify-center gap-1.5 whitespace-nowrap rounded-pill px-3 text-sm font-medium transition-colors duration-150',
                   theme.preference === opt.v
-                    ? 'bg-ink-900 text-canvas'
-                    : 'text-muted hover:text-ink-900',
+                    ? 'bg-canvas text-ink-900 shadow-card'
+                    : 'text-ink-600 hover:text-ink-900',
                 )}
               >
-                <opt.icon size={11} strokeWidth={1.75} />
+                <opt.icon size={16} strokeWidth={1.75} aria-hidden />
                 {opt.label}
               </button>
             ))}
           </div>
         </Row>
-      </section>
+      </AppSection>
 
       {/* Account */}
-      <section className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-qurtag-3">
-        <Eyebrow>Account</Eyebrow>
+      <AppSection title="Account">
         <Row icon={Mail} title={user?.email ?? 'Signed in'} body="The email you sign in with. Finders never see it." />
-        <Row icon={CreditCard} title="Membership" body="Your plan, billing and your family.">
-          <Link
-            to="/app/membership"
-            className="inline-flex h-11 items-center rounded-pill border border-hairline-strong px-4 text-caption font-medium text-ink-900"
-          >
-            Open
-          </Link>
-        </Row>
-        <Row icon={Download} title="Download my data" body="Your items, tags, scans and conversations, as a file. On the Free plan the file holds the last 30 days of scans.">
-          <button
-            type="button"
-            onClick={handleExport}
-            disabled={exporting}
-            className="inline-flex h-11 items-center rounded-pill border border-hairline-strong px-4 text-caption font-medium text-ink-900 disabled:opacity-60"
-          >
-            {exporting ? 'Preparing…' : 'Download'}
-          </button>
-        </Row>
-        <Row icon={LogOut} title="Sign out" body="Sign back in with your email and password at any time.">
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="inline-flex h-11 items-center rounded-pill border border-hairline-strong px-4 text-caption font-medium text-ink-900"
-          >
-            Sign out
-          </button>
-        </Row>
-        <Row icon={Trash2} title="Delete my account" body="Deletes your account, items, tags and conversations for good. Your tags stop working.">
-          <button
-            type="button"
-            onClick={() => setDeleteOpen(true)}
-            className="inline-flex h-11 items-center rounded-pill border border-hairline-strong px-4 text-caption font-medium text-signal-700"
-          >
-            Delete
-          </button>
-        </Row>
-      </section>
+        <ActionRow icon={CreditCard} title="Membership" body="Your plan, billing and your family." to="/app/membership" />
+        <ActionRow
+          icon={Download}
+          title={exporting ? 'Preparing your file…' : 'Download my data'}
+          body="Your items, tags, scans and conversations, as a file. On the Free plan the file holds the last 30 days of scans."
+          onClick={handleExport}
+          disabled={exporting}
+        />
+        <ActionRow icon={LogOut} title="Sign out" onClick={handleSignOut} />
+      </AppSection>
+
+      <AppSection description="Deletes your account, items, tags and conversations for good. Your tags stop working.">
+        <ActionRow icon={Trash2} title="Delete my account" onClick={() => setDeleteOpen(true)} tone="danger" />
+      </AppSection>
+
+      <AppSection title="Help">
+        <ul className="divide-y divide-hairline">
+          {[
+            { to: '/app/tags', label: 'Your tags', icon: TagIcon },
+            { to: '/help', label: 'Help and questions', icon: CircleHelp },
+            { to: '/privacy', label: 'Privacy', icon: Lock },
+            { to: '/terms', label: 'Terms', icon: FileText },
+          ].map((l) => (
+            <li key={l.to}>
+              <Link to={l.to} className="flex min-h-14 items-center gap-3 px-4 py-2 transition-colors hover:bg-ink-50 focus-visible:outline-offset-[-2px] active:bg-ink-50">
+                <span className="grid size-9 shrink-0 place-items-center rounded-card bg-ink-100">
+                  <l.icon size={18} strokeWidth={1.75} className="text-ink-900" aria-hidden />
+                </span>
+                <span className="flex-1 text-base font-medium text-ink-900">{l.label}</span>
+                <ChevronRight size={20} strokeWidth={1.75} className="shrink-0 text-ink-300" aria-hidden />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </AppSection>
+      </div>
 
       <Modal
         open={deleteOpen}
@@ -371,12 +366,12 @@ export function Settings() {
       />
 
       {FEATURES.push && !isPushSupported && (
-        <p className="mt-qurtag-5 text-caption text-muted">
+        <p className="mt-6 text-sm text-muted">
           This browser doesn't support Web Push. iOS Safari requires installing QuR Tag as a home-screen
           app first.
         </p>
       )}
-    </div>
+    </AppPage>
   );
 }
 
@@ -391,6 +386,49 @@ function pushSubtitle(
   return 'Get a quiet alert when someone finds one of your items.';
 }
 
+/** A whole-row button or link, like a row in iOS Settings. */
+function ActionRow({
+  icon: Icon,
+  title,
+  body,
+  to,
+  onClick,
+  disabled,
+  tone = 'default',
+}: {
+  icon: LucideIcon;
+  title: string;
+  body?: string;
+  to?: string;
+  onClick?: () => void;
+  disabled?: boolean;
+  tone?: 'default' | 'danger';
+}) {
+  const inner = (
+    <>
+      <span className={cn('grid size-9 shrink-0 place-items-center rounded-card', tone === 'danger' ? 'bg-signal-50' : 'bg-ink-100')}>
+        <Icon size={18} strokeWidth={1.75} className={tone === 'danger' ? 'text-signal-700' : 'text-ink-900'} aria-hidden />
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5 text-left">
+        <span className={cn('text-base font-medium', tone === 'danger' ? 'text-signal-700' : 'text-ink-900')}>{title}</span>
+        {body && <span className="text-sm text-muted text-pretty">{body}</span>}
+      </span>
+      {to && <ChevronRight size={20} strokeWidth={1.75} className="shrink-0 text-ink-300" aria-hidden />}
+    </>
+  );
+  const cls =
+    'flex min-h-14 w-full items-center gap-3 border-t border-hairline px-4 py-3 transition-colors first:border-t-0 hover:bg-ink-50 active:bg-ink-50 disabled:opacity-60 focus-visible:outline-offset-[-2px]';
+  return to ? (
+    <Link to={to} className={cls}>
+      {inner}
+    </Link>
+  ) : (
+    <button type="button" onClick={onClick} disabled={disabled} className={cls}>
+      {inner}
+    </button>
+  );
+}
+
 interface RowProps {
   icon: LucideIcon;
   title: string;
@@ -400,21 +438,17 @@ interface RowProps {
 
 function Row({ icon: Icon, title, body, children }: RowProps) {
   return (
-    <div
-      className={cn(
-        'flex items-start justify-between gap-qurtag-3 py-qurtag-2 border-t border-hairline first:border-t-0 first:pt-0',
-      )}
-    >
-      <div className="flex items-start gap-3 min-w-0">
-        <div className="size-9 rounded-pill bg-ink-50 grid place-items-center shrink-0">
-          <Icon size={16} strokeWidth={1.75} className="text-ink-900" />
+    <div className="flex flex-col gap-3 border-t border-hairline px-4 py-4 first:border-t-0 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex min-w-0 items-start gap-3">
+        <div className="grid size-9 shrink-0 place-items-center rounded-card bg-ink-100">
+          <Icon size={18} strokeWidth={1.75} className="text-ink-900" aria-hidden />
         </div>
-        <div className="flex flex-col min-w-0">
-          <span className="text-body font-medium text-ink-900 truncate">{title}</span>
-          <span className="text-caption text-muted text-pretty">{body}</span>
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <span className="break-words text-base font-medium text-ink-900">{title}</span>
+          <span className="text-sm text-muted text-pretty">{body}</span>
         </div>
       </div>
-      <div className="shrink-0 self-center">{children}</div>
+      {children && <div className="shrink-0 sm:pl-3">{children}</div>}
     </div>
   );
 }

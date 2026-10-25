@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
 import { Camera, Lock, MessageCircle, Printer } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
-import { Eyebrow, Lede } from '@/components/brand/Typography';
-import { PhoneMockup } from '@/components/brand/PhoneMockup';
+import { useTheme } from '@/lib/theme';
+import { Lede } from '@/components/brand/Typography';
 import { PrimaryLink, SecondaryLink, CtaBand } from './parts';
 
 const audiences = [
@@ -39,14 +39,18 @@ const points = [
 ];
 
 export function MarketingHome() {
+  const theme = useTheme();
   return (
     <>
       <section className="relative overflow-hidden">
         <Container size="xl">
-          <div className="grid gap-qurtag-8 lg:grid-cols-2 lg:items-center pt-qurtag-8 pb-qurtag-12 md:pt-16 md:pb-qurtag-16">
-            <div className="flex flex-col gap-5 items-start">
-              <Eyebrow>Free QR tags for everyday things</Eyebrow>
-              <h1 className="font-display font-semibold text-ink-900 text-h2 sm:text-h1 lg:text-display tracking-[-0.035em] leading-[0.98] text-balance">
+          <div className="grid gap-12 pb-16 pt-8 md:pb-24 md:pt-16 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:items-center lg:gap-16">
+            <div className="flex flex-col items-start gap-6">
+              <span className="inline-flex h-8 items-center gap-2 rounded-pill border border-hairline bg-paper px-3 text-sm font-medium text-ink-700">
+                <span className="size-1.5 rounded-full bg-signal-500" aria-hidden />
+                Free QR tags for everyday things
+              </span>
+              <h1 className="text-[2.5rem] font-semibold leading-[1.05] tracking-[-0.03em] text-ink-900 text-balance sm:text-5xl lg:text-[3.5rem]">
                 A free QR tag, so a kind stranger can message you.
               </h1>
               <Lede>
@@ -64,27 +68,39 @@ export function MarketingHome() {
               </p>
             </div>
             <div className="flex justify-center">
-              <PhoneMockup />
+              {/* A real screen from the app, light or dark to match the visitor. */}
+              <div className="w-[17.5rem] rounded-[2.75rem] bg-[#050608] p-2.5 shadow-device ring-1 ring-hairline-strong sm:w-[19rem]">
+                <picture>
+                  <img
+                    src={theme.resolved === 'dark' ? '/screens/app-conversation-dark.png' : '/screens/app-conversation-light.png'}
+                    width={390}
+                    height={780}
+                    alt="The QuR Tag app on a phone: the owner of a blue water bottle reads a note from the person who found it at the gym, and replies."
+                    className="block h-auto w-full rounded-[2.125rem]"
+                  />
+                </picture>
+              </div>
             </div>
           </div>
         </Container>
       </section>
 
       <section className="border-t border-hairline bg-paper">
-        <Container size="lg">
-          <div className="py-qurtag-12 md:py-qurtag-16 flex flex-col gap-qurtag-8">
-            <div className="flex flex-col gap-3 max-w-2xl">
-              <Eyebrow>Why it is different</Eyebrow>
-              <h2 className="font-display font-semibold text-h3 text-ink-900 tracking-[-0.025em] text-balance">
+        <Container size="xl">
+          <div className="flex flex-col gap-10 py-16 md:py-24">
+            <div className="flex max-w-2xl flex-col gap-3">
+              <h2 className="text-3xl font-semibold tracking-[-0.02em] text-ink-900 text-balance sm:text-4xl">
                 For the things too cheap, or too many, to put a tracker on.
               </h2>
             </div>
-            <div className="grid gap-qurtag-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-3">
               {points.map((p) => (
-                <div key={p.title} className="rounded-card border border-hairline bg-canvas p-qurtag-4 flex flex-col gap-3">
-                  <p.icon size={20} strokeWidth={1.5} className="text-ink-900" aria-hidden />
-                  <h3 className="font-display font-semibold text-h6 text-ink-900">{p.title}</h3>
-                  <p className="text-body text-ink-700 text-pretty">{p.body}</p>
+                <div key={p.title} className="flex flex-col gap-3 rounded-modal border border-hairline bg-canvas p-6 shadow-card">
+                  <span className="grid size-10 place-items-center rounded-card bg-signal-50">
+                    <p.icon size={20} strokeWidth={1.75} className="text-signal-700" aria-hidden />
+                  </span>
+                  <h3 className="text-lg font-semibold text-ink-900">{p.title}</h3>
+                  <p className="text-base text-ink-700 text-pretty">{p.body}</p>
                 </div>
               ))}
             </div>
@@ -93,19 +109,18 @@ export function MarketingHome() {
       </section>
 
       <section className="border-t border-hairline">
-        <Container size="lg">
-          <div className="py-qurtag-12 md:py-qurtag-16 flex flex-col gap-qurtag-8">
-            <div className="flex flex-col gap-3 max-w-2xl">
-              <Eyebrow>Who it is for</Eyebrow>
-              <h2 className="font-display font-semibold text-h3 text-ink-900 tracking-[-0.025em] text-balance">
+        <Container size="xl">
+          <div className="flex flex-col gap-10 py-16 md:py-24">
+            <div className="flex max-w-2xl flex-col gap-3">
+              <h2 className="text-3xl font-semibold tracking-[-0.02em] text-ink-900 text-balance sm:text-4xl">
                 The things that go missing at school, the gym and the bus stop.
               </h2>
             </div>
-            <div className="grid gap-qurtag-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-3">
               {audiences.map((a) => (
-                <div key={a.title} className="rounded-card border border-hairline p-qurtag-4 flex flex-col gap-2">
-                  <h3 className="font-display font-semibold text-h6 text-ink-900">{a.title}</h3>
-                  <p className="text-body text-ink-700 text-pretty">{a.body}</p>
+                <div key={a.title} className="flex flex-col gap-2 rounded-modal border border-hairline bg-canvas p-6">
+                  <h3 className="text-lg font-semibold text-ink-900">{a.title}</h3>
+                  <p className="text-base text-ink-700 text-pretty">{a.body}</p>
                 </div>
               ))}
             </div>
@@ -114,10 +129,12 @@ export function MarketingHome() {
       </section>
 
       <section className="border-t border-hairline bg-paper">
-        <Container size="md">
-          <div className="py-qurtag-12 flex flex-col gap-4 items-start">
-            <MessageCircle size={22} strokeWidth={1.5} className="text-ink-900" aria-hidden />
-            <h2 className="font-display font-semibold text-h4 text-ink-900 tracking-[-0.02em]">Found something?</h2>
+        <Container size="xl">
+          <div className="flex max-w-2xl flex-col items-start gap-4 py-16">
+            <span className="grid size-10 place-items-center rounded-card bg-canvas shadow-card">
+              <MessageCircle size={20} strokeWidth={1.75} className="text-ink-900" aria-hidden />
+            </span>
+            <h2 className="text-3xl font-semibold tracking-[-0.02em] text-ink-900">Found something?</h2>
             <p className="text-body text-ink-700 text-pretty">
               Thank you. Open your phone camera and point it at the QR code on the item. A page opens
               with the item's name and a short note from the owner. Write the owner a message. You do
@@ -133,7 +150,7 @@ export function MarketingHome() {
         </Container>
       </section>
 
-      <CtaBand title="Make your first tag in a few minutes." body="It is free for up to two items. You need an email address and a printer." />
+      <CtaBand wide title="Make your first tag in a few minutes." body="It is free for up to two items. You need an email address and a printer." />
     </>
   );
 }

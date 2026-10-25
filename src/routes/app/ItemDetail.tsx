@@ -1,14 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import {
-  ArrowLeft,
-  Check,
-  Clock,
-  Printer,
-  MapPin,
-  Tag as TagIcon,
-} from 'lucide-react';
+import { Check, Clock, MapPin, Printer, RefreshCw, Tag as TagIcon, Trash2 } from 'lucide-react';
 import { Eyebrow } from '@/components/brand/Typography';
+import { AppPage, AppSection } from '@/components/layout/AppPage';
+import { buttonClasses } from '@/components/ui/Button';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { Input } from '@/components/ui/Input';
 import { PhotoUploader } from '@/components/ui/PhotoUploader';
 import { LostModeToggle } from '@/components/ui/LostModeToggle';
@@ -308,97 +304,109 @@ export function ItemDetail() {
 
   const value = useMemo(() => centsToUSD(item?.declared_value_cents), [item]);
 
+  const back = { to: '/app', label: 'Items' };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="size-7 rounded-full border-2 border-ink-100 border-t-ink-900 animate-spin" />
-      </div>
+      <AppPage title="Item" back={back}>
+        <div className="flex flex-col gap-4" aria-busy="true" aria-label="Loading the item">
+          <Skeleton className="h-20 w-full rounded-modal" />
+          <Skeleton className="h-36 w-full rounded-modal" />
+          <Skeleton className="h-56 w-full rounded-modal" />
+        </div>
+      </AppPage>
     );
   }
 
   if (!item) {
     return (
-      <div className="px-qurtag-5 md:px-qurtag-8 py-qurtag-8 max-w-3xl flex flex-col gap-5">
-        <Link
-          to="/app"
-          className="inline-flex items-center gap-2 text-caption text-muted hover:text-ink-900 transition-colors"
-        >
-          <ArrowLeft size={14} strokeWidth={1.75} />
-          Your items
-        </Link>
-        <Eyebrow>Not found</Eyebrow>
-        <h1 className="font-display font-semibold text-h3 text-ink-900 tracking-[-0.022em]">
-          We couldn't find that item.
-        </h1>
-        <p className="text-body text-muted">
-          It may have been deleted, or you don't have access to it.
-        </p>
-      </div>
+      <AppPage title="Item" back={back}>
+        <section className="flex flex-col items-center gap-3 rounded-modal border border-hairline bg-paper px-6 py-10 text-center">
+          <h2 className="text-xl font-semibold text-ink-900">We couldn't find that item</h2>
+          <p className="max-w-sm text-base text-muted">It may have been deleted, or it isn't in your account.</p>
+          <Link to="/app" className={buttonClasses({ variant: 'secondary', className: 'mt-2' })}>
+            Back to Items
+          </Link>
+        </section>
+      </AppPage>
     );
   }
 
   return (
-    <div className="px-qurtag-5 md:px-qurtag-8 py-qurtag-8 max-w-5xl">
-      {/* Top bar */}
-      <div className="flex items-center justify-between mb-qurtag-5">
-        <Link
-          to="/app"
-          className="inline-flex items-center gap-2 text-caption text-muted hover:text-ink-900 transition-colors"
-        >
-          <ArrowLeft size={14} strokeWidth={1.75} />
-          Your items
-        </Link>
-        <SaveBadge state={saveState} />
-      </div>
+    <AppPage title={name.trim() || 'Item'} back={back} action={<SaveBadge state={saveState} />}>
+      <div className="flex flex-col gap-6">
+        {readOnly && (
+          <p role="status" className="rounded-card bg-ink-100 px-4 py-3 text-sm text-ink-700 text-pretty">
+            This item is over your plan's limit, so it is read-only: you can see it, print its tag and delete it,
+            but not change it. Finders can still scan its tag and write to you, and you can still reply.{' '}
+            <Link to="/app/membership" className="font-medium text-ink-900 underline underline-offset-4">See plans</Link>
+          </p>
+        )}
+        {/* A read-only item (over the plan's limit) cannot be changed. */}
+        <fieldset disabled={readOnly} className="contents">
+          <LostModeToggle value={lostMode} pending={lostPending} onChange={onToggleLostMode} />
+        </fieldset>
 
-      {/* Header */}
-      <div className="flex flex-col gap-2 mb-qurtag-8">
-        <Eyebrow>{tag?.hardware_tier ?? 'No tag'}</Eyebrow>
-        <input
-          aria-label="Item name"
-          readOnly={readOnly}
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="font-display font-semibold text-ink-900 text-h2 sm:text-h1 tracking-[-0.032em] leading-[1.02] bg-transparent border-0 outline-none w-full text-balance focus:outline-none focus-visible:bg-ink-50 rounded-card px-1 -mx-1 transition-colors duration-qurtag"
-        />
-      </div>
-
-      {readOnly && (
-        <p role="status" className="mb-qurtag-5 rounded-card bg-ink-50 px-4 py-3 text-caption text-ink-700 text-pretty">
-          This item is over your plan's limit, so it is read-only: you can see it, print its tag and delete it, but not change it.
-          Finders can still scan its tag and write to you, and you can still reply.{' '}
-          <Link to="/app/membership" className="underline underline-offset-4 text-ink-900">See plans</Link>
-        </p>
-      )}
-
-      <div className="grid lg:grid-cols-12 gap-qurtag-5">
-        {/* Left column */}
-        <div className="lg:col-span-7 flex flex-col gap-qurtag-5">
-          {/* Lost mode + reward. A read-only item (over the plan's limit) cannot be changed. */}
-          <fieldset disabled={readOnly} className="contents">
-          <LostModeToggle
-            value={lostMode}
-            pending={lostPending}
-            onChange={onToggleLostMode}
-          />
-
-          <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-2">
-            <label htmlFor="reward-text" className="flex flex-col gap-1">
-              <Eyebrow>A word for the finder (optional)</Eyebrow>
-              <span className="text-caption text-muted text-pretty">
-                Shown on the tag's page. For example "Coffee on me as a thank-you" or "Please hand in at the school office".
+        {/* The tag */}
+        <AppSection title="Tag">
+          <div className="flex flex-col gap-4 p-4">
+            <div className="flex items-center gap-3">
+              <span className="grid size-11 shrink-0 place-items-center rounded-card bg-ink-100">
+                <TagIcon size={20} strokeWidth={1.75} className="text-ink-900" aria-hidden />
               </span>
-            </label>
-            <input
-              id="reward-text"
-              value={rewardText}
-              maxLength={140}
-              onChange={(e) => setRewardText(e.target.value)}
-              placeholder="A small thank-you if you get it back to me"
-              className="h-12 rounded-card border border-hairline-strong bg-canvas px-4 text-body text-ink-900 placeholder:text-ink-300 focus:outline-none focus:border-ink-900"
-            />
-            <p className="text-caption text-muted">Do not put your phone number or address here.</p>
+              <div className="flex min-w-0 flex-col">
+                <span className="text-base font-semibold text-ink-900">
+                  {tag ? <>Tag <span className="font-mono text-[0.9375rem]">{tag.public_id}</span></> : 'No working tag'}
+                </span>
+                <span className="text-sm text-muted">
+                  {tag ? `Made ${relativeTime(tag.activated_at)}` : 'Make a new tag to print.'}
+                </span>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {tag && (
+                <Link to={`/app/tags/${tag.id}/print`} className={buttonClasses({ variant: 'primary', className: 'flex-1 basis-[9rem]' })}>
+                  <Printer size={16} strokeWidth={1.75} aria-hidden />
+                  Print tag
+                </Link>
+              )}
+              <button
+                type="button"
+                onClick={() => (tag ? setReplaceOpen(true) : void onReplaceTag())}
+                disabled={replacing || readOnly}
+                className={buttonClasses({ variant: tag ? 'secondary' : 'primary', className: 'flex-1 basis-[9rem]' })}
+              >
+                <RefreshCw size={16} strokeWidth={1.75} aria-hidden />
+                {tag ? 'New code' : 'Make a tag'}
+              </button>
+            </div>
           </div>
+        </AppSection>
+
+        {/* What a finder sees */}
+        <fieldset disabled={readOnly} className="contents">
+        <AppSection title="What a finder sees" description="Do not put your phone number or address in these.">
+          <div className="flex flex-col gap-5 p-4">
+            <Input
+              name="name"
+              label="Name"
+              maxLength={80}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+            <PhotoUploader householdId={householdId} value={item.hero_photo_url} onChange={onChangePhoto} />
+            <Input
+              id="reward-text"
+              name="rewardText"
+              label="A word for the finder (optional)"
+              placeholder="A small thank-you if you get it back to me"
+              maxLength={140}
+              value={rewardText}
+              onChange={(e) => setRewardText(e.target.value)}
+              hint='For example "Coffee on me as a thank-you" or "Please hand in at the school office".'
+            />
+          </div>
+        </AppSection>
 
           {FEATURES.rewards && lostMode && (
             <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3">
@@ -439,115 +447,19 @@ export function ItemDetail() {
             </div>
           )}
 
-          {/* Tag card */}
-          <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex items-start gap-qurtag-3">
-            <div className="size-10 rounded-pill bg-ink-50 grid place-items-center shrink-0">
-              <TagIcon size={18} strokeWidth={1.75} className="text-ink-900" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <Eyebrow>Tag</Eyebrow>
-              <p className="font-display font-semibold text-h6 text-ink-900 tracking-[-0.011em] mt-0.5">
-                {tag ? `QuR Tag · ${tag.public_id}` : 'No tag attached'}
-              </p>
-              <p className="text-caption text-muted mt-1">
-                {tag
-                  ? `Printable tag, made ${relativeTime(tag.activated_at)}`
-                  : 'This item has no working tag. Make a new one to print.'}
-              </p>
-              <div className="flex flex-wrap gap-2 mt-3">
-                {tag && (
-                  <Link
-                    to={`/app/tags/${tag.id}/print`}
-                    className="inline-flex items-center gap-1.5 h-11 px-4 rounded-pill bg-ink-900 text-canvas text-caption font-medium hover:bg-ink-700 transition-colors duration-qurtag"
-                  >
-                    <Printer size={14} strokeWidth={1.75} />
-                    Print tag
-                  </Link>
-                )}
-                <button
-                  type="button"
-                  onClick={() => (tag ? setReplaceOpen(true) : void onReplaceTag())}
-                  disabled={replacing}
-                  className="inline-flex items-center h-11 px-4 rounded-pill border border-hairline-strong text-ink-900 text-caption font-medium disabled:opacity-50"
-                >
-                  {tag ? 'Make a new code' : 'Make a tag'}
-                </button>
-              </div>
-            </div>
-          </div>
+        </fieldset>
 
-          </fieldset>
-
-          {/* Scan history */}
-          <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <Eyebrow>{limitedHistory ? 'Scans, last 30 days' : 'Scan history'}</Eyebrow>
-              <span className="text-caption text-muted">{scans.length} {limitedHistory ? 'in 30 days' : 'total'}</span>
-            </div>
-            {scans.length === 0 ? (
-              <div className="flex items-center gap-3 py-qurtag-3 text-caption text-muted">
-                <Clock size={14} strokeWidth={1.75} />
-                Nobody's scanned this yet. That's good. Quiet means nothing's wandered.
-              </div>
-            ) : (
-              <ul className="flex flex-col divide-y divide-hairline">
-                {(showAllScans ? scans : scans.slice(0, 10)).map((scan) => (
-                  <li
-                    key={scan.id}
-                    className="flex items-center justify-between gap-3 py-3 text-caption"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className="size-8 rounded-pill bg-ink-50 grid place-items-center shrink-0">
-                        <MapPin size={12} strokeWidth={1.75} className="text-ink-900" />
-                      </span>
-                      <div className="flex flex-col min-w-0">
-                        <span className="text-ink-900 font-medium truncate">
-                          Someone opened the tag's page
-                        </span>
-                        <span className="text-muted truncate">
-                          {scan.user_agent_class ? `On ${DEVICE[scan.user_agent_class] ?? 'a device'}` : 'On a device'}
-                        </span>
-                      </div>
-                    </div>
-                    <span className="text-muted shrink-0">{relativeTime(scan.scanned_at)}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {scans.length > 10 && (
-              <button
-                type="button"
-                onClick={() => setShowAllScans((v) => !v)}
-                className="self-start inline-flex h-11 items-center text-caption font-medium text-ink-900 underline underline-offset-4"
-              >
-                {showAllScans ? 'Show fewer' : `Show all ${scans.length}`}
-              </button>
-            )}
-            {limitedHistory && (
-              <p className="text-caption text-muted text-pretty">
-                The Free plan keeps the last 30 days of scans in view.{' '}
-                <Link to="/app/membership" className="underline underline-offset-4 text-ink-900">Plus shows them all.</Link>
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Right column */}
-        <div className="lg:col-span-5 flex flex-col gap-qurtag-5">
-          <fieldset disabled={readOnly} className="contents">
-          <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-4">
-            <PhotoUploader
-              householdId={householdId}
-              value={item.hero_photo_url}
-              onChange={onChangePhoto}
-            />
+        {/* Private to the owner */}
+        <fieldset disabled={readOnly} className="contents">
+        <AppSection title="Only you see">
+          <div className="flex flex-col gap-5 p-4">
             <Input
               name="brand"
-              label="Description (optional)"
+              label="Description"
               placeholder="Blue, with stickers on the side"
               value={brand}
               onChange={(e) => setBrand(e.target.value)}
-              hint="Private to you, to tell your things apart."
+              hint="To tell your things apart."
             />
             {FEATURES.insurancePacket && (
             <Input
@@ -560,8 +472,70 @@ export function ItemDetail() {
               hint={value ? `Currently ${value}.` : 'Used for insurance packets and courier coverage.'}
             />
             )}
+            <label htmlFor="item-notes" className="flex flex-col gap-1.5">
+              <span className="text-sm font-medium text-ink-900">Private note</span>
+              <textarea
+                id="item-notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={3}
+                placeholder="A detail only you would know, to check it is yours."
+                maxLength={1000}
+                className="w-full resize-none rounded-card border border-ink-400 bg-canvas px-4 py-3 text-base text-ink-900 placeholder:text-muted transition-colors focus:border-ink-900 focus:outline-none"
+              />
+            </label>
           </div>
-          </fieldset>
+        </AppSection>
+
+        </fieldset>
+
+        {/* Scans */}
+        <AppSection
+          title={limitedHistory ? 'Scans, last 30 days' : 'Scan history'}
+          description={
+            limitedHistory ? (
+              <>
+                The Free plan keeps the last 30 days of scans in view.{' '}
+                <Link to="/app/membership" className="font-medium text-ink-900 underline underline-offset-4">Plus shows them all.</Link>
+              </>
+            ) : undefined
+          }
+        >
+          {scans.length === 0 ? (
+            <div className="flex items-center gap-3 px-4 py-4 text-sm text-muted">
+              <Clock size={16} strokeWidth={1.75} className="shrink-0" aria-hidden />
+              Nobody has scanned this tag yet. Quiet means nothing has wandered off.
+            </div>
+          ) : (
+            <ul className="divide-y divide-hairline">
+              {(showAllScans ? scans : scans.slice(0, 5)).map((scan) => (
+                <li key={scan.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="grid size-9 shrink-0 place-items-center rounded-pill bg-ink-100">
+                      <MapPin size={16} strokeWidth={1.75} className="text-ink-900" aria-hidden />
+                    </span>
+                    <div className="flex min-w-0 flex-col">
+                      <span className="text-sm font-medium text-ink-900">Scanned</span>
+                      <span className="text-sm text-muted">
+                        {scan.user_agent_class ? `On ${DEVICE[scan.user_agent_class] ?? 'a device'}` : 'On a device'}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="shrink-0 text-sm text-muted">{relativeTime(scan.scanned_at)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {scans.length > 5 && (
+            <button
+              type="button"
+              onClick={() => setShowAllScans((v) => !v)}
+              className="flex h-12 w-full items-center justify-center border-t border-hairline text-sm font-medium text-ink-900 transition-colors hover:bg-ink-50"
+            >
+              {showAllScans ? 'Show fewer' : `Show all ${scans.length}`}
+            </button>
+          )}
+        </AppSection>
 
           {FEATURES.walletPasses && (
           <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3">
@@ -608,7 +582,6 @@ export function ItemDetail() {
           </div>
 
           )}
-
           {FEATURES.insurancePacket && (
           <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3">
             <Eyebrow>Insurance packet</Eyebrow>
@@ -625,37 +598,14 @@ export function ItemDetail() {
           </div>
           )}
 
-          <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3">
-            <Eyebrow>Danger</Eyebrow>
-            <p className="text-caption text-muted text-pretty">
-              Deleting this item switches off its tag and removes its scans, notes and
-              conversations. You cannot undo this.
-            </p>
-            <button
-              type="button"
-              onClick={() => setDeleteOpen(true)}
-              className="self-start inline-flex h-10 items-center gap-2 rounded-pill border border-hairline-strong text-signal-700 text-caption font-medium px-4 hover:border-signal-500 transition-colors duration-qurtag"
-            >
-              Delete item
-            </button>
-          </div>
-
-          <fieldset disabled={readOnly} className="contents">
-          <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-2">
-            <Eyebrow>Notes</Eyebrow>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={4}
-              placeholder="A detail only you would know, to check it is yours."
-              maxLength={1000}
-              className="w-full rounded-card border border-hairline-strong bg-canvas p-3 text-body text-ink-900 placeholder:text-ink-300 focus:outline-none focus:border-ink-900 transition-colors duration-qurtag resize-none"
-            />
-            <p className="text-caption text-muted">
-              Private to you. Never shown to a finder.
-            </p>
-          </div>
-          </fieldset>
+        <div className="flex flex-col gap-2">
+          <button type="button" onClick={() => setDeleteOpen(true)} className={buttonClasses({ variant: 'danger', block: true, className: 'sm:w-auto sm:self-start' })}>
+            <Trash2 size={16} strokeWidth={1.75} aria-hidden />
+            Delete item
+          </button>
+          <p className="px-1 text-sm text-muted text-pretty">
+            Deleting this item switches off its tag and removes its scans, notes and conversations.
+          </p>
         </div>
       </div>
 
@@ -683,7 +633,7 @@ export function ItemDetail() {
         }}
         secondaryAction={{ label: 'Cancel', onClick: () => setDeleteOpen(false) }}
       />
-    </div>
+    </AppPage>
   );
 }
 

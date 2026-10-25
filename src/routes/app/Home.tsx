@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Inbox as InboxIcon, Package, Plus, Printer } from 'lucide-react';
-import { Eyebrow } from '@/components/brand/Typography';
-import { ItemCardSkeleton } from '@/components/ui/Skeleton';
+import { ChevronRight, Inbox as InboxIcon, Package, Plus, Tag as TagIcon } from 'lucide-react';
+import { AppPage } from '@/components/layout/AppPage';
+import { buttonClasses } from '@/components/ui/Button';
+import { ItemRowSkeleton } from '@/components/ui/Skeleton';
 import { useAuth } from '@/lib/auth';
 import { countUnreadForHousehold, fetchItems, fetchPrimaryHouseholdId, fetchTags } from '@/lib/queries';
 import { fetchMembership, type Membership } from '@/lib/membership';
@@ -57,56 +58,51 @@ export function useOwnerItems() {
   return { items, tagByItemId, unread, membership, readOnly, loading: authLoading || fetching, failed };
 }
 
+/** A square photo of the item, or a quiet placeholder when it has none. */
+export function ItemThumb({ src, size = 'md' }: { src?: string | null; size?: 'sm' | 'md' }) {
+  const box = size === 'sm' ? 'size-11' : 'size-14';
+  return src ? (
+    <img src={src} alt="" className={cn(box, 'shrink-0 rounded-card bg-ink-50 object-cover')} />
+  ) : (
+    <div className={cn(box, 'grid shrink-0 place-items-center rounded-card bg-ink-100')}>
+      <Package size={size === 'sm' ? 18 : 22} strokeWidth={1.5} className="text-muted" aria-hidden />
+    </div>
+  );
+}
+
+/** "Lost" status chip; nothing when the item is not marked lost. */
+export function LostChip({ lost }: { lost: boolean }) {
+  if (!lost) return null;
+  return (
+    <span className="inline-flex h-6 shrink-0 items-center gap-1.5 rounded-pill bg-signal-50 px-2 text-xs font-semibold text-signal-700">
+      <span className="size-1.5 rounded-full bg-signal-500" aria-hidden />
+      Marked lost
+    </span>
+  );
+}
+
 export function ItemList({ items, tagByItemId, readOnly }: { items: Item[]; tagByItemId: Map<string, Tag>; readOnly?: Set<string> }) {
   return (
-    <ul className="grid sm:grid-cols-2 gap-3">
+    <ul className="overflow-hidden rounded-modal border border-hairline bg-canvas divide-y divide-hairline">
       {items.map((item) => {
         const tag = tagByItemId.get(item.id);
         const locked = readOnly?.has(item.id) ?? false;
         return (
-          <li key={item.id} className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-qurtag-3">
-            <Link to={`/app/items/${item.id}`} className="flex gap-qurtag-3 min-w-0">
-              {item.hero_photo_url ? (
-                <img src={item.hero_photo_url} alt="" className="size-16 rounded-card object-cover bg-ink-50 shrink-0" />
-              ) : (
-                <div className="size-16 rounded-card bg-ink-50 grid place-items-center shrink-0">
-                  <Package size={20} strokeWidth={1.5} className="text-muted" aria-hidden />
-                </div>
-              )}
-              <div className="flex-1 min-w-0 flex flex-col gap-1">
-                <h3 className="font-display font-semibold text-h6 text-ink-900 tracking-[-0.014em] truncate">{item.name}</h3>
-                <span
-                  className={cn(
-                    'self-start inline-flex items-center gap-1 text-caption px-2 py-0.5 rounded-pill',
-                    item.lost_mode ? 'bg-signal-50 text-signal-700' : 'bg-ink-50 text-ink-700',
-                  )}
-                >
-                  <span className={cn('size-1.5 rounded-full', item.lost_mode ? 'bg-signal-500' : 'bg-ink-300')} />
-                  {item.lost_mode ? 'Marked lost' : 'Not lost'}
+          <li key={item.id}>
+            <Link
+              to={`/app/items/${item.id}`}
+              className="flex min-h-[4.5rem] items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-ink-50 focus-visible:outline-offset-[-2px] active:bg-ink-50"
+            >
+              <ItemThumb src={item.hero_photo_url} />
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <span className="line-clamp-2 break-words text-base font-semibold leading-snug text-ink-900">{item.name}</span>
+                <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
+                  <LostChip lost={item.lost_mode} />
+                  <span>{locked ? 'Read-only: over your plan' : tag ? 'Tag ready to print' : 'No working tag'}</span>
                 </span>
-                <span className="text-caption text-muted">{tag ? `Tag ${tag.public_id}` : 'No working tag'}</span>
-                {locked && (
-                  <span className="self-start text-caption px-2 py-0.5 rounded-pill bg-ink-50 text-ink-700">Read-only: over your plan's limit</span>
-                )}
               </div>
+              <ChevronRight size={20} strokeWidth={1.75} className="shrink-0 text-ink-300" aria-hidden />
             </Link>
-            <div className="flex flex-wrap gap-2">
-              <Link
-                to={`/app/items/${item.id}`}
-                className="inline-flex h-11 items-center rounded-pill border border-hairline-strong px-4 text-caption font-medium text-ink-900"
-              >
-                {locked ? 'View' : 'Edit'}
-              </Link>
-              {tag && (
-                <Link
-                  to={`/app/tags/${tag.id}/print`}
-                  className="inline-flex h-11 items-center gap-1.5 rounded-pill bg-ink-900 px-4 text-caption font-medium text-canvas"
-                >
-                  <Printer size={14} strokeWidth={1.75} aria-hidden />
-                  Print tag
-                </Link>
-              )}
-            </div>
           </li>
         );
       })}
@@ -114,94 +110,132 @@ export function ItemList({ items, tagByItemId, readOnly }: { items: Item[]; tagB
   );
 }
 
-export function AddItemCard({ count, membership }: { count: number; membership?: Membership | null }) {
+/** The add button beside the title, or nothing once the plan's limit is reached. */
+export function AddItemButton({ membership }: { membership?: Membership | null }) {
   // Until the plan is known, trust the database to refuse (it does, with a plain message).
-  if (membership && !membership.can_add_items) {
-    return (
-      <div className="mt-qurtag-3 flex flex-col gap-2 items-start">
-        <p className="text-caption text-muted text-pretty">
-          {membership.item_limit === 2
-            ? 'QuR Tag is free for up to two items, and you have two. To tag something else, upgrade your plan or delete one first.'
-            : `Your plan covers ${membership.item_limit} items. To tag something else, delete one first.`}
-        </p>
-        <Link
-          to="/app/membership"
-          className="inline-flex h-11 items-center rounded-pill bg-ink-900 px-5 text-caption font-medium text-canvas hover:bg-ink-700 transition-colors duration-qurtag"
-        >
-          See plans
-        </Link>
-      </div>
-    );
-  }
+  if (membership && !membership.can_add_items) return null;
   return (
-    <Link
-      to="/start/setup"
-      className="mt-qurtag-3 inline-flex h-12 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-body font-medium px-6 hover:bg-ink-700 transition-colors duration-qurtag"
-    >
-      <Plus size={16} strokeWidth={1.75} aria-hidden />
-      {count === 0 ? 'Add your first item' : 'Add another item'}
+    <Link to="/start/setup" className={buttonClasses({ variant: 'primary', className: 'px-4' })}>
+      <Plus size={18} strokeWidth={2} aria-hidden />
+      Add item
     </Link>
   );
 }
 
-export function AppHome() {
+/** Under the list when the plan is full: what to do about it. */
+export function AddItemCard({ membership }: { count?: number; membership?: Membership | null }) {
+  if (!membership || membership.can_add_items) return null;
+  return (
+    <div className="mt-3 flex flex-col items-start gap-3 rounded-modal border border-hairline bg-paper p-4">
+      <p className="text-sm text-ink-700 text-pretty">
+        {membership.item_limit === 2
+          ? 'QuR Tag is free for up to two items, and you have two. To tag something else, upgrade your plan or delete one first.'
+          : `Your plan covers ${membership.item_limit} items. To tag something else, delete one first.`}
+      </p>
+      <Link to="/app/membership" className={buttonClasses({ variant: 'secondary' })}>
+        See plans
+      </Link>
+    </div>
+  );
+}
+
+function EmptyItems() {
+  return (
+    <section className="flex flex-col items-center gap-3 rounded-modal border border-hairline bg-paper px-6 py-10 text-center">
+      <div className="grid size-14 place-items-center rounded-modal bg-canvas shadow-card">
+        <TagIcon size={24} strokeWidth={1.75} className="text-ink-900" aria-hidden />
+      </div>
+      <h2 className="text-xl font-semibold text-ink-900">Tag your first thing</h2>
+      <p className="max-w-sm text-base text-muted text-pretty">
+        A water bottle, a violin case, a gym bag, your keys. If someone finds it, they scan the tag and
+        send you a note here.
+      </p>
+      <Link to="/start/setup" className={buttonClasses({ variant: 'primary', size: 'lg', className: 'mt-2' })}>
+        <Plus size={18} strokeWidth={2} aria-hidden />
+        Add your first item
+      </Link>
+    </section>
+  );
+}
+
+function MoreLinks() {
+  return (
+    <ul className="mt-6 overflow-hidden rounded-modal border border-hairline bg-canvas md:hidden">
+      <li>
+        <Link to="/app/tags" className="flex min-h-14 items-center gap-3 px-4 py-3 transition-colors hover:bg-ink-50 focus-visible:outline-offset-[-2px] active:bg-ink-50">
+          <span className="grid size-9 shrink-0 place-items-center rounded-card bg-ink-100">
+            <TagIcon size={18} strokeWidth={1.75} className="text-ink-900" aria-hidden />
+          </span>
+          <span className="flex min-w-0 flex-1 flex-col">
+            <span className="text-base font-medium text-ink-900">Tags</span>
+            <span className="text-sm text-muted">Print again or switch a tag off</span>
+          </span>
+          <ChevronRight size={20} strokeWidth={1.75} className="shrink-0 text-ink-300" aria-hidden />
+        </Link>
+      </li>
+    </ul>
+  );
+}
+
+export function ItemsScreen() {
   const { items, tagByItemId, unread, membership, readOnly, loading, failed } = useOwnerItems();
+  const subtitle =
+    loading || !membership
+      ? '\u00a0'
+      : membership.item_limit === null
+        ? `${items.length} ${items.length === 1 ? 'item' : 'items'}`
+        : `${items.length} of ${membership.item_limit} items`;
 
   return (
-    <div className="px-qurtag-5 md:px-qurtag-8 py-qurtag-8 max-w-5xl">
-      <div className="flex flex-col gap-2 mb-qurtag-5">
-        <Eyebrow>Your things</Eyebrow>
-        <h1 className="font-display font-semibold text-ink-900 text-h3 sm:text-h2 tracking-[-0.028em] leading-[1.04] text-balance">
-          {items.length === 0 ? 'Tag your first thing.' : 'Your tagged things.'}
-        </h1>
-      </div>
-
+    <AppPage
+      title="Items"
+      subtitle={subtitle}
+      action={!loading && items.length > 0 ? <AddItemButton membership={membership} /> : undefined}
+    >
       {!loading && unread > 0 && (
         <Link
           to="/app/inbox"
-          className="mb-qurtag-5 rounded-modal border border-signal-500 bg-signal-50 p-qurtag-5 flex items-center gap-3"
+          className="mb-4 flex min-h-14 items-center gap-3 rounded-modal border border-signal-200 bg-signal-50 px-4 py-3 transition-colors hover:border-signal-300"
         >
-          <InboxIcon size={20} strokeWidth={1.75} className="text-signal-700 shrink-0" aria-hidden />
-          <span className="text-body text-ink-900 font-medium">
-            {unread === 1 ? 'Someone sent you a note. Read it.' : `You have ${unread} new notes. Read them.`}
+          <span className="grid size-9 shrink-0 place-items-center rounded-pill bg-signal-700 text-canvas">
+            <InboxIcon size={18} strokeWidth={2} aria-hidden />
           </span>
+          <span className="flex-1 text-base font-medium text-ink-900">
+            {unread === 1 ? 'Someone sent you a note' : `You have ${unread} new notes`}
+          </span>
+          <ChevronRight size={20} strokeWidth={1.75} className="shrink-0 text-signal-700" aria-hidden />
         </Link>
       )}
 
       {failed && (
-        <p role="alert" className="rounded-card bg-signal-50 px-3 py-2 text-caption text-signal-700">
-          We could not load your things. Refresh the page to try again.
+        <p role="alert" className="mb-4 rounded-card bg-signal-50 px-4 py-3 text-sm text-signal-700">
+          We could not load your things. Pull down or reopen this screen to try again.
         </p>
       )}
 
       {loading ? (
-        <div className="grid sm:grid-cols-2 gap-3">
-          <ItemCardSkeleton />
-          <ItemCardSkeleton />
+        <div className="overflow-hidden rounded-modal border border-hairline bg-canvas divide-y divide-hairline" aria-busy="true" aria-label="Loading your items">
+          <ItemRowSkeleton />
+          <ItemRowSkeleton />
         </div>
-      ) : items.length === 0 ? (
-        <section className="rounded-modal border border-hairline bg-paper p-qurtag-5 sm:p-qurtag-8 flex flex-col gap-2">
-          <h2 className="font-display font-semibold text-h4 text-ink-900 tracking-[-0.018em] text-balance">
-            Name a thing. Print its tag. Stick it on.
-          </h2>
-          <p className="text-body text-muted max-w-md text-pretty">
-            A water bottle, a violin case, a gym bag, a set of keys. If someone finds it, they scan the
-            tag and send you a note here. Free for up to two items.
-          </p>
-          <AddItemCard count={0} membership={membership} />
-        </section>
+      ) : items.length === 0 && !failed ? (
+        <EmptyItems />
       ) : (
         <>
           {readOnly.size > 0 && (
-            <p className="mb-qurtag-3 rounded-card bg-ink-50 px-3 py-2 text-caption text-ink-700 text-pretty">
-              {readOnly.size === 1 ? '1 item is' : `${readOnly.size} items are`} over your plan's limit, so {readOnly.size === 1 ? 'it' : 'they'} can be read but not changed. Nothing was deleted.{' '}
-              <Link to="/app/membership" className="underline underline-offset-4 text-ink-900">See plans</Link>
+            <p className="mb-4 rounded-card bg-ink-100 px-4 py-3 text-sm text-ink-700 text-pretty">
+              {readOnly.size === 1 ? '1 item is' : `${readOnly.size} items are`} over your plan's limit, so{' '}
+              {readOnly.size === 1 ? 'it' : 'they'} can be read but not changed. Nothing was deleted.{' '}
+              <Link to="/app/membership" className="font-medium text-ink-900 underline underline-offset-4">See plans</Link>
             </p>
           )}
           <ItemList items={items} tagByItemId={tagByItemId} readOnly={readOnly} />
-          <AddItemCard count={items.length} membership={membership} />
+          <AddItemCard membership={membership} />
+          <MoreLinks />
         </>
       )}
-    </div>
+    </AppPage>
   );
 }
+
+export const AppHome = ItemsScreen;

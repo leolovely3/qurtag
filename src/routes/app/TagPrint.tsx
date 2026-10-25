@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
-import { ArrowLeft, Printer, Scissors } from 'lucide-react';
-import { Container } from '@/components/ui/Container';
-import { Wordmark } from '@/components/brand/Wordmark';
-import { Eyebrow } from '@/components/brand/Typography';
+import { Printer, Scissors } from 'lucide-react';
+import { AppPage } from '@/components/layout/AppPage';
+import { TagLogo } from '@/components/brand/Wordmark';
+import { buttonClasses } from '@/components/ui/Button';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { useAuth } from '@/lib/auth';
 import { isNative, publicUrl } from '@/lib/platform';
 import { shareTagPdf } from '@/lib/tagPdf';
@@ -67,127 +68,110 @@ export function TagPrint() {
     }
   }
 
+  const back = { to: tag?.current_item_id ? `/app/items/${tag.current_item_id}` : '/app', label: tag?.current_item_id ? 'Item' : 'Items' };
+
   if (loading || fetching) {
     return (
-      <Container size="md">
-        <div className="min-h-[60vh] flex items-center justify-center">
-          <div className="size-7 rounded-full border-2 border-ink-100 border-t-ink-900 animate-spin" />
-        </div>
-      </Container>
+      <AppPage title="Tag" back={{ to: '/app', label: 'Items' }} width="normal">
+        <Skeleton className="mx-auto h-[26rem] w-full max-w-2xl rounded-modal" />
+      </AppPage>
     );
   }
 
   if (!tag) {
     return (
-      <Container size="md">
-        <div className="min-h-[60vh] flex flex-col items-start gap-3 py-qurtag-12">
-          <Eyebrow>Tag not found</Eyebrow>
-          <h1 className="font-display font-semibold text-h3 text-ink-900 tracking-[-0.022em]">
-            That tag isn't in your account, or it is switched off.
-          </h1>
-          <Link to="/app" className="link-arrow text-body">
-            Back to your items →
+      <AppPage title="Tag" back={{ to: '/app', label: 'Items' }} width="normal">
+        <section className="flex flex-col items-center gap-3 rounded-modal border border-hairline bg-paper px-6 py-10 text-center">
+          <h2 className="text-xl font-semibold text-ink-900">Tag not found</h2>
+          <p className="max-w-sm text-base text-muted">That tag isn't in your account, or it is switched off.</p>
+          <Link to="/app" className={buttonClasses({ variant: 'secondary', className: 'mt-2' })}>
+            Back to Items
           </Link>
-        </div>
-      </Container>
+        </section>
+      </AppPage>
     );
   }
 
+  const printButton = (
+    <button
+      type="button"
+      disabled={preparing}
+      onClick={() => (isNative() ? void printInApp() : window.print())}
+      className={buttonClasses({ variant: 'primary', className: 'px-4' })}
+    >
+      <Printer size={16} strokeWidth={1.75} aria-hidden />
+      {preparing ? 'Preparing…' : 'Print'}
+    </button>
+  );
+
   return (
-    <Container size="md">
-      {/* Toolbar. Hidden in print */}
-      <div className="no-print py-qurtag-3 flex items-center justify-between gap-3 border-b border-hairline">
-        <Link
-          to="/app"
-          className="inline-flex items-center gap-2 text-caption text-muted hover:text-ink-900 transition-colors"
-        >
-          <ArrowLeft size={14} strokeWidth={1.75} />
-          Your items
-        </Link>
-        <div className="flex items-center gap-3">
-          <span className="text-caption text-muted hidden sm:inline">
-            {isNative() ? 'Opens the share sheet: Print, Save to Files or AirDrop.' : 'Press print, then "Save as PDF" to keep a copy.'}
-          </span>
-          <button
-            type="button"
-            disabled={preparing}
-            onClick={() => (isNative() ? void printInApp() : window.print())}
-            className="inline-flex h-10 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-4 hover:bg-ink-700 transition-colors duration-qurtag disabled:opacity-60"
-          >
-            <Printer size={14} strokeWidth={1.75} />
-            {preparing ? 'Preparing...' : 'Print tag'}
-          </button>
-        </div>
-      </div>
+    <AppPage title="Tag" back={back} action={printButton} width="normal">
+      <style>{`
+        @media print {
+          body { background: white !important; }
+          @page { size: Letter; margin: 0.5in; }
+        }
+      `}</style>
 
       {shareError && (
-        <p role="alert" className="no-print pt-qurtag-2 text-caption text-signal-700">
+        <p role="alert" className="no-print mb-4 rounded-card bg-signal-50 px-4 py-3 text-sm text-signal-700">
           {shareError}
         </p>
       )}
 
-      {/* The printable area */}
-      <div className="py-qurtag-8 flex justify-center">
-        <article className="w-full max-w-2xl bg-canvas border border-hairline rounded-modal p-qurtag-8 print:border-0 print:rounded-none print:shadow-none shadow-card">
-          <div className="flex items-start justify-between mb-qurtag-5">
-            <Wordmark />
-            {/* Tag codes are case-sensitive, so this is never shown in capitals. */}
-            <span className="text-caption text-muted font-mono">
-              Tag {tag.public_id}
-            </span>
+      {/* The printable tag */}
+      <div className="flex justify-center print:block">
+        <article className="w-full max-w-2xl rounded-modal border border-hairline bg-white p-6 text-[#0A0B0F] shadow-card sm:p-8 print:rounded-none print:border-0 print:p-0 print:shadow-none">
+          <div className="mb-6">
+            <TagLogo />
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-qurtag-5 items-center">
+          <div className="grid items-center gap-6 sm:grid-cols-2 sm:gap-8">
             <div className="flex flex-col gap-3">
-              <Eyebrow>If found</Eyebrow>
-              <h2 className="font-display font-semibold text-h2 sm:text-h1 text-ink-900 tracking-[-0.028em] leading-[0.98] text-balance">
-                Please scan.
+              <h2 className="text-[1.75rem] font-semibold leading-tight tracking-[-0.02em] text-[#0A0B0F]">
+                If found, please scan.
               </h2>
-              <p className="text-body text-ink-700 max-w-sm text-pretty">
-                Scan with your phone camera to send the owner a note. No app needed. Neither of
-                you sees the other's phone number or email.
+              <p className="max-w-sm text-base text-[#34363D] text-pretty">
+                Point your phone camera at the code to send the owner a note. No app needed, and
+                neither of you sees the other's phone number or email.
               </p>
               {item && (
-                <p className="text-caption text-muted mt-2">
-                  Linked to: <span className="text-ink-900 font-medium">{item.name}</span>
+                <p className="mt-1 text-sm text-[#52545B]">
+                  On: <span className="font-medium text-[#0A0B0F]">{item.name}</span>
                 </p>
               )}
             </div>
             <div className="flex flex-col items-center gap-3">
               {/* White in every theme: a QR code needs a light quiet zone around it to scan. */}
-              <div className="rounded-modal bg-white border border-hairline-strong p-4">
-                <QRCodeSVG
-                  value={finderUrl}
-                  size={208}
-                  level="H"
-                  marginSize={0}
-                  bgColor="#FFFFFF"
-                  fgColor="#0A0B0F"
-                />
+              <div className="rounded-modal border border-black/15 bg-white p-4">
+                <QRCodeSVG value={finderUrl} size={200} level="H" marginSize={0} bgColor="#FFFFFF" fgColor="#0A0B0F" />
               </div>
-              <span className="text-caption text-muted text-center font-mono break-all">
+              {/* The address carries the tag's code, which is case-sensitive: never shown in capitals. */}
+              <span className="break-all text-center font-mono text-sm text-[#52545B]">
                 {finderUrl.replace(/^https?:\/\//, '')}
               </span>
             </div>
           </div>
 
-          {/* Fold + cut guide */}
-          <div className="mt-qurtag-8 flex items-center gap-3 text-caption text-muted">
-            <Scissors size={14} strokeWidth={1.75} />
+          <div className="mt-6 flex items-center gap-2 border-t border-dashed border-black/20 pt-4 text-sm text-[#52545B]">
+            <Scissors size={16} strokeWidth={1.75} aria-hidden />
             <span>Cut it out. Tape it on, slip it into a tag holder, or stick it inside a lid.</span>
           </div>
         </article>
       </div>
 
-      <div className="no-print pb-qurtag-8 max-w-2xl mx-auto flex flex-col gap-2">
-        <p className="text-caption text-muted">
-          Tip: print on sticker paper or thick paper, and cover it with clear tape so rain and
-          washing do not wear it out. You can print this page again at any time.
+      <div className="no-print mx-auto mt-6 flex max-w-2xl flex-col gap-4">
+        <p className="px-1 text-sm text-muted text-pretty">
+          {isNative()
+            ? 'Print opens the share sheet: print it, save it to Files or AirDrop it to a computer.'
+            : 'Print, or choose "Save as PDF" in the print window to keep a copy.'}{' '}
+          Sticker paper or thick paper lasts longest; clear tape over it keeps rain off. You can print
+          this tag again at any time.
         </p>
-        <Link to="/app" className="link-arrow text-caption text-ink-900">
-          Done. Take me to my items →
+        <Link to="/app" className={buttonClasses({ variant: 'secondary', size: 'lg', block: true, className: 'sm:w-auto sm:self-start' })}>
+          Done
         </Link>
       </div>
-    </Container>
+    </AppPage>
   );
 }

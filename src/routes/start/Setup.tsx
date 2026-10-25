@@ -1,10 +1,11 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Lock } from 'lucide-react';
-import { Container } from '@/components/ui/Container';
+import { Lock } from 'lucide-react';
+import { AppPage } from '@/components/layout/AppPage';
+import { buttonClasses } from '@/components/ui/Button';
+import { isNative } from '@/lib/platform';
 import { Input } from '@/components/ui/Input';
 import { PhotoUploader } from '@/components/ui/PhotoUploader';
-import { Eyebrow } from '@/components/brand/Typography';
 import { useAuth } from '@/lib/auth';
 import { createItemWithPrintableTag, fetchPrimaryHouseholdId } from '@/lib/queries';
 import { Link } from 'react-router-dom';
@@ -45,11 +46,15 @@ export function StartSetup() {
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!householdId) {
-      setError("We couldn't find your account yet. Give it a second and try again.");
+    setSubmitting(true);
+    // The account is looked up when the screen opens; a quick tap can beat it, so look again.
+    const hh = householdId ?? (await fetchPrimaryHouseholdId());
+    if (!hh) {
+      setSubmitting(false);
+      setError("We couldn't find your account. Check your connection and try again.");
       return;
     }
-    setSubmitting(true);
+    if (!householdId) setHouseholdId(hh);
     const result = await createItemWithPrintableTag({
       name: name.trim(),
       brand: brand.trim() || undefined,
@@ -71,95 +76,84 @@ export function StartSetup() {
   }
 
   return (
-    <Container size="md">
-      <div className="min-h-[70vh] py-qurtag-12 grid lg:grid-cols-12 gap-qurtag-12 items-start">
-        <div className="lg:col-span-5 flex flex-col gap-5 lg:sticky lg:top-28">
-          <Eyebrow>Add a thing</Eyebrow>
-          <h1 className="font-display font-semibold text-ink-900 text-h2 sm:text-h1 tracking-[-0.032em] leading-[1.02] text-balance">
-            Tell us what you'd hate to lose.
-          </h1>
-          <p className="text-lede text-muted text-pretty">
-            You get its tag on the next screen. Print it at home, stick or tie it on, and you are
-            done. Free for up to two items.
-          </p>
-          <div className="rounded-card bg-paper border border-hairline p-qurtag-3 flex items-start gap-3 mt-2">
-            <Lock size={16} strokeWidth={1.75} className="mt-0.5 text-ink-900 shrink-0" />
-            <p className="text-caption text-ink-700 text-pretty">
-              Someone who scans the tag sees the item's name, its photo and your note for the
-              finder. Never your name, email, phone number or address.
-            </p>
-          </div>
+    <AppPage title="Add item" back={{ to: '/app', label: 'Items' }} width="narrow">
+      <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
+        <p className="px-1 text-base text-muted text-pretty">
+          Name the thing you would hate to lose. Its tag is ready to print on the next screen.
+        </p>
+
+        <div className="flex flex-col gap-5 rounded-modal border border-hairline bg-canvas p-4 sm:p-6">
+          <Input
+            name="name"
+            label="What is it?"
+            placeholder="Blue water bottle"
+            autoFocus={!isNative()}
+            maxLength={80}
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            hint="The finder sees this. You can change it later."
+          />
+          <PhotoUploader householdId={householdId} value={photoUrl} onChange={setPhotoUrl} />
+          <Input
+            name="rewardText"
+            label="A word for the finder (optional)"
+            placeholder="A small thank-you if you get it back to me"
+            maxLength={140}
+            value={rewardText}
+            onChange={(e) => setRewardText(e.target.value)}
+            hint="The finder sees this too. Do not put your phone number or address here."
+          />
         </div>
 
-        <form onSubmit={onSubmit} className="lg:col-span-7 flex flex-col gap-5">
-          <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-5">
-            <Input
-              name="name"
-              label="What is it?"
-              placeholder="Blue water bottle"
-              autoFocus
-              maxLength={80}
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              hint="The finder sees this. You can change it later."
-            />
-            <Input
-              name="rewardText"
-              label="A word for the finder (optional)"
-              placeholder="A small thank-you if you get it back to me"
-              maxLength={140}
-              value={rewardText}
-              onChange={(e) => setRewardText(e.target.value)}
-              hint="The finder sees this too. Do not put your phone number or address here."
-            />
-            <Input
-              name="brand"
-              label="Description (optional)"
-              placeholder="Blue, with stickers on the side"
-              maxLength={60}
-              value={brand}
-              onChange={(e) => setBrand(e.target.value)}
-              hint="Private to you."
-            />
-            <Input
-              name="notes"
-              label="Private note (optional)"
-              placeholder="A detail only you would know"
-              maxLength={1000}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              hint="Private to you. Never shown to a finder."
-            />
-            <PhotoUploader
-              householdId={householdId}
-              value={photoUrl}
-              onChange={setPhotoUrl}
-            />
-          </div>
+        <div className="flex flex-col gap-5 rounded-modal border border-hairline bg-canvas p-4 sm:p-6">
+          <Input
+            name="brand"
+            label="Description (optional)"
+            placeholder="Blue, with stickers on the side"
+            maxLength={60}
+            value={brand}
+            onChange={(e) => setBrand(e.target.value)}
+            hint="Private to you."
+          />
+          <Input
+            name="notes"
+            label="Private note (optional)"
+            placeholder="A detail only you would know"
+            maxLength={1000}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            hint="Private to you. Never shown to a finder."
+          />
+        </div>
 
-          {error && (
-            <p className="rounded-card bg-signal-50 px-3 py-2 text-caption text-signal-700">
-              {error}
-            </p>
-          )}
+        <div className="flex items-start gap-3 px-1">
+          <Lock size={16} strokeWidth={1.75} className="mt-0.5 shrink-0 text-muted" aria-hidden />
+          <p className="text-sm text-muted text-pretty">
+            Someone who scans the tag sees the item's name, its photo and your word for the finder.
+            Never your name, email, phone number or address.
+          </p>
+        </div>
 
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-caption text-muted max-w-sm">
-              Next: a one-page tag you can print at home.{' '}
-              <Link to="/app" className="underline underline-offset-4">Skip for now</Link>
-            </p>
-            <button
-              type="submit"
-              disabled={submitting || !name.trim()}
-              className="inline-flex h-12 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-body font-medium px-6 hover:bg-ink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-qurtag"
-            >
-              {submitting ? 'Saving…' : 'Make my tag'}
-              <ArrowRight size={16} strokeWidth={1.75} />
-            </button>
-          </div>
-        </form>
-      </div>
-    </Container>
+        {error && (
+          <p role="alert" className="rounded-card bg-signal-50 px-4 py-3 text-sm text-signal-700">
+            {error}
+          </p>
+        )}
+
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end">
+          <Link to="/app" className={buttonClasses({ variant: 'ghost', size: 'lg' })}>
+            Not now
+          </Link>
+          <button
+            type="submit"
+            disabled={submitting || !name.trim()}
+            className={buttonClasses({ variant: 'primary', size: 'lg', className: 'w-full sm:w-auto' })}
+          >
+            {submitting ? 'Saving…' : 'Make my tag'}
+          </button>
+        </div>
+      </form>
+    </AppPage>
   );
 }

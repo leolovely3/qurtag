@@ -1,6 +1,7 @@
-import { forwardRef, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { forwardRef, useId, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { Send } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { buttonClasses } from '@/components/ui/Button';
 
 interface MessageComposerProps {
   placeholder?: string;
@@ -16,6 +17,19 @@ interface MessageComposerProps {
 
 const DEFAULT_MAX = 1200;
 
+/**
+ * The send shortcut is shown only where there is a hardware keyboard and a precise pointer
+ * (a Mac or PC), never on a phone, where it means nothing. Inside the iPhone app it is hidden
+ * even with an iPad keyboard attached, to keep the box simple.
+ */
+function keyboardHint(): string | null {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return null;
+  if (document.documentElement.classList.contains('native-app')) return null;
+  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return null;
+  const mac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+  return mac ? '⌘ Return to send' : 'Ctrl Enter to send';
+}
+
 export const MessageComposer = forwardRef<HTMLTextAreaElement, MessageComposerProps>(
   function MessageComposer(
     { placeholder, onSend, disabled, maxLength = DEFAULT_MAX, tone = 'light', label },
@@ -23,6 +37,8 @@ export const MessageComposer = forwardRef<HTMLTextAreaElement, MessageComposerPr
   ) {
     const [body, setBody] = useState('');
     const [sending, setSending] = useState(false);
+    const [hint] = useState(keyboardHint);
+    const fieldId = useId();
     const trimmed = body.trim();
     const canSend = !!trimmed && !sending && !disabled;
 
@@ -49,18 +65,16 @@ export const MessageComposer = forwardRef<HTMLTextAreaElement, MessageComposerPr
     return (
       <form onSubmit={submit} className="flex flex-col gap-2">
         {label && (
-          <span
-            className={cn(
-              'text-eyebrow uppercase tracking-[0.14em] font-medium',
-              tone === 'dark' ? 'text-ink-200' : 'text-muted',
-            )}
+          <label
+            htmlFor={fieldId}
+            className={cn('px-1 text-sm font-semibold', tone === 'dark' ? 'text-ink-200' : 'text-ink-700')}
           >
             {label}
-          </span>
+          </label>
         )}
         <div
           className={cn(
-            'rounded-modal border flex flex-col gap-2 px-qurtag-3 py-3 transition-colors duration-qurtag',
+            'flex flex-col gap-2 rounded-modal border px-4 pb-3 pt-3 transition-colors duration-150',
             tone === 'dark'
               ? 'bg-ink-900 border-hairline-dark focus-within:border-ink-50/30'
               : 'bg-canvas border-hairline-strong focus-within:border-ink-900',
@@ -68,6 +82,8 @@ export const MessageComposer = forwardRef<HTMLTextAreaElement, MessageComposerPr
         >
           <textarea
             ref={ref}
+            id={fieldId}
+            aria-label={label ? undefined : "Message"}
             value={body}
             onChange={(e) => setBody(e.target.value.slice(0, maxLength))}
             onKeyDown={onKey}
@@ -75,34 +91,30 @@ export const MessageComposer = forwardRef<HTMLTextAreaElement, MessageComposerPr
             rows={3}
             disabled={disabled}
             className={cn(
-              'w-full bg-transparent resize-none border-0 outline-none text-body placeholder:text-muted',
+              'w-full resize-none border-0 bg-transparent text-base outline-none placeholder:text-muted focus-visible:ring-0 focus-visible:ring-offset-0',
               tone === 'dark' ? 'text-ink-50 placeholder:text-ink-400' : 'text-ink-900',
             )}
           />
           <div className="flex items-center justify-between gap-3">
             <span
               className={cn(
-                'text-caption',
+                'min-w-0 truncate text-xs',
                 tone === 'dark' ? 'text-ink-300' : 'text-muted',
-                trimmed.length > maxLength * 0.9 && 'text-signal-600',
+                trimmed.length > maxLength * 0.9 && 'text-signal-700',
               )}
             >
-              {trimmed.length} / {maxLength} · ⌘+Enter
+              {trimmed.length > maxLength * 0.8 ? `${trimmed.length} of ${maxLength}` : hint ?? ''}
             </span>
             <button
               type="submit"
               disabled={!canSend}
-              className={cn(
-                'inline-flex h-10 items-center gap-2 rounded-pill px-5 text-caption font-medium',
-                'transition-colors duration-qurtag ease-qurtag',
-                'disabled:opacity-50 disabled:cursor-not-allowed',
-                tone === 'dark'
-                  ? 'bg-canvas text-ink-900 hover:bg-ink-50'
-                  : 'bg-ink-900 text-canvas hover:bg-ink-700',
-              )}
+              className={buttonClasses({
+                variant: 'primary',
+                className: cn('px-5', tone === 'dark' && 'bg-canvas text-ink-900 hover:bg-ink-50'),
+              })}
             >
+              {!sending && <Send size={16} strokeWidth={1.75} aria-hidden />}
               {sending ? 'Sending…' : 'Send'}
-              {!sending && <Send size={14} strokeWidth={1.75} />}
             </button>
           </div>
         </div>

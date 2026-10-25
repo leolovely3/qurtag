@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Container } from '@/components/ui/Container';
-import { Eyebrow } from '@/components/brand/Typography';
 import { useAuth } from '@/lib/auth';
 import { acceptInvite, previewInvite } from '@/lib/membership';
 
@@ -59,7 +58,7 @@ export function JoinFamily() {
   } else if (done) {
     body = (
       <>
-        <h1 className="font-display font-semibold text-ink-900 text-h3 tracking-[-0.028em] text-balance">You are in the family.</h1>
+        <h1 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900 text-balance sm:text-3xl">You are in the family.</h1>
         <p className="text-lede text-muted text-pretty">You now see the family's items and inbox. Items you add will be shared too.</p>
         <button type="button" className={`${button} bg-ink-900 text-canvas hover:bg-ink-700 self-start`} onClick={() => navigate('/app', { replace: true })}>
           Open QuR Tag
@@ -69,7 +68,7 @@ export function JoinFamily() {
   } else if (!user) {
     body = (
       <>
-        <h1 className="font-display font-semibold text-ink-900 text-h3 tracking-[-0.028em] text-balance">You were invited to share a QuR Tag family.</h1>
+        <h1 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900 text-balance sm:text-3xl">You were invited to share a QuR Tag family.</h1>
         <p className="text-lede text-muted text-pretty">
           Sign in, or make an account, using the email address the invite was sent to. Then you can accept.
         </p>
@@ -88,7 +87,7 @@ export function JoinFamily() {
   } else if (!preview || !preview.valid) {
     body = (
       <>
-        <h1 className="font-display font-semibold text-ink-900 text-h3 tracking-[-0.028em] text-balance">This invite cannot be used.</h1>
+        <h1 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900 text-balance sm:text-3xl">This invite cannot be used.</h1>
         <p className="text-lede text-muted text-pretty">{WORDS[preview?.reason ?? 'invalid']}</p>
         <Link to="/app" className={`${button} bg-ink-900 text-canvas hover:bg-ink-700 self-start`}>
           Open QuR Tag
@@ -98,7 +97,7 @@ export function JoinFamily() {
   } else if (!preview.email_matches) {
     body = (
       <>
-        <h1 className="font-display font-semibold text-ink-900 text-h3 tracking-[-0.028em] text-balance">This invite is for another email address.</h1>
+        <h1 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900 text-balance sm:text-3xl">This invite is for another email address.</h1>
         <p className="text-lede text-muted text-pretty">
           It was sent to {preview.invited_email_hint}. You are signed in as {user.email}. Sign out, then sign in with the address it was sent to.
         </p>
@@ -117,14 +116,14 @@ export function JoinFamily() {
   } else if (!preview.family_active) {
     body = (
       <>
-        <h1 className="font-display font-semibold text-ink-900 text-h3 tracking-[-0.028em] text-balance">This family is not active right now.</h1>
+        <h1 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900 text-balance sm:text-3xl">This family is not active right now.</h1>
         <p className="text-lede text-muted text-pretty">{preview.inviter ?? 'The person who invited you'} needs an active Family plan for you to join. Ask them to check their membership.</p>
       </>
     );
   } else {
     body = (
       <>
-        <h1 className="font-display font-semibold text-ink-900 text-h3 tracking-[-0.028em] text-balance">
+        <h1 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900 text-balance sm:text-3xl">
           {preview.inviter ?? 'Someone'} invited you to share their QuR Tag.
         </h1>
         <p className="text-lede text-muted text-pretty">
@@ -151,7 +150,6 @@ export function JoinFamily() {
   return (
     <Container size="sm">
       <div className="min-h-[60vh] py-qurtag-12 flex flex-col gap-5 justify-center">
-        <Eyebrow>Family invite</Eyebrow>
         {body}
       </div>
     </Container>

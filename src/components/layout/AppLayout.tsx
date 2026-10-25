@@ -1,20 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { usePoll } from '@/lib/realtime';
 import { FEATURES } from '@/lib/features';
-import {
-  Home,
-  Package,
-  Tag,
-  Inbox,
-  Plane,
-  CreditCard,
-  Settings,
-  LogOut,
-  Menu,
-  X,
-  ShieldCheck,
-} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { CircleHelp, CreditCard, Inbox, LogOut, Package, Plane, Settings, ShieldCheck, Tag } from 'lucide-react';
 import { Wordmark } from '@/components/brand/Wordmark';
 import { useAuth } from '@/lib/auth';
 import { useIsSuperAdmin } from '@/lib/admin';
@@ -23,41 +12,89 @@ import { fetchMembership, type Membership } from '@/lib/membership';
 import { PLAN_INFO } from '../../../server/billing/catalog';
 import { cn } from '@/lib/cn';
 
-const nav = [
-  { to: '/app', label: 'Home', icon: Home, end: true, key: 'home' },
-  { to: '/app/inbox', label: 'Inbox', icon: Inbox, end: false, key: 'inbox' },
-  { to: '/app/items', label: 'Items', icon: Package, end: false, key: 'items' },
-  { to: '/app/tags', label: 'Tags', icon: Tag, end: false, key: 'tags' },
-  ...(FEATURES.trips ? [{ to: '/app/trips', label: 'Trips', icon: Plane, end: false, key: 'trips' }] : []),
-  { to: '/app/membership', label: 'Membership', icon: CreditCard, end: false, key: 'membership' },
-  { to: '/app/settings', label: 'Settings', icon: Settings, end: false, key: 'settings' },
+/**
+ * The signed-in app's frame.
+ *
+ * Phone widths (under 768px, which is also the iPhone app) get a bottom tab bar, the standard
+ * iPhone pattern (Apple HIG: Tab bars; Material 3: Navigation bar, 3 to 5 destinations), kept
+ * clear of the home indicator. Wider screens get a left sidebar, as Things 3 and Linear do.
+ * Each screen draws its own title and Back (src/components/layout/AppPage.tsx).
+ *
+ * `tab: true` puts a destination in the phone's tab bar; every destination is in the sidebar.
+ * Tags and Membership are reached from Items and Settings on a phone, so the bar keeps to the
+ * places people go daily. Admin joins the bar only for a super admin.
+ */
+interface NavEntry {
+  to: string;
+  label: string;
+  icon: LucideIcon;
+  key: string;
+  tab: boolean;
+  /** Which paths count as this destination (for the selected state). */
+  match: (path: string) => boolean;
+}
+
+const nav: NavEntry[] = [
+  {
+    to: '/app',
+    label: 'Items',
+    icon: Package,
+    key: 'items',
+    tab: true,
+    match: (p) => p === '/app' || p.startsWith('/app/items') || p === '/start/setup' || /^\/app\/tags\/[^/]+\/print/.test(p),
+  },
+  { to: '/app/inbox', label: 'Inbox', icon: Inbox, key: 'inbox', tab: true, match: (p) => p.startsWith('/app/inbox') },
+  { to: '/app/tags', label: 'Tags', icon: Tag, key: 'tags', tab: false, match: (p) => p === '/app/tags' },
+  ...(FEATURES.trips
+    ? [{ to: '/app/trips', label: 'Trips', icon: Plane, key: 'trips', tab: false, match: (p: string) => p.startsWith('/app/trips') }]
+    : []),
+  { to: '/app/membership', label: 'Membership', icon: CreditCard, key: 'membership', tab: false, match: (p) => p.startsWith('/app/membership') },
+  { to: '/app/settings', label: 'Settings', icon: Settings, key: 'settings', tab: true, match: (p) => p.startsWith('/app/settings') },
 ];
+
+const adminEntry: NavEntry = { to: '/app/admin', label: 'Admin', icon: ShieldCheck, key: 'admin', tab: true, match: (p) => p.startsWith('/app/admin') };
+
+function Badge({ count, className }: { count: number; className?: string }) {
+  if (count <= 0) return null;
+  return (
+    <span
+      className={cn(
+        'inline-flex h-5 min-w-5 items-center justify-center rounded-pill bg-signal-700 px-1.5 text-xs font-semibold leading-none text-canvas',
+        className,
+      )}
+    >
+      <span className="sr-only">, </span>
+      {count > 9 ? '9+' : count}
+      <span className="sr-only"> unread</span>
+    </span>
+  );
+}
 
 export function AppLayout() {
   const { user, loading, signOut } = useAuth();
   const isSuperAdmin = useIsSuperAdmin();
   const navigate = useNavigate();
-  const location = useLocation();
+  const { pathname, search } = useLocation();
   const [unread, setUnread] = useState(0);
   const [householdId, setHouseholdId] = useState<string | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [membership, setMembership] = useState<Membership | null>(null);
+  const entries = isSuperAdmin ? [...nav, adminEntry] : nav;
 
   useEffect(() => {
     // Signed out: sign in, and come back to this page (an invite link, the Membership page).
-    if (!loading && !user) navigate(`/start?next=${encodeURIComponent(location.pathname + location.search)}`, { replace: true });
-  }, [loading, user, navigate, location.pathname, location.search]);
+    if (!loading && !user) navigate(`/start?next=${encodeURIComponent(pathname + search)}`, { replace: true });
+  }, [loading, user, navigate, pathname, search]);
+
+  // The plan, for the line at the foot of the sidebar; read again when the person moves between pages.
+  useEffect(() => {
+    if (!user) return;
+    void fetchMembership().then(setMembership);
+  }, [user, pathname]);
 
   useEffect(() => {
     if (!user) return;
     void fetchPrimaryHouseholdId().then(setHouseholdId);
   }, [user]);
-
-  // The plan, for the card at the foot of the menu; read again when the person moves between pages.
-  useEffect(() => {
-    if (!user) return;
-    void fetchMembership().then(setMembership);
-  }, [user, location.pathname]);
 
   const refreshUnread = useCallback(async () => {
     if (!householdId) return;
@@ -67,22 +104,13 @@ export function AppLayout() {
 
   useEffect(() => {
     void refreshUnread();
-  }, [refreshUnread, location.pathname]);
+  }, [refreshUnread, pathname]);
 
-  // Close drawer on every route change.
+  // Every screen opens at its top, not where the previous screen (or the sign-in form, with
+  // the keyboard up) was scrolled to.
   useEffect(() => {
-    setDrawerOpen(false);
-  }, [location.pathname]);
-
-  // Body scroll lock when the drawer is open.
-  useEffect(() => {
-    if (!drawerOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [drawerOpen]);
+    window.scrollTo(0, 0);
+  }, [pathname]);
 
   // Keep the inbox count fresh while the app is open.
   usePoll(refreshUnread, !!householdId);
@@ -92,137 +120,105 @@ export function AppLayout() {
     navigate('/start', { replace: true });
   }
 
-  const navItems = (
-    <nav className="flex flex-col gap-0.5 px-qurtag-3 py-qurtag-3">
-      {[...nav, ...(isSuperAdmin ? [{ to: '/app/admin', label: 'Admin', icon: ShieldCheck, end: false, key: 'admin' }] : [])].map((item) => (
-        <NavLink
-          key={item.to}
-          to={item.to}
-          end={item.end}
-          className={({ isActive }) =>
-            cn(
-              'flex items-center gap-3 px-3 h-11 rounded-card text-body md:text-caption font-medium',
-              'transition-colors duration-qurtag',
-              isActive
-                ? 'bg-ink-50 text-ink-900'
-                : 'text-muted hover:text-ink-900 hover:bg-ink-50',
-            )
-          }
-        >
-          <item.icon size={16} strokeWidth={1.75} aria-hidden />
-          <span className="flex-1">{item.label}</span>
-          {item.key === 'inbox' && unread > 0 && (
-            <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-pill bg-signal-500 text-canvas text-[10px] font-semibold">
-              {unread > 9 ? '9+' : unread}
-            </span>
-          )}
-        </NavLink>
-      ))}
-    </nav>
-  );
-
-  const railFooter = (
-    <div className="px-qurtag-3 py-qurtag-3 border-t border-hairline flex flex-col gap-2">
-      <div className="rounded-card bg-paper px-3 py-3 flex flex-col gap-1.5">
-        <span className="text-eyebrow uppercase tracking-[0.14em] text-muted">{membership ? PLAN_INFO[membership.items_plan].name : 'Plan'}</span>
-        <p className="text-caption text-ink-700 text-pretty">
-          {membership
-            ? membership.item_limit === null
-              ? 'No limit on items.'
-              : `${membership.items_used} of ${membership.item_limit} items.`
-            : 'QuR Tag is free for up to two items.'}
-        </p>
-        <Link
-          to="/app/membership"
-          className="text-caption font-medium text-ink-900 hover:opacity-70 transition-opacity self-start min-h-11 inline-flex items-center"
-        >
-          {membership && membership.items_plan !== 'free' ? 'Membership →' : 'See plans →'}
-        </Link>
-        <Link
-          to="/help"
-          className="text-caption font-medium text-ink-900 hover:opacity-70 transition-opacity self-start min-h-11 inline-flex items-center"
-        >
-          Help →
-        </Link>
-      </div>
-      <button
-        type="button"
-        onClick={handleSignOut}
-        className="flex items-center gap-3 px-3 h-11 rounded-card text-caption font-medium text-muted hover:text-ink-900 hover:bg-ink-50 transition-colors"
-      >
-        <LogOut size={16} strokeWidth={1.75} />
-        Sign out
-      </button>
-    </div>
-  );
-
   return (
-    <div className="min-h-screen bg-canvas text-ink-900 antialiased">
+    <div className="min-h-screen bg-canvas text-ink-900 antialiased md:flex">
       <a href="#main-content" className="skip-link">Skip to content</a>
-      {/* Mobile top bar */}
-      <header className="md:hidden sticky top-0 z-30 bg-canvas/90 backdrop-blur border-b border-hairline px-qurtag-3 h-14 flex items-center justify-between gap-3">
-        <Link to="/app" className="flex items-center gap-2">
-          <Wordmark />
-        </Link>
-        <button
-          type="button"
-          onClick={() => setDrawerOpen(true)}
-          aria-label="Open menu"
-          className="size-10 grid place-items-center rounded-pill text-ink-900 hover:bg-ink-50 transition-colors duration-qurtag relative"
-        >
-          <Menu size={20} strokeWidth={1.75} />
-          {unread > 0 && (
-            <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-signal-500" />
-          )}
-        </button>
-      </header>
 
-      <div className="flex">
-        {/* Desktop left rail */}
-        <aside className="hidden md:flex w-60 lg:w-64 flex-col border-r border-hairline min-h-screen sticky top-0">
-          <div className="px-qurtag-3 pt-qurtag-5 pb-qurtag-3 border-b border-hairline">
-            <Link to="/" className="flex items-center gap-2 px-2">
-              <Wordmark />
-            </Link>
-          </div>
-          {navItems}
-          <div className="mt-auto">
-            {railFooter}
-          </div>
-        </aside>
-
-        <main id="main-content" className="flex-1 min-w-0">
-          <Outlet />
-        </main>
-      </div>
-
-      {/* Mobile drawer */}
-      {drawerOpen && (
-        <div className="md:hidden fixed inset-0 z-40 flex">
-          <div
-            className="absolute inset-0 bg-ink-950/40 animate-qurtag-fade-up"
-            onClick={() => setDrawerOpen(false)}
-            aria-hidden
-          />
-          <aside className="relative w-72 max-w-[85vw] bg-canvas border-r border-hairline shadow-modal flex flex-col animate-qurtag-fade-up">
-            <div className="flex items-center justify-between px-qurtag-3 h-14 border-b border-hairline">
-              <Link to="/" className="flex items-center gap-2 px-2">
-                <Wordmark />
-              </Link>
-              <button
-                type="button"
-                onClick={() => setDrawerOpen(false)}
-                aria-label="Close menu"
-                className="size-9 grid place-items-center rounded-pill text-muted hover:bg-ink-50 transition-colors duration-qurtag"
-              >
-                <X size={18} strokeWidth={1.75} />
-              </button>
-            </div>
-            {navItems}
-            <div className="mt-auto">{railFooter}</div>
-          </aside>
+      {/* Sidebar, from tablet width */}
+      <aside className="no-print sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-hairline bg-paper md:flex lg:w-64">
+        <div className="flex h-16 items-center px-5">
+          <Link to="/app" className="inline-flex min-h-11 items-center rounded-card px-1">
+            <Wordmark />
+          </Link>
         </div>
-      )}
+        <nav aria-label="App" className="flex flex-col gap-1 px-3 py-2">
+          {entries.map((item) => {
+            const active = item.match(pathname);
+            return (
+              <Link
+                key={item.key}
+                to={item.to}
+                aria-current={active ? 'page' : undefined}
+                className={cn(
+                  'flex h-11 items-center gap-3 rounded-card px-3 text-sm font-medium transition-colors duration-150',
+                  active ? 'bg-ink-100 text-ink-900' : 'text-ink-600 hover:bg-ink-50 hover:text-ink-900',
+                )}
+              >
+                <item.icon size={18} strokeWidth={1.75} aria-hidden />
+                <span className="flex-1">{item.label}</span>
+                {item.key === 'inbox' && <Badge count={unread} />}
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="mt-auto flex flex-col gap-1 border-t border-hairline px-3 py-3">
+          <Link
+            to="/app/membership"
+            className="mb-1 flex flex-col gap-0.5 rounded-card px-3 py-2 transition-colors hover:bg-ink-50"
+          >
+            <span className="text-sm font-semibold text-ink-900">{membership ? `${PLAN_INFO[membership.items_plan].name} plan` : 'Plan'}</span>
+            <span className="text-sm text-muted">
+              {membership
+                ? membership.item_limit === null
+                  ? `${membership.items_used} items, no limit`
+                  : `${membership.items_used} of ${membership.item_limit} items`
+                : 'QuR Tag is free for up to two items.'}
+            </span>
+          </Link>
+          <Link
+            to="/help"
+            className="flex h-11 items-center gap-3 rounded-card px-3 text-sm font-medium text-ink-600 transition-colors hover:bg-ink-50 hover:text-ink-900"
+          >
+            <CircleHelp size={18} strokeWidth={1.75} aria-hidden />
+            Help
+          </Link>
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="flex h-11 items-center gap-3 rounded-card px-3 text-sm font-medium text-ink-600 transition-colors hover:bg-ink-50 hover:text-ink-900"
+          >
+            <LogOut size={18} strokeWidth={1.75} aria-hidden />
+            Sign out
+          </button>
+        </div>
+      </aside>
+
+      <main id="main-content" className="min-w-0 flex-1 pb-24 md:pb-0 print:pb-0">
+        <Outlet />
+      </main>
+
+      {/* Tab bar, on phones */}
+      <nav
+        aria-label="App"
+        className="no-print fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-canvas/90 backdrop-blur-xl supports-[backdrop-filter]:bg-canvas/80 md:hidden"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
+        <ul className="mx-auto flex max-w-md">
+          {entries
+            .filter((item) => item.tab)
+            .map((item) => {
+              const active = item.match(pathname);
+              return (
+                <li key={item.key} className="flex-1">
+                  <Link
+                    to={item.to}
+                    aria-current={active ? 'page' : undefined}
+                    className={cn(
+                      'flex h-14 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors duration-150',
+                      active ? 'text-ink-900' : 'text-muted hover:text-ink-900',
+                    )}
+                  >
+                    <span className="relative">
+                      <item.icon size={24} strokeWidth={active ? 2 : 1.6} aria-hidden />
+                      {item.key === 'inbox' && <Badge count={unread} className="absolute -right-3 -top-1.5" />}
+                    </span>
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            })}
+        </ul>
+      </nav>
     </div>
   );
 }

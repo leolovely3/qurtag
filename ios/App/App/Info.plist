@@ -24,6 +24,10 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>Take a photo of your item, so the person who finds it knows they have the right thing.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Choose a photo of your item, so the person who finds it knows they have the right thing.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>

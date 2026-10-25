@@ -40,3 +40,4 @@ dist-ssr
 .claude/
 
 .vercel
+scripts/brand/preview/

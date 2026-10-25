@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState, type DragEvent } from 'react';
-import { Camera, Upload, X } from 'lucide-react';
+import { Camera, X } from 'lucide-react';
 import { uploadItemPhoto } from '@/lib/queries';
 import { cn } from '@/lib/cn';
 
@@ -12,11 +12,18 @@ interface PhotoUploaderProps {
 
 const ACCEPTED = 'image/jpeg,image/png,image/webp,image/heic,image/heif';
 
+/** A phone or tablet: no mouse, so "drop one here" would mean nothing. */
+function isTouchOnly(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+  return window.matchMedia('(hover: none), (pointer: coarse)').matches;
+}
+
 export function PhotoUploader({ householdId, value, onChange, className }: PhotoUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [touch] = useState(isTouchOnly);
 
   const handleFile = useCallback(
     async (file: File | null) => {
@@ -54,18 +61,18 @@ export function PhotoUploader({ householdId, value, onChange, className }: Photo
 
   return (
     <div className={cn('flex flex-col gap-1.5', className)}>
-      <span className="text-caption font-medium text-ink-900">Photo</span>
+      <span className="text-sm font-medium text-ink-900">Photo (optional)</span>
 
       {value ? (
-        <div className="relative rounded-card overflow-hidden border border-hairline-strong group">
-          <img src={value} alt="" className="w-full aspect-[4/3] object-cover bg-ink-50" />
+        <div className="relative overflow-hidden rounded-modal border border-hairline">
+          <img src={value} alt="The photo finders see" className="aspect-[4/3] w-full bg-ink-50 object-cover" />
           <button
             type="button"
             onClick={() => onChange(null)}
-            className="absolute top-2 right-2 size-8 grid place-items-center rounded-pill bg-ink-900/85 text-canvas hover:bg-ink-900 transition-colors duration-qurtag opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+            className="absolute right-2 top-2 grid size-11 place-items-center rounded-pill bg-black/60 text-white backdrop-blur transition-colors hover:bg-black/75"
             aria-label="Remove photo"
           >
-            <X size={14} strokeWidth={2} />
+            <X size={18} strokeWidth={2} aria-hidden />
           </button>
         </div>
       ) : (
@@ -78,28 +85,26 @@ export function PhotoUploader({ householdId, value, onChange, className }: Photo
           onDragLeave={() => setDragOver(false)}
           onDrop={onDrop}
           className={cn(
-            'flex flex-col items-center justify-center gap-2 aspect-[4/3] rounded-card border border-dashed cursor-pointer',
-            'transition-colors duration-qurtag ease-qurtag',
+            'flex min-h-48 cursor-pointer flex-col items-center justify-center gap-2 rounded-modal border border-dashed px-6 py-8 text-center',
+            'transition-colors duration-150 ease-out focus-within:ring-2 focus-within:ring-ink-900/40',
             dragOver
               ? 'border-ink-900 bg-ink-50'
               : 'border-hairline-strong bg-paper hover:bg-ink-50 hover:border-ink-900/40',
             uploading && 'opacity-60 cursor-progress',
           )}
         >
-          <div className="size-10 rounded-pill bg-canvas grid place-items-center shadow-card">
+          <div className="grid size-12 place-items-center rounded-pill bg-canvas shadow-card">
             {uploading ? (
-              <div className="size-4 rounded-full border-2 border-ink-100 border-t-ink-900 animate-spin" />
+              <div className="size-5 animate-spin rounded-full border-2 border-ink-100 border-t-ink-900" />
             ) : (
-              <Camera size={18} strokeWidth={1.75} className="text-ink-900" />
+              <Camera size={22} strokeWidth={1.75} className="text-ink-900" aria-hidden />
             )}
           </div>
-          <span className="text-body font-medium text-ink-900">
-            {uploading ? 'Preparing…' : 'Add a photo (optional)'}
+          <span className="text-base font-medium text-ink-900">
+            {uploading ? 'Preparing…' : touch ? 'Take or choose a photo' : 'Choose a photo'}
           </span>
-          <span className="text-caption text-muted">Tap to choose a photo, or drop one here.</span>
-          <span className="text-caption text-muted inline-flex items-center gap-1.5">
-            <Upload size={12} strokeWidth={1.75} />
-            The finder sees this photo
+          <span className="max-w-xs text-sm text-muted text-pretty">
+            {touch ? 'A clear photo helps the finder know they have the right thing.' : 'Or drop one here. A clear photo helps the finder know they have the right thing.'}
           </span>
         </label>
       )}
@@ -113,7 +118,8 @@ export function PhotoUploader({ householdId, value, onChange, className }: Photo
         onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
       />
 
-      {error && <span className="text-caption text-signal-600">{error}</span>}
+      {!value && <span className="text-sm text-muted">The finder sees this photo.</span>}
+      {error && <span role="alert" className="text-sm text-signal-700">{error}</span>}
     </div>
   );
 }
