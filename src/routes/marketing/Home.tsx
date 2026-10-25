@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Camera, Lock, MessageCircle, Printer } from 'lucide-react';
+import { Camera, Lock, MessageCircle, Printer, Smartphone } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
 import { useTheme } from '@/lib/theme';
 import { Lede } from '@/components/brand/Typography';
@@ -62,6 +62,12 @@ export function MarketingHome() {
                 <PrimaryLink to="/start">Make a free tag</PrimaryLink>
                 <SecondaryLink to="/how-it-works">How it works</SecondaryLink>
               </div>
+              {/* Apple's "Download on the App Store" badge may only link to a live listing, so
+                  until the app is approved this is plain text; swap in the badge on launch day. */}
+              <p className="inline-flex items-center gap-2 rounded-pill border border-hairline bg-paper px-3 py-1.5 text-caption font-medium text-ink-700">
+                <Smartphone size={16} strokeWidth={1.75} aria-hidden />
+                The QuR Tag iPhone app is coming soon to the App Store.
+              </p>
               <p className="text-caption text-muted text-pretty max-w-md">
                 QuR Tag is not a tracker. It does not find anything by itself. It works when someone
                 kind finds your thing.
