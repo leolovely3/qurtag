@@ -87,14 +87,14 @@ export async function drawTagCanvas(tag: TagSheet): Promise<HTMLCanvasElement> {
   ctx.textAlign = 'left';
 
   const textX = margin + pad;
-  const textW = 2.7 * DPI;
+  const textW = 2.8 * DPI;
   let y = top + pad + 0.95 * DPI;
   ctx.fillStyle = MUTED;
   ctx.font = `600 ${0.13 * DPI}px ${FONT}`;
   ctx.fillText('IF FOUND', textX, y);
-  y += 0.62 * DPI;
+  y += 0.55 * DPI;
   ctx.fillStyle = INK;
-  ctx.font = `700 ${0.55 * DPI}px ${FONT}`;
+  ctx.font = `700 ${0.42 * DPI}px ${FONT}`;
   ctx.fillText('Please scan.', textX, y);
   y += 0.45 * DPI;
   ctx.fillStyle = '#1E2026';
@@ -117,7 +117,7 @@ export async function drawTagCanvas(tag: TagSheet): Promise<HTMLCanvasElement> {
   }
 
   // The QR code is drawn from vector markup, so it is sharp at any print size.
-  const qrSize = 2.4 * DPI;
+  const qrSize = 2.3 * DPI;
   const qrX = margin + cardW - pad - qrSize;
   const qrY = top + pad + 0.7 * DPI;
   const svg = renderToStaticMarkup(
