@@ -11,6 +11,16 @@
  * every look the QR code sits on plain white with its full quiet zone, in black, so the contrast
  * a phone needs never depends on the look.
  *
+ * Every style carries the QuR Tag frame, a thin orange line round the edge, so a tag is known at a
+ * glance. On white (Clean) it is a plain orange line. On the black plate (Bold) the orange line
+ * sits inside the black edge, which is high contrast. On the yellow plate (Playful) orange alone
+ * would nearly vanish, so the line has a thin black keyline on either side.
+ *
+ * "Scan me" lines. The small sticker, the key fob front and the clothing strip are the pieces
+ * a stranger sees from an arm's length, so they carry a heavy capital line (LOST? SCAN ME, or
+ * IF FOUND, / SCAN ME) as large as the width allows. The lines are set in Helvetica-Bold, a
+ * base font every PDF viewer and printer has, so the weight survives into the PDF.
+ *
  * The outer plate (black or yellow) runs out into the bleed, so a trim that drifts a hair shows
  * no white edge. On a sheet or in a preview the plate has rounded corners that show where to cut.
  * In a print-ready file the corners are square, because the sticker printer's cutter makes the shape.
@@ -96,9 +106,8 @@ interface Inner {
   r: number;
 }
 
-const RING = { clean: 0.03, bold: 0.055, playful: 0.055 } as const;
+const RING = { clean: 0.046, bold: 0.055, playful: 0.055 } as const;
 const RADIUS = { clean: 0.05, bold: 0.04, playful: 0.09 } as const;
-const GRAY_LINE = '#C9CBD1';
 
 /** The text block's colours in each look. */
 function blockColors(look: LookId): { fill: string | null; fg: string; sub: string } {
@@ -107,23 +116,28 @@ function blockColors(look: LookId): { fill: string | null; fg: string; sub: stri
   return { fill: null, fg: INK, sub: '#34363D' };
 }
 
-/** The plate, the inner white panel and the outline for a look. */
+/**
+ * The plate, the inner white panel and the orange QuR Tag frame for a look. `ring` is the width of
+ * the plate in Bold and Playful; Clean uses its own, wider-than-the-line margin. The inner panel
+ * `p` is clear of the frame, so nothing drawn inside it can touch the line.
+ */
 function frame(c: Ctx, ring: number): { items: Item[]; p: Inner } {
   const rScale = Math.min(c.w, c.h);
   const rOuter = Math.min(0.28, RADIUS[c.look] * rScale);
-  const ringW = c.look === 'clean' ? RING.clean : ring;
+  const clean = c.look === 'clean';
+  const ringW = clean ? RING.clean : ring;
   const p: Inner = { x: ringW, y: ringW, w: c.w - 2 * ringW, h: c.h - 2 * ringW, r: Math.max(0, rOuter - ringW * 0.6) };
   const items: Item[] = [];
   const plate = c.look === 'bold' ? INK : c.look === 'playful' ? YELLOW : WHITE;
   const b = c.bleed;
   const corners: [number, number, number, number] = c.square ? [0, 0, 0, 0] : [rOuter, rOuter, rOuter, rOuter];
-  if (c.look === 'clean') {
-    items.push(rectItem(-b.l, -b.t, c.w + b.l + b.r, c.h + b.t + b.b, { fill: WHITE }));
-    items.push(rectItem(p.x, p.y, p.w, p.h, { stroke: GRAY_LINE, sw: 0.012 }, p.r));
-  } else {
-    items.push(rectItem(-b.l, -b.t, c.w + b.l + b.r, c.h + b.t + b.b, { fill: plate }, corners));
-    items.push(rectItem(p.x, p.y, p.w, p.h, { fill: WHITE, ...(c.look === 'playful' ? { stroke: INK, sw: 0.014 } : {}) }, p.r));
-  }
+  items.push(rectItem(-b.l, -b.t, c.w + b.l + b.r, c.h + b.t + b.b, { fill: plate }, corners));
+  if (!clean) items.push(rectItem(p.x, p.y, p.w, p.h, { fill: WHITE }, p.r));
+  const inset = clean ? 0.027 : ringW * 0.5;
+  const sw = clean ? 0.02 : ringW * 0.32;
+  const line = (stroke: string, w: number) => rectItem(inset, inset, c.w - 2 * inset, c.h - 2 * inset, { stroke, sw: w }, Math.max(0, rOuter - inset));
+  if (c.look === 'playful') items.push(line(INK, sw + 0.01));
+  items.push(line(ORANGE, sw));
   return { items, p };
 }
 
@@ -155,33 +169,42 @@ function nameLines(c: Ctx, maxW: number, pt: number, maxLines: number): string[]
 
 // ---------------------------------------------------------------- the styles
 
+/** The small sticker: a heavy one line request on top, the QR code below it, the short address beside it. */
 function sticker(c: Ctx): Item[] {
-  const { items, p } = frame(c, 0.04);
-  const ring = c.look === 'clean' ? RING.clean : 0.04;
+  const { items, p } = frame(c, 0.05);
+  const colors = blockColors(c.look);
   const q = c.qrIn;
-  const x = ring + c.quiet + (c.look === 'playful' ? 0.012 : 0.005);
-  const y = x;
+  const zone = q + 2 * c.quiet;
+  const bandH = 0.22;
+  if (colors.fill) items.push(rectItem(p.x, p.y, p.w, bandH, { fill: colors.fill }, [p.r, p.r, 0, 0]));
+  const pt = fitSize(STICKER_LINE, p.w - 0.12, 14, true);
+  items.push(textItem(c.w / 2, p.y + bandH / 2 + cap(pt) / 2, STICKER_LINE, pt, colors.fg, { bold: true, anchor: 'middle' }));
+  // The quiet zone is white and sits just below the band, with the leftover height shared above and below.
+  const slack = p.h - bandH - zone;
+  const zy = p.y + bandH + slack / 2;
+  const x = p.x + 0.012 + c.quiet;
+  const y = zy + c.quiet;
   items.push(...qrItems(c.qr, x, y, q, c.quiet));
-  const zoneBottom = c.h - ring;
-  const line = c.look === 'playful' ? "I'm lost. Scan me!" : 'If found, scan';
-  const pt = fitSize(line, c.w - 2 * ring - 0.08, 5.4, true);
-  items.push(textItem(c.w / 2, zoneBottom - 0.017, line, pt, INK, { bold: true, anchor: 'middle' }));
   if (c.addr) {
     const stripLeft = x + q + c.quiet;
-    const cx = (stripLeft + c.w - ring) / 2;
-    const apt = fitSize(c.addr, q, 4.8, true);
+    const cx = (stripLeft + p.x + p.w) / 2;
+    const apt = fitSize(c.addr, q, 6.5, true);
     items.push(textItem(cx + cap(apt) / 2, y + q / 2, c.addr, apt, INK, { bold: true, anchor: 'middle', rot: -90 }));
   }
-  void p;
   return items;
 }
 
-/** A label with the QR on the left and a text block on the right (label strip, clothing strip). */
-function stripLike(c: Ctx, text: { headline: string; playful: string; sub: string }): Item[] {
-  const ring = c.look === 'clean' ? RING.clean : 0.05;
+/** The sticker's request, in capitals. The same words in every look, so the longest line sets the size. */
+export const STICKER_LINE = 'LOST? SCAN ME';
+
+/**
+ * A label with the QR on the left and a text block on the right (label strip, clothing strip).
+ * With `stacked`, the headline is two heavy capital lines as large as the block allows.
+ */
+function stripLike(c: Ctx, text: { headline: string; playful: string; sub: string; stacked?: readonly [string, string]; stackedPlayful?: readonly [string, string] }): Item[] {
   const { items, p } = frame(c, 0.05);
   const q = c.qrIn;
-  const x = ring + c.quiet + 0.01;
+  const x = p.x + c.quiet + 0.01;
   const y = (c.h - q) / 2;
   const bx = x + q + c.quiet;
   const colors = blockColors(c.look);
@@ -190,17 +213,26 @@ function stripLike(c: Ctx, text: { headline: string; playful: string; sub: strin
   const pad = 0.12;
   const tx = bx + pad;
   const colW = p.x + p.w - bx - pad - 0.08;
-  const head = c.look === 'playful' ? text.playful : text.headline;
-  items.push(textItem(tx, p.y + 0.3, head, fitSize(head, colW, 11.5, true), colors.fg, { bold: true }));
-  wrapText(text.sub, colW, 6, false).slice(0, 2).forEach((ln, i) => items.push(textItem(tx, p.y + 0.46 + i * 0.1, ln, 6, colors.sub)));
   const mark = 0.2;
+  const stack = c.look === 'playful' ? text.stackedPlayful : text.stacked;
+  let subY = p.y + 0.46;
+  if (stack) {
+    const pt = Math.min(15, ...stack.map((l) => fitSize(l, colW, 15, true)));
+    stack.forEach((l, i) => items.push(textItem(tx, p.y + 0.12 + cap(pt) + i * (cap(pt) + 0.07), l, pt, colors.fg, { bold: true })));
+    subY = p.y + 0.12 + 2 * cap(pt) + 0.07 + 0.14;
+  } else {
+    const head = c.look === 'playful' ? text.playful : text.headline;
+    items.push(textItem(tx, p.y + 0.3, head, fitSize(head, colW, 11.5, true), colors.fg, { bold: true }));
+  }
+  wrapText(text.sub, colW, 6, false)
+    .slice(0, 2)
+    .forEach((ln, i) => items.push(textItem(tx, subY + i * 0.1, ln, 6, colors.sub)));
   items.push(...markItems(p.x + p.w - 0.08 - mark, p.y + p.h - 0.06 - mark, mark, c.look === 'bold' ? WHITE : undefined));
   items.push(...addressText(c, tx, p.y + p.h - 0.1, colW - mark - 0.04, 9, colors.fg));
   return items;
 }
 
 function wallet(c: Ctx): Item[] {
-  const ring = c.look === 'clean' ? RING.clean : 0.06;
   const { items, p } = frame(c, 0.06);
   const q = c.qrIn;
   const colW = q + 2 * c.quiet + 0.02;
@@ -230,20 +262,21 @@ function wallet(c: Ctx): Item[] {
   const qy = (c.h - q) / 2 - 0.1;
   items.push(...qrItems(c.qr, cx - q / 2, qy, q, c.quiet));
   items.push(...addressText(c, cx, qy + q + c.quiet + 0.13, colW - 0.1, 8.5, INK, 'middle'));
-  void ring;
   return items;
 }
 
 function fobFront(c: Ctx): Item[] {
-  const { items } = frame(c, 0.035);
-  const ring = c.look === 'clean' ? RING.clean : 0.035;
+  const { items, p } = frame(c, 0.045);
+  const colors = blockColors(c.look);
   const q = c.qrIn;
-  const line = c.look === 'playful' ? "I'm lost. Scan me!" : 'If found, scan';
-  items.push(textItem(c.w / 2, ring + 0.1, line, fitSize(line, c.w - 0.14, 5.6, true), INK, { bold: true, anchor: 'middle' }));
-  const y = ring + 0.1 + 0.05 + c.quiet;
+  const lines = c.look === 'playful' ? ["I'M LOST!", 'SCAN ME'] : ['IF FOUND,', 'SCAN ME'];
+  const pt = Math.min(10, ...lines.map((l) => fitSize(l, p.w - 0.1, 10, true)));
+  const bandH = 0.04 + 2 * cap(pt) + 0.06 + 0.04;
+  if (colors.fill) items.push(rectItem(p.x, p.y, p.w, bandH, { fill: colors.fill }, [p.r, p.r, 0, 0]));
+  lines.forEach((l, i) => items.push(textItem(c.w / 2, p.y + 0.04 + cap(pt) + i * (cap(pt) + 0.06), l, pt, colors.fg, { bold: true, anchor: 'middle' })));
+  const y = p.y + bandH + c.quiet;
   items.push(...qrItems(c.qr, (c.w - q) / 2, y, q, c.quiet));
-  items.push(...addressText(c, c.w / 2, y + q + c.quiet + 0.1, c.w - 0.14, 5, INK, 'middle'));
-  items.push(...markItems(c.w / 2 - 0.065, c.h - ring - 0.17, 0.13, undefined));
+  items.push(...addressText(c, c.w / 2, y + q + c.quiet + 0.095, c.w - 0.14, 5.4, INK, 'middle'));
   return items;
 }
 
@@ -321,7 +354,14 @@ function bagBack(c: Ctx): Item[] {
 const BUILDERS: Record<'sticker' | 'strip' | 'clothing' | 'wallet', (c: Ctx) => Item[]> = {
   sticker,
   strip: (c) => stripLike(c, { headline: 'If found, scan me', playful: "I'm lost! Scan me", sub: 'Send the owner a note. No app needed.' }),
-  clothing: (c) => stripLike(c, { headline: 'If found, scan', playful: "I'm lost! Scan me", sub: 'Send the owner a note. No app needed.' }),
+  clothing: (c) =>
+    stripLike(c, {
+      headline: 'If found, scan',
+      playful: "I'm lost! Scan me",
+      stacked: ['IF FOUND,', 'SCAN ME'],
+      stackedPlayful: ["I'M LOST!", 'SCAN ME'],
+      sub: 'No app needed.',
+    }),
   wallet,
 };
 

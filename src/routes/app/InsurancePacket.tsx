@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { shortAddress } from '@/lib/tagLayout';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Printer, FileText, Lock } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
@@ -221,7 +222,7 @@ export function InsurancePacket() {
         {tag && (
           <Section title="QuR Tag tag">
             <Grid>
-              <Field label="Tag public id" value={<span className="font-mono">{tag.public_id}</span>} />
+              <Field label="Tag address" value={<span className="font-mono">{tag.short_code ? shortAddress(tag.short_code) : tag.public_id}</span>} />
               <Field label="Tier" value={tag.hardware_tier} />
               <Field label="Status" value={tag.status} />
               <Field label="Activated" value={formatDateTime(tag.activated_at)} />

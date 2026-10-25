@@ -8,11 +8,11 @@ import { PrimaryLink, SecondaryLink, CtaBand } from './parts';
 const audiences = [
   {
     title: 'Students and parents',
-    body: 'Water bottles, instruments and instrument cases, school uniforms and sports kit, school bags and lunch boxes. A parent sets up the tags, so the note comes to you.',
+    body: 'Water bottles, instruments and instrument cases, school uniforms and sports gear, school bags and lunch boxes. A parent sets up the tags, so the note comes to you.',
   },
   {
     title: 'Ages 18 to 30',
-    body: 'Festival gear, gym bags and gym kit, and everyday things you carry to work: umbrellas, headphone cases, bike helmets and laptop sleeves.',
+    body: 'Festival gear, gym bags and gym clothes, and everyday things you carry to work: umbrellas, headphone cases, bike helmets and laptop sleeves.',
   },
   {
     title: 'Keys, glasses and bags',

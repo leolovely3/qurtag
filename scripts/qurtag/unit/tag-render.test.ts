@@ -78,8 +78,8 @@ test('a PDF has the right page size, one page, valid offsets and the short code'
 
 test('the print-ready PDF carries a trim box inside its bleed box', () => {
   const text = Buffer.from(pageToPdf(buildPrintReady('sticker', 'clean', data))).toString('latin1');
-  assert.ok(text.includes('/TrimBox [9 9 81 81]'), text.match(/\/TrimBox[^\]]*\]/)?.[0]);
-  assert.ok(text.includes('/BleedBox [0 0 90 90]'));
+  assert.ok(text.includes('/TrimBox [9 9 99 99]'), text.match(/\/TrimBox[^\]]*\]/)?.[0]);
+  assert.ok(text.includes('/BleedBox [0 0 108 108]'));
 });
 
 test('copies on a page match the grid', () => {
@@ -174,4 +174,37 @@ test('a long item name wraps or is cut, and no text overlaps other text or leave
       }
     }
   }
+});
+
+const walkItems = (items: ReturnType<typeof buildPiece>['items']): ReturnType<typeof buildPiece>['items'] =>
+  items.flatMap((i) => (i.t === 'group' ? walkItems(i.items) : [i]));
+
+test('the sticker, fob front and clothing strip carry a heavy scan-me line, large enough to read from a metre', () => {
+  const want: Record<string, string[]> = { sticker: ['LOST? SCAN ME'], fob: ['SCAN ME'], clothing: ['SCAN ME'] };
+  for (const id of Object.keys(want)) {
+    for (const l of LOOKS) {
+      const texts = walkItems(buildPiece(id as 'sticker', l.id, data).items).filter((i) => i.t === 'text');
+      for (const w of want[id]) {
+        const t = texts.find((i) => i.t === 'text' && i.text.endsWith(w));
+        assert.ok(t && t.t === 'text' && t.bold, `${id} ${l.id} has a bold "${w}"`);
+        // Capital height of at least 2.2 mm (a 9 pt line, 0.72 cap height).
+        assert.ok(t.t === 'text' && ((0.72 * t.pt) / 72) * 25.4 >= 2.2 - 1e-6, `${id} ${l.id} lettering size ${t.t === 'text' ? t.pt : 0} pt`);
+      }
+    }
+  }
+});
+
+test('every style in every look carries the orange QuR Tag frame', () => {
+  for (const s of STYLES) {
+    for (const l of LOOKS) {
+      const frames = walkItems(buildPiece(s.id, l.id, data).items).filter((i) => i.t === 'path' && i.stroke === '#FF5C2E');
+      assert.ok(frames.length >= 1, `${s.id} ${l.id}`);
+    }
+  }
+});
+
+test('the PDF uses the real bold face for heavy lines', () => {
+  const text = Buffer.from(pageToPdf(buildSheet('sticker', 'bold', data, { paper: 'letter' }))).toString('latin1');
+  assert.ok(text.includes('/BaseFont /Helvetica-Bold'));
+  assert.ok(/\/F2 [\d.]+ Tf[^\n]*\(LOST\? SCAN ME\) Tj/.test(text), 'the line is set in the bold font');
 });

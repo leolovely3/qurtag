@@ -28,6 +28,7 @@ import { issueGoogleWalletPass, startStripeCheckout } from '@/lib/stripe';
 import { useToast } from '@/components/ui/Toast';
 import type { Item, Reward, Scan, Tag } from '@/lib/database.types';
 import { cn } from '@/lib/cn';
+import { shortAddress } from '@/lib/tagLayout';
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
@@ -356,7 +357,7 @@ export function ItemDetail() {
               </span>
               <div className="flex min-w-0 flex-col">
                 <span className="text-base font-semibold text-ink-900">
-                  {tag ? <>Tag <span className="font-mono text-[0.9375rem]">{tag.public_id}</span></> : 'No working tag'}
+                  {tag ? tag.short_code ? <>Tag <span className="font-mono text-[0.9375rem]">{shortAddress(tag.short_code)}</span></> : 'Your tag' : 'No working tag'}
                 </span>
                 <span className="text-sm text-muted">
                   {tag ? `Made ${relativeTime(tag.activated_at)}` : 'Make a new tag to print.'}

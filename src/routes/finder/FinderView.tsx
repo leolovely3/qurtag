@@ -180,7 +180,7 @@ export function FinderView() {
           )}
         >
           <span className={cn('size-1.5 rounded-full', item.lost ? 'bg-signal-500' : 'bg-ink-300')} />
-          {item.lost ? 'The owner is looking for this' : `Tag ${tagId}`}
+          {item.lost ? 'The owner is looking for this' : 'QuR Tag'}
         </span>
       </div>
 
