@@ -2,8 +2,9 @@
  * QuR Tag's scheduled work. Each answers only the scheduler (Vercel Cron sends
  * Authorization: Bearer <CRON_SECRET>) or the finder route's nudge, which sends the same.
  *
- *   /api/jobs/outbox   send what the database queued (server/routes/outbox.ts). Asked
- *                      by the finder route after each note.
+ *   /api/jobs/outbox   send what the database queued (server/routes/outbox.ts): alerts to
+ *                      phones, emails, the email copy and the scan alert. Asked by the finder
+ *                      route after each note, and by the scheduler every 5 minutes.
  *   /api/jobs/daily    every day at 05:00 UTC: the outbox again, for anything a nudge
  *                      missed or that is due for another try, and memberships past their
  *                      end are marked expired

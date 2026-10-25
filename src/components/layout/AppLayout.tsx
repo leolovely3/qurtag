@@ -5,6 +5,7 @@ import { FEATURES } from '@/lib/features';
 import type { LucideIcon } from 'lucide-react';
 import { CircleHelp, CreditCard, Inbox, LogOut, Package, Plane, Settings, ShieldCheck, Tag } from 'lucide-react';
 import { Wordmark } from '@/components/brand/Wordmark';
+import { NativePushBridge } from '@/components/push/NativePushBridge';
 import { useAuth } from '@/lib/auth';
 import { useIsSuperAdmin } from '@/lib/admin';
 import { countUnreadForHousehold, fetchPrimaryHouseholdId } from '@/lib/queries';
@@ -76,6 +77,7 @@ export function AppLayout() {
   const navigate = useNavigate();
   const { pathname, search } = useLocation();
   const [unread, setUnread] = useState(0);
+  const [unreadKnown, setUnreadKnown] = useState(false);
   const [householdId, setHouseholdId] = useState<string | null>(null);
   const [membership, setMembership] = useState<Membership | null>(null);
   const entries = isSuperAdmin ? [...nav, adminEntry] : nav;
@@ -100,6 +102,7 @@ export function AppLayout() {
     if (!householdId) return;
     const n = await countUnreadForHousehold(householdId);
     setUnread(n);
+    setUnreadKnown(true);
   }, [householdId]);
 
   useEffect(() => {
@@ -123,6 +126,7 @@ export function AppLayout() {
   return (
     <div className="min-h-screen bg-canvas text-ink-900 antialiased md:flex">
       <a href="#main-content" className="skip-link">Skip to content</a>
+      <NativePushBridge unread={unreadKnown ? unread : null} />
 
       {/* Sidebar, from tablet width */}
       <aside className="no-print sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-hairline bg-paper md:flex lg:w-64">

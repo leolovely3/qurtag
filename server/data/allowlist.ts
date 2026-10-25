@@ -145,6 +145,13 @@ export const RPCS: Readonly<Record<string, RpcRule>> = {
   leave_household: { args: {}, returns: 'void', callers: ['user'] },
   remove_member: { args: { p_user: 'uuid' }, returns: 'void', callers: ['user'] },
   revoke_invite: { args: { p_invite: 'uuid' }, returns: 'void', callers: ['user'] },
+  // Notification settings (db/push.sql).
+  my_push_settings: { args: {}, returns: 'value', callers: ['user'] },
+  set_push_settings: {
+    args: { p_found_on: 'boolean', p_message_on: 'boolean', p_scan_on: 'boolean', p_hide_text: 'boolean', p_email_copy: 'boolean' },
+    returns: 'value',
+    callers: ['user'],
+  },
   // With no pass: the Factory's counts (which check a token of their own).
   factory_metrics: { args: { p_token: 'text' }, returns: 'value', callers: ['anon'] },
 };

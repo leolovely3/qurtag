@@ -28,8 +28,9 @@ project's own data API.
 | Schema, rules, functions for the Super Admin role | `db/admin.sql` | applied once as `postgres`, after the two above |
 | Data API for signed-in owners (PostgREST-style) | `api/data`, `server/data/` | `qurtag_authenticator`, which can only become `qurtag_user` or `qurtag_anon` |
 | Finder routes | `api/fn` (`finder-view`, `finder-send`), `server/routes/finder.ts` | `qurtag_server`: no table rights, only the `server_*` functions |
-| Outbox and daily job | `api/jobs`, `server/routes/outbox.ts`, Vercel cron 05:00 UTC | `qurtag_server` |
+| Outbox and scheduled jobs | `api/jobs`, `server/routes/outbox.ts`, Vercel cron every 5 minutes (outbox) and daily at 05:00 UTC | `qurtag_server` |
 | Memberships: checkout, portal, family invites, Stripe and RevenueCat webhooks | `api/fn`, `server/routes/billing.ts`, `server/billing/` | `qurtag_server`: only the `server_*` functions of `db/membership.sql` and `db/family.sql` |
+| iPhone alerts: register a phone, reply from a notification, send to Apple | `api/fn` (`push-register`, `push-unregister`, `push-reply`), `server/routes/push.ts`, `server/push/apns.ts`, the outbox | `qurtag_server`: only the `server_*` functions of `db/push.sql` |
 
 Privacy by structure: a finder never reaches a table. The finder routes call
 `qurtag.server_finder_view`, `server_finder_open` and `server_finder_post`, which return only
@@ -147,6 +148,71 @@ Database changes are the rollout files 5 (memberships) and 6 (family) in
 `~/Claude/Rollouts/QurTag-rollout-schema` (copies of `db/membership.sql` and `db/family.sql`, each with an
 undo). The schema comments in those two files explain every rule.
 
+## iPhone push notifications
+
+The iPhone app can alert the owner the moment a finder writes, and the owner can reply from the alert.
+Alerts go straight from the server to Apple's push service (APNs) over HTTP/2, signed with a token made
+from the company's `.p8` key. There is no Firebase and no push vendor.
+
+| Alert | When | Default |
+| --- | --- | --- |
+| "Someone found your <item>" | a finder sends the first note of a conversation | on |
+| "New note about your <item>" | each later note | on |
+| "Your tag was scanned" | the tag page was opened and no note followed within 2 minutes; at most one an hour for each tag and person | off |
+
+- **Time-sensitive** (breaks through a Focus) for the first two only. The iPhone app has the Push Notifications
+  and Time Sensitive Notifications capabilities (`ios/App/App/App.entitlements`).
+- **Reply** is a text-input action on the found and new-message categories. It is handled in the app's native
+  code (`ios/App/App/QurTagNotifications.swift`), so it works with the app in the background or closed: it reads
+  the session token the page kept in the iPhone Keychain (`src/lib/nativeSession.ts`), asks `/api/auth/token`
+  for a short-lived pass, and posts to `/api/fn/push-reply`. A reply that cannot be sent is announced in a
+  notification, never lost silently.
+- **Badge**: the number of unread finder notes (across the households the person can read) is sent with each
+  alert, set again whenever the app counts its inbox, and returned by `push-reply`.
+- **Family**: every person who can read the household's inbox is alerted, each by their own settings and on
+  their own phones. A member who leaves or is removed stops being alerted.
+- **Settings** (Settings, then Notifications, in the app): found, new messages, tag scanned, "Hide note text
+  on the lock screen" and the email copy. Stored per person in `qurtag.push_settings`. With the text hidden the
+  alert says only "You have a new note": no note, no item name.
+- **Email copy** (needs `RESEND_API_KEY`): a person with a phone who was sent an alert and has not read the note
+  10 minutes later gets one email per conversation, through the existing Resend path. Opening the alert opens
+  the conversation, which marks it read. Switch it off in Settings. A person with no phone registered is
+  emailed at once, as before; a person whose phone Apple refused is emailed at once too.
+- **What a push carries**: the lock screen text, the conversation id (so a tap opens it and Reply knows where
+  to post), the badge, and the category. Never a finder's token, name, email or address.
+- **Device tokens** are in `qurtag.push_devices` (account, token, sandbox or production, first and last seen).
+  No role the app uses can read the table and no route returns a token. A token goes when the person signs out,
+  deletes the account, registers it on another account, or Apple answers 410 or 400 BadDeviceToken for it.
+- **How it runs**: a finder note queues work in the outbox; the finder route nudges `/api/jobs/outbox` at once,
+  and Vercel Cron runs it every 5 minutes (the email copy is due 10 minutes after a note, a scan alert 2 minutes
+  after the scan) plus the daily 05:00 UTC run. The finder's request never waits for Apple. A failed try is
+  repeated with the outbox's backoff and never alerts anyone twice (`qurtag.note_alerts`, and the note's id as
+  Apple's collapse id).
+
+Database changes are rollout step 8 in `~/Claude/Rollouts/QurTag-rollout-schema` (`8-push.sql`, a copy of
+`db/push.sql` with a migration record, and `undo-8-push.sql`); it needs steps 5 and 6. Run it before merging the
+pull request that adds push.
+
+**Settings** (Vercel, project `qurtag`, Production). With the first three missing, sending is a no-op that logs
+once, and everything else works (people are emailed at once, as before):
+
+| Setting | What |
+| --- | --- |
+| `APNS_KEY_ID` | the key's 10-character id (shown in Apple's key list, and in the file name `AuthKey_<id>.p8`) |
+| `APNS_TEAM_ID` | the Apple team id, `CQUVU6BHHA` |
+| `APNS_KEY_P8` | the whole contents of the `.p8` file, including the BEGIN and END lines |
+| `APNS_BUNDLE_ID` | optional; default `app.impactconsultingai.qurtag` |
+| `APNS_ENV` | optional; `production` (default; TestFlight and App Store builds) or `sandbox` (builds run from Xcode). A phone registers for the Apple server its build uses and a deployment sends only to phones of its own kind |
+
+`QURTAG_PUSH_RATE_PER_ACCOUNT` (default 30 a minute) and `QURTAG_PUSH_RATE_PER_IP` (120) limit the push routes.
+`QURTAG_APNS_URL` replaces Apple's address and exists for the local tests only.
+
+**Apple setup.** One APNs Auth Key (Apple Developer, Certificates, Identifiers & Profiles, Keys) serves every
+app of the team, so the company's existing key can be reused. The App ID `app.impactconsultingai.qurtag` needs
+the Push Notifications and Time Sensitive Notifications capabilities (Xcode's automatic signing turns them on
+from `App.entitlements`). `aps-environment` in the entitlements file stays `development`; Xcode makes it
+`production` when it signs a TestFlight or App Store build.
+
 ## Contact us (support)
 
 A Contact us form in Help, and "Question about a charge?" on the Membership screen. It posts to
@@ -169,7 +235,7 @@ by any request; only `server_support_create` writes and only the Super Admin fun
 
 `src/lib/features.ts` hides code built for a bigger plan that cannot work yet: cash rewards,
 courier labels, trips, partner drop-off points, insurance packets, wallet passes, location
-sharing, web push, and block or report tools. Their tables are not in
+sharing, web push (the browser kind; the iPhone app's alerts are described above), and block or report tools. Their tables are not in
 schema `qurtag`. `VITE_QURTAG_LABS=1` shows them for local work only. The old Supabase
 migrations and Edge Functions for them are kept in `supabase/` for reference; they are not
 deployed.
@@ -179,8 +245,8 @@ deployed.
 ```bash
 npm install
 npm run typecheck     # app, Vite config and server code
-npm run test:unit     # the finder routes and the payment code, with stand-in databases and Stripe
-npm run test:e2e      # the whole loop, memberships, webhooks and Family, on a throwaway local Postgres (needs Docker)
+npm run test:unit     # the finder routes, the payment code, and the push code (Apple token, alert text, requests), with stand-ins
+npm run test:e2e      # the whole loop, memberships, webhooks, Family and push alerts (with a stand-in Apple server), on a throwaway local Postgres (needs Docker)
 npm run build
 ```
 
@@ -212,7 +278,7 @@ shell (`capacitor.config.ts`, `ios/`). The old Expo stub in `mobile/` is not use
 - The app opens to `/app`. Links to other sites open in Safari's sheet, which has a Done button back to the app.
 - The item photo picker offers Take Photo and the photo library, so `Info.plist` carries
   `NSCameraUsageDescription` and `NSPhotoLibraryUsageDescription`; iOS asks the first time either is
-  used. The app requests no location or NFC permission. "Print tag" draws the tag
+  used. The app requests no location or NFC permission, and asks for notifications once, as described under "iPhone push notifications". "Print tag" draws the tag
   (label and QR code) on the phone as a one-page PDF (`src/lib/tagPdf.ts`) and opens the iOS share
   sheet through `@capacitor/share` and `@capacitor/filesystem`, which offers Print, Save to Files and
   AirDrop. On the web it opens the browser's print dialog.
@@ -222,5 +288,7 @@ shell (`capacitor.config.ts`, `ios/`). The old Expo stub in `mobile/` is not use
   (Items, Inbox, Settings); wider screens use a sidebar (`src/components/layout/AppLayout.tsx`). Each
   screen has a title, and nested screens a Back button (`src/components/layout/AppPage.tsx`).
 - The app follows the phone's light or dark setting, and Settings lets the owner pick Light, Auto or Dark.
+- The app asks for notification permission once, right after the first item is saved, behind a short
+  explanation (`src/components/push/PushPrimer.tsx`), never at launch. See "iPhone push notifications".
 - Version and build number are `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` in
   `ios/App/App.xcodeproj/project.pbxproj`.

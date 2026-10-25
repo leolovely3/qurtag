@@ -17,6 +17,9 @@ const config: CapacitorConfig = {
     // The page pads itself with the safe-area insets (src/index.css); the native view adds none.
     contentInset: 'never',
     backgroundColor: '#FFFFFF',
+    // The app's own notification handler (ios/App/App/QurTagNotifications.swift) is the delegate, set
+    // before launch finishes, so Reply typed in a notification works with the app closed.
+    handleApplicationNotifications: false,
   },
   plugins: {
     SplashScreen: {

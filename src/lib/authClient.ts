@@ -5,7 +5,9 @@
  *   cookie the page cannot read. The iPhone app's pages come from capacitor://localhost,
  *   which cannot hold the site's cookie, so there the app keeps the session token the
  *   server sends in its `set-auth-token` answer header and sends it back as
- *   `Authorization: Bearer`; it calls the live site by full address (src/lib/platform.ts).
+ *   `Authorization: Bearer`; it calls the live site by full address (src/lib/platform.ts). The
+ *   token is also handed to the app's native code (src/lib/nativeSession.ts) for Reply in a
+ *   notification.
  * - `getDataPass()` returns a short-lived pass for the data API (/api/data), fetched
  *   from /api/auth/token and reused until a minute before it expires; null when nobody
  *   is signed in.
@@ -14,6 +16,7 @@
  */
 import { createAuthClient } from 'better-auth/client';
 import { jwtClient } from 'better-auth/client/plugins';
+import { syncNativeSession } from './nativeSession';
 import { isNative, serverUrl } from './platform';
 
 /** Where the iPhone app keeps its session token (the app's own storage; the web keeps none). */
@@ -34,6 +37,8 @@ const phoneToken = {
     } catch {
       /* storage off: the next start signs in again */
     }
+    // The app's native code keeps its own copy, so a reply typed in a notification works with the app closed.
+    void syncNativeSession(token);
   },
   clear(): void {
     try {
@@ -41,6 +46,7 @@ const phoneToken = {
     } catch {
       /* nothing kept */
     }
+    void syncNativeSession(null);
   },
 };
 
@@ -82,6 +88,12 @@ export async function getDataPass(): Promise<string | null> {
     }
   })();
   return inFlight;
+}
+
+/** Gives the app's native code the session token already kept on this phone (a person who signed in before it kept its own copy). */
+export function shareSessionWithApp(): void {
+  const token = phoneToken.get();
+  if (token) void syncNativeSession(token);
 }
 
 /** Forget the cached pass, for example straight after signing out. */

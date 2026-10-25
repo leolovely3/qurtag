@@ -10,7 +10,9 @@ import { useAuth } from '@/lib/auth';
 import { usePushSubscription, isPushSupported } from '@/lib/push';
 import { exportMyData, fetchHousehold, fetchPrimaryHouseholdId, updateHousehold } from '@/lib/queries';
 import { FEATURES } from '@/lib/features';
+import { isNative } from '@/lib/platform';
 import { Modal } from '@/components/ui/Modal';
+import { NotificationSettings } from '@/components/push/NotificationSettings';
 import type { Household } from '@/lib/database.types';
 import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/lib/cn';
@@ -272,6 +274,13 @@ export function Settings() {
           body="Notes arrive in your QuR Tag inbox. Email alerts are not switched on yet, so check your inbox here, especially when something is lost."
         />
       </AppSection>
+
+      {/* iPhone alerts: their own group, in the iPhone app only */}
+      {isNative() && (
+        <AppSection title="Alerts">
+          <NotificationSettings />
+        </AppSection>
+      )}
 
       {/* Appearance */}
       <AppSection title="Appearance">
