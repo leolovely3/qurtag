@@ -24,7 +24,7 @@ const points = [
   {
     icon: Printer,
     title: 'Free, and you print it',
-    body: 'Print the tag at home on plain paper or sticker paper. Free for up to two items.',
+    body: 'Print the tag at home on plain paper or sticker paper. Free for up to three items.',
   },
   {
     icon: Camera,
@@ -156,7 +156,7 @@ export function MarketingHome() {
         </Container>
       </section>
 
-      <CtaBand wide title="Make your first tag in a few minutes." body="It is free for up to two items. You need an email address and a printer." />
+      <CtaBand wide title="Make your first tag in a few minutes." body="It is free for up to three items. You need an email address and a printer." />
     </>
   );
 }

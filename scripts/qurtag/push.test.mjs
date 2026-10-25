@@ -364,7 +364,7 @@ const D1 = hex('a');
   const rc = await fetch(`${MAIN}/api/fn/revenuecat-webhook`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: RC_AUTH },
-    body: JSON.stringify({ api_version: '1.0', event: { id: `rc_push_${Date.now()}`, type: 'INITIAL_PURCHASE', app_user_id: fay.id, original_app_user_id: fay.id, aliases: [fay.id], product_id: 'app.impactconsultingai.qurtag.family.monthly', store: 'APP_STORE', environment: 'SANDBOX', original_transaction_id: '7100000000001', transaction_id: '7100000000001', expiration_at_ms: Date.now() + 30 * 86400_000, event_timestamp_ms: Date.now() } }),
+    body: JSON.stringify({ api_version: '1.0', event: { id: `rc_push_${Date.now()}`, type: 'INITIAL_PURCHASE', app_user_id: fay.id, original_app_user_id: fay.id, aliases: [fay.id], product_id: 'app.impactconsultingai.qurtag.family.yearly', store: 'APP_STORE', environment: 'SANDBOX', original_transaction_id: '7100000000001', transaction_id: '7100000000001', expiration_at_ms: Date.now() + 30 * 86400_000, event_timestamp_ms: Date.now() } }),
   });
   check('Fay is on the Family plan', rc.status === 200 && (await fay.db.rpc('my_membership')).data?.plan === 'family');
   const kayak = await newItem(fay, 'Family kayak');

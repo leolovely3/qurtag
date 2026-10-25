@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Check } from 'lucide-react';
-import { PLAN_INFO, priceLabel, productFor, yearlySavingPercent, type PaidPlan, type Plan } from '../../../server/billing/catalog';
+import { PLAN_INFO, priceLabel, productFor, type PaidPlan, type Plan } from '../../../server/billing/catalog';
 import { cn } from '@/lib/cn';
 
 /**
@@ -56,19 +56,15 @@ function PriceLines({ plan, prices }: { plan: Plan; prices?: Map<string, string>
     return <p className="text-3xl font-semibold tracking-[-0.02em] text-ink-900">$0</p>;
   }
   const paid = plan as PaidPlan;
-  const monthly = productFor(paid, 'month');
   const yearly = productFor(paid, 'year');
-  const month = prices?.get(monthly.appleId) ?? priceLabel(monthly.cents);
   const year = prices?.get(yearly.appleId) ?? priceLabel(yearly.cents);
   return (
     <div className="flex flex-col gap-0.5">
       <p className="text-3xl font-semibold tracking-[-0.02em] text-ink-900">
-        {month}
-        <span className="text-body font-normal text-muted"> a month</span>
+        {year}
+        <span className="text-body font-normal text-muted"> a year</span>
       </p>
-      <p className="text-body text-ink-700">
-        or {year} a year{!prices && <span className="text-muted"> (save {yearlySavingPercent(paid)}%)</span>}
-      </p>
+      <p className="text-body text-ink-700">Renews every year until you cancel</p>
       {!prices && <p className="text-caption text-muted">Plus applicable sales tax</p>}
     </div>
   );

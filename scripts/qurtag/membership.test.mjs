@@ -4,7 +4,7 @@
  * same throwaway Postgres and the same server functions (run through run-local.sh, which
  * applies db/membership.sql and db/family.sql and sets made-up payment settings):
  *
- *   - the item limit follows the plan (Free 2, Plus and Family unlimited);
+ *   - the item limit follows the plan (Free 3, Plus and Family unlimited);
  *   - the webhooks change the plan: signed Stripe fixtures and RevenueCat fixtures, forged
  *     and tampered ones refused, repeated ones changing nothing, old ones not overwriting
  *     new ones, a web and an iPhone membership together;
@@ -49,7 +49,7 @@ let counter = 0;
 const nextId = (prefix) => `${prefix}_${Date.now()}_${++counter}`;
 const inDays = (d) => Math.floor(Date.now() / 1000) + d * 86400;
 
-function stripeEvent({ type = 'customer.subscription.updated', user, customer = 'cus_default', sub = 'sub_default', price = 'price_test_plus_month',
+function stripeEvent({ type = 'customer.subscription.updated', user, customer = 'cus_default', sub = 'sub_default', price = 'price_test_plus_year',
   status = 'active', cancel = false, end = inDays(30), id = nextId('evt'), created = tick(), app = 'qurtag', object = null }) {
   return {
     id,
@@ -127,14 +127,15 @@ await signUp(ana, 'ana@example.com', 'Ana Free');
 
 {
   const m = await membership(ana);
-  check('a new account is on Free with a limit of 2', m?.plan === 'free' && m?.item_limit === 2 && m?.can_add_items === true, JSON.stringify(m));
+  check('a new account is on Free with a limit of 3', m?.plan === 'free' && m?.item_limit === 3 && m?.can_add_items === true, JSON.stringify(m));
   const a = await addItem(ana, 'Bottle');
   const b = await addItem(ana, 'Violin');
   const c = await addItem(ana, 'Keys');
-  check('Free: two items are allowed', !a.error && !b.error);
-  check('Free: a third item is refused with item_limit', reason(c) === 'item_limit', JSON.stringify(c.error));
+  const d = await addItem(ana, 'Wallet');
+  check('Free: three items are allowed', !a.error && !b.error && !c.error);
+  check('Free: a fourth item is refused with item_limit', reason(d) === 'item_limit', JSON.stringify(d.error));
   const m2 = await membership(ana);
-  check('Free: the membership says no more items can be added', m2?.can_add_items === false && m2?.items_used === 2);
+  check('Free: the membership says no more items can be added', m2?.can_add_items === false && m2?.items_used === 3);
 }
 
 // Forged and invalid webhooks change nothing.
@@ -142,7 +143,7 @@ await signUp(ana, 'ana@example.com', 'Ana Free');
   const ev = stripeEvent({ user: ana.id, customer: 'cus_ana', sub: 'sub_ana' });
   check('Stripe: no signature is refused', (await postStripe(ev, { sign: false })).status === 400);
   check('Stripe: a signature made with another secret is refused', (await postStripe(ev, { secret: 'whsec_not_ours' })).status === 400);
-  check('Stripe: a tampered body is refused', (await postStripe(ev, { mutate: (s) => s.replace('price_test_plus_month', 'price_test_family_year') })).status === 400);
+  check('Stripe: a tampered body is refused', (await postStripe(ev, { mutate: (s) => s.replace('price_test_plus_year', 'price_test_family_year') })).status === 400);
   check('Stripe: an old signature is refused', (await postStripe(ev, { at: Date.now() - 20 * 60_000 })).status === 400);
   check('Stripe: a malformed signature header is refused', (await fetch(`${BASE}/api/fn/stripe-webhook`, { method: 'POST', headers: { 'stripe-signature': 't=1,v1=zz' }, body: JSON.stringify(ev) })).status === 400);
   check('RevenueCat: no secret is refused', (await postRc(rcEvent({ user: ana.id }), null)).status === 401);
@@ -162,11 +163,11 @@ await signUp(ana, 'ana@example.com', 'Ana Free');
   const linked = await sql('select stripe_customer_id from qurtag.billing_customers where user_id = $1', [ana.id]);
   check('the customer link is stored', linked.rows[0]?.stripe_customer_id === 'cus_ana');
 
-  const created = stripeEvent({ type: 'customer.subscription.created', user: ana.id, customer: 'cus_ana', sub: 'sub_ana', price: 'price_test_plus_month' });
+  const created = stripeEvent({ type: 'customer.subscription.created', user: ana.id, customer: 'cus_ana', sub: 'sub_ana', price: 'price_test_plus_year' });
   const r1 = await postStripe(created);
   check('Stripe: subscription.created makes the account Plus', r1.status === 200 && r1.json?.result === 'applied' && (await planOf(ana)) === 'plus', JSON.stringify(r1));
   const row = (await sql('select plan, billing_interval, status, provider from qurtag.subscriptions where external_id = $1', ['sub_ana'])).rows[0];
-  check('the subscription row has plan, interval, status and provider', row?.plan === 'plus' && row?.billing_interval === 'month' && row?.status === 'active' && row?.provider === 'stripe', JSON.stringify(row));
+  check('the subscription row has plan, interval, status and provider', row?.plan === 'plus' && row?.billing_interval === 'year' && row?.status === 'active' && row?.provider === 'stripe', JSON.stringify(row));
   check('households.plan_tier mirrors the plan', (await sql('select plan_tier from qurtag.households where id = $1', [ana.household])).rows[0].plan_tier === 'plus');
 
   const before = (await sql('select updated_at from qurtag.subscriptions where external_id = $1', ['sub_ana'])).rows[0].updated_at;
@@ -175,9 +176,9 @@ await signUp(ana, 'ana@example.com', 'Ana Free');
 
   const c = await addItem(ana, 'Keys');
   const d = await addItem(ana, 'Backpack');
-  check('Plus: unlimited items (a third and a fourth)', !c.error && !d.error, JSON.stringify(c.error ?? d.error));
+  check('Plus: unlimited items (a fourth and a fifth)', !c.error && !d.error, JSON.stringify(c.error ?? d.error));
   const m = await membership(ana);
-  check('Plus: the membership says no limit, renewing, monthly, from Stripe', m?.item_limit === null && m?.renews === true && m?.provider === 'stripe' && m?.billing_interval === 'month', JSON.stringify(m));
+  check('Plus: the membership says no limit, renewing, yearly, from Stripe', m?.item_limit === null && m?.renews === true && m?.provider === 'stripe' && m?.billing_interval === 'year', JSON.stringify(m));
 
   const cancel = await postStripe(stripeEvent({ user: ana.id, customer: 'cus_ana', sub: 'sub_ana', cancel: true }));
   const m2 = await membership(ana);
@@ -199,7 +200,7 @@ await signUp(ana, 'ana@example.com', 'Ana Free');
   const notOurs = await postStripe(stripeEvent({ user: ana.id, sub: 'sub_other_app', app: null }));
   check('Stripe: a subscription that is not marked as QuR Tag is ignored', notOurs.status === 200 && /^ignored/.test(notOurs.json?.result) && (await sql(`select count(*)::int as n from qurtag.subscriptions where external_id = 'sub_other_app'`)).rows[0].n === 0);
   const unknownPrice = await postStripe(stripeEvent({ user: ana.id, sub: 'sub_x', price: 'price_nobody_knows' }));
-  check('Stripe: a QuR Tag subscription with an unknown price answers 500 so Stripe retries', unknownPrice.status === 500);
+  check('Stripe: a QuR Tag subscription with an unknown price is logged, acknowledged and changes nothing', unknownPrice.status === 200 && /^ignored/.test(unknownPrice.json?.result ?? '') && (await sql(`select count(*)::int as n from qurtag.subscriptions where external_id = 'sub_x'`)).rows[0].n === 0, JSON.stringify(unknownPrice));
   const ghost = await postStripe(stripeEvent({ user: crypto.randomUUID(), sub: 'sub_ghost' }));
   check('Stripe: an event for an account that does not exist is acknowledged and recorded nowhere', ghost.status === 200 && ghost.json?.result === 'unknown_user' && (await sql(`select count(*)::int as n from qurtag.subscriptions where external_id = 'sub_ghost'`)).rows[0].n === 0, JSON.stringify(ghost));
   const noUserOnEvent = await postStripe(stripeEvent({ user: null, customer: 'cus_ana', sub: 'sub_ana', price: 'price_test_plus_year' }));
@@ -229,26 +230,26 @@ await signUp(ana, 'ana@example.com', 'Ana Free');
   check('RevenueCat: an anonymous RevenueCat id is ignored', /^ignored/.test(anon.json?.result ?? ''));
 
   // Both at once: Stripe Family and Apple Plus. The better plan counts; neither overwrites the other.
-  await postStripe(stripeEvent({ user: bea.id, customer: 'cus_bea', sub: 'sub_bea', price: 'price_test_family_month' }));
+  await postStripe(stripeEvent({ user: bea.id, customer: 'cus_bea', sub: 'sub_bea', price: 'price_test_family_year' }));
   check('web Family and iPhone Plus together give Family', (await planOf(bea)) === 'family');
   const m = await membership(bea);
   check('both subscriptions are kept', (await sql('select count(*)::int as n from qurtag.subscriptions where user_id = $1', [bea.id])).rows[0].n === 2 && m?.provider === 'stripe');
-  await postStripe(stripeEvent({ type: 'customer.subscription.deleted', user: bea.id, customer: 'cus_bea', sub: 'sub_bea', price: 'price_test_family_month', status: 'canceled' }));
+  await postStripe(stripeEvent({ type: 'customer.subscription.deleted', user: bea.id, customer: 'cus_bea', sub: 'sub_bea', price: 'price_test_family_year', status: 'canceled' }));
   check('when the web one ends the iPhone one still counts', (await planOf(bea)) === 'plus');
 
   const down = await postRc(rcEvent({ type: 'PRODUCT_CHANGE', user: bea.id, product: 'app.impactconsultingai.qurtag.plus.yearly', extra: { new_product_id: 'app.impactconsultingai.qurtag.family.yearly' } }));
   check('RevenueCat: PRODUCT_CHANGE to Family makes the account Family', down.json?.result === 'applied' && (await planOf(bea)) === 'family', JSON.stringify(down));
-  const lower = await postRc(rcEvent({ type: 'PRODUCT_CHANGE', user: bea.id, extra: { new_product_id: 'app.impactconsultingai.qurtag.plus.monthly' } }));
+  const lower = await postRc(rcEvent({ type: 'PRODUCT_CHANGE', user: bea.id, extra: { new_product_id: 'app.impactconsultingai.qurtag.plus.yearly' } }));
   check('RevenueCat: a PRODUCT_CHANGE down to Plus does not lower the plan before the renewal', lower.json?.result === 'applied' && (await planOf(bea)) === 'family');
-  const renewDown = await postRc(rcEvent({ type: 'RENEWAL', user: bea.id, product: 'app.impactconsultingai.qurtag.plus.monthly' }));
+  const renewDown = await postRc(rcEvent({ type: 'RENEWAL', user: bea.id, product: 'app.impactconsultingai.qurtag.plus.yearly' }));
   check('RevenueCat: the RENEWAL at the lower product makes it Plus', renewDown.json?.result === 'applied' && (await planOf(bea)) === 'plus');
 
-  const cancel = await postRc(rcEvent({ type: 'CANCELLATION', user: bea.id, product: 'app.impactconsultingai.qurtag.plus.monthly', extra: { cancel_reason: 'UNSUBSCRIBE' } }));
+  const cancel = await postRc(rcEvent({ type: 'CANCELLATION', user: bea.id, product: 'app.impactconsultingai.qurtag.plus.yearly', extra: { cancel_reason: 'UNSUBSCRIBE' } }));
   const mc = await membership(bea);
   check('RevenueCat: CANCELLATION keeps the plan until it expires', cancel.json?.result === 'applied' && mc?.plan === 'plus' && mc?.status === 'canceling' && mc?.renews === false, JSON.stringify(mc));
-  const billing = await postRc(rcEvent({ type: 'BILLING_ISSUE', user: bea.id, product: 'app.impactconsultingai.qurtag.plus.monthly' }));
+  const billing = await postRc(rcEvent({ type: 'BILLING_ISSUE', user: bea.id, product: 'app.impactconsultingai.qurtag.plus.yearly' }));
   check('RevenueCat: BILLING_ISSUE keeps the plan', billing.json?.result === 'applied' && (await membership(bea))?.status === 'billing_issue' && (await planOf(bea)) === 'plus');
-  const expire = await postRc(rcEvent({ type: 'EXPIRATION', user: bea.id, product: 'app.impactconsultingai.qurtag.plus.monthly', exp: Date.now() - 1000 }));
+  const expire = await postRc(rcEvent({ type: 'EXPIRATION', user: bea.id, product: 'app.impactconsultingai.qurtag.plus.yearly', exp: Date.now() - 1000 }));
   check('RevenueCat: EXPIRATION returns the account to Free', expire.json?.result === 'applied' && (await planOf(bea)) === 'free');
   const refund = await postRc(rcEvent({ type: 'INITIAL_PURCHASE', user: bea.id, orig: '2000000000002', id: 'rc-buy-2' }));
   check('RevenueCat: a new purchase works again', refund.json?.result === 'applied' && (await planOf(bea)) === 'plus');
@@ -282,12 +283,12 @@ await signUp(ana, 'ana@example.com', 'Ana Free');
   const sub = rcEvent({ user: dee.id, orig: '4000000000004', exp: Date.now() + 30 * 86400_000 });
   await postRc(sub);
   const made = [];
-  for (const n of ['One', 'Two', 'Three', 'Four']) {
+  for (const n of ['One', 'Two', 'Three', 'Four', 'Five']) {
     const r = await addItem(dee, n);
     made.push(r.data);
     await sql(`update qurtag.items set created_at = now() - interval '${10 - made.length} days' where id = $1`, [r.data?.item_id]);
   }
-  check('Plus holds four items', (await itemsOf(dee)).length === 4);
+  check('Plus holds five items', (await itemsOf(dee)).length === 5);
   check('Plus: nothing is read-only', ((await membership(dee))?.read_only_item_ids ?? []).length === 0);
   const tagOfFour = made[3].public_id;
 
@@ -298,10 +299,10 @@ await signUp(ana, 'ana@example.com', 'Ana Free');
 
   await postRc(rcEvent({ type: 'EXPIRATION', user: dee.id, orig: '4000000000004', exp: Date.now() - 1000 }));
   check('after the downgrade the account is Free', (await planOf(dee)) === 'free');
-  check('downgrading deletes nothing: all four items are still there', (await itemsOf(dee)).length === 4);
+  check('downgrading deletes nothing: all five items are still there', (await itemsOf(dee)).length === 5);
   const m = await membership(dee);
-  check('the two newest items are read-only, the two oldest stay editable', JSON.stringify([...(m.read_only_item_ids ?? [])].sort()) === JSON.stringify([made[2].item_id, made[3].item_id].sort()), JSON.stringify(m.read_only_item_ids));
-  check('a downgraded account cannot add an item', reason(await addItem(dee, 'Five')) === 'item_limit');
+  check('the two newest items are read-only, the three oldest stay editable', JSON.stringify([...(m.read_only_item_ids ?? [])].sort()) === JSON.stringify([made[3].item_id, made[4].item_id].sort()), JSON.stringify(m.read_only_item_ids));
+  check('a downgraded account cannot add an item', reason(await addItem(dee, 'Six')) === 'item_limit');
 
   const editOld = await dee.db.from('items').update({ name: 'One renamed' }).eq('id', made[0].item_id).select().single();
   check('an item within the limit can still be edited', !editOld.error && editOld.data?.name === 'One renamed', JSON.stringify(editOld.error));
@@ -327,13 +328,13 @@ await signUp(ana, 'ana@example.com', 'Ana Free');
   const del = await dee.db.from('items').delete().eq('id', made[0].item_id);
   check('items can be deleted while read-only ones exist', !del.error);
   const m2 = await membership(dee);
-  check('after deleting one, the next item becomes editable', JSON.stringify(m2.read_only_item_ids) === JSON.stringify([made[3].item_id]), JSON.stringify(m2.read_only_item_ids));
-  const del2 = await dee.db.from('items').delete().eq('id', made[3].item_id);
-  check('a read-only item can be deleted', !del2.error && (await itemsOf(dee)).length === 2);
+  check('after deleting one, the next item becomes editable', JSON.stringify(m2.read_only_item_ids) === JSON.stringify([made[4].item_id]), JSON.stringify(m2.read_only_item_ids));
+  const del2 = await dee.db.from('items').delete().eq('id', made[4].item_id);
+  check('a read-only item can be deleted', !del2.error && (await itemsOf(dee)).length === 3);
 
   // Upgrading restores everything.
   await postRc(rcEvent({ user: dee.id, orig: '4000000000005', exp: Date.now() + 30 * 86400_000 }));
-  check('after upgrading again, items can be added', !(await addItem(dee, 'Five')).error && !(await addItem(dee, 'Six')).error);
+  check('after upgrading again, items can be added', !(await addItem(dee, 'Seven')).error && !(await addItem(dee, 'Eight')).error);
 }
 
 // Scan history: 30 days on Free, everything on Plus.
@@ -360,7 +361,7 @@ await signUp(fay, 'fay@example.com', 'Fay Family');
 await signUp(gil, 'gil@example.com', 'Gil Member');
 await signUp(hal, 'hal@example.com', 'Hal Other');
 await signUp(ivy, 'ivy@example.com', 'Ivy Outsider');
-const FAMILY = 'app.impactconsultingai.qurtag.family.monthly';
+const FAMILY = 'app.impactconsultingai.qurtag.family.yearly';
 
 const fayItem = (await addItem(fay, 'Fay bike')).data;
 const gilOwn = (await addItem(gil, 'Gil own scooter')).data;
@@ -599,7 +600,7 @@ const tokenOf = (link) => link.split('/join/')[1];
   const fam = (await gil.db.rpc('my_family')).data;
   check('the member is told the family is paused', fam?.role === 'member' && fam.active === false, JSON.stringify(fam));
   const fm = await membership(fay);
-  check('the owner\'s family items are read-only past 2, oldest first', (fm?.read_only_item_ids ?? []).length === itemsBefore - 2, JSON.stringify(fm?.read_only_item_ids));
+  check('the owner\'s family items are read-only past 3, oldest first', (fm?.read_only_item_ids ?? []).length === Math.max(0, itemsBefore - 3), JSON.stringify(fm?.read_only_item_ids));
   const noInvite = await fay.post('/api/fn/family-invite', { email: 'again@example.com' });
   check('a lapsed owner cannot invite', noInvite.status === 403);
   const gilNew = await addItem(gil, 'Gil after pause');
@@ -719,7 +720,7 @@ const tokenOf = (link) => link.split('/join/')[1];
 
 {
   const r = await new Person('visitor', '10.7.9.9').post('/api/fn/billing-config', {});
-  check('the config route says which plans can be bought', r.status === 200 && r.json?.available?.plus_month === true && r.json?.available?.family_year === true && Object.keys(r.json.available).length === 4, JSON.stringify(r.json));
+  check('the config route says which plans can be bought', r.status === 200 && r.json?.available?.plus_year === true && r.json?.available?.family_year === true && Object.keys(r.json.available).length === 2, JSON.stringify(r.json));
   check('the config route holds no secret', !JSON.stringify(r.json).includes('sk_') && !JSON.stringify(r.json).includes('whsec_') && !JSON.stringify(r.json).includes('price_'));
 }
 

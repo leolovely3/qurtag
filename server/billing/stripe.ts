@@ -154,7 +154,8 @@ export interface Applied {
 
 /** What a webhook delivery asks the database to do. */
 export type Action =
-  | { kind: 'ignore'; why: string }
+  /** `log`: say so in the server log (a QuR Tag event nothing here can place). */
+  | { kind: 'ignore'; why: string; log?: boolean }
   | { kind: 'link'; userId: string; customer: string }
   | { kind: 'apply'; apply: Applied };
 
@@ -193,7 +194,13 @@ export function actionForStripeEvent(env: NodeJS.ProcessEnv, event: unknown): Ac
     const priceId = text(obj(item?.price)?.id);
     const product = productForStripePrice(env, priceId);
     if (!subscriptionId) throw new Error('subscription without an id');
-    if (!product) throw new Error(`price ${priceId ?? '(none)'} is not one of the four QuR Tag price settings`);
+    if (!product) {
+      // With no price settings at all the server is not set up: throw, so Stripe retries the event
+      // later instead of dropping it. With the settings in place, a price that is not one of them
+      // (a retired or unknown price) is logged and the plan is left as it is.
+      if (!stripeSettings(env).prices.some((x) => x.priceId)) throw new Error(`price ${priceId ?? '(none)'}: the QuR Tag price settings are not set`);
+      return { kind: 'ignore', why: `price ${priceId ?? '(none)'} is not a QuR Tag price; the plan is unchanged`, log: true };
+    }
     // The period end moved from the subscription to its items in newer API versions; read both.
     const end = Number(item?.current_period_end ?? object.current_period_end);
     const status = String(object.status);

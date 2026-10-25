@@ -30,14 +30,14 @@ export function Terms() {
         <Section title="3. Plans, prices and payment">
           <Bullets
             items={[
-              'Free: up to two items, one person, and the last 30 days of scan history. No payment is taken.',
-              'Plus: unlimited items, one person and the full scan history. $2.99 a month or $19 a year.',
-              'Family: Plus for up to five people who share the items and the inbox. $4.99 a month or $39 a year.',
+              'Free: up to three items, one person, and the last 30 days of scan history. No payment is taken.',
+              'Plus: unlimited items, one person and the full scan history. $19 a year.',
+              'Family: Plus for up to five people who share the items and the inbox. $29 a year.',
             ]}
           />
           <P>
             Prices are in US dollars and exclude any sales tax, which is shown at checkout. Plus and Family are subscriptions that renew
-            automatically every month or every year, whichever you chose, until you cancel. You can cancel at any
+            automatically every year until you cancel. You can cancel at any
             time; you keep your plan until the end of the period you already paid for, and nothing more is charged.
             Canceling does not delete anything you made.
           </P>

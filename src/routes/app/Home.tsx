@@ -131,9 +131,9 @@ export function AddItemCard({ membership }: { count?: number; membership?: Membe
     <div className="mt-3 flex flex-col items-start gap-3 rounded-modal border border-hairline bg-paper p-4">
       <p className="text-sm text-ink-700 text-pretty">
         {!memberships
-          ? 'Free accounts can tag up to two items.'
-          : membership.item_limit === 2
-            ? 'QuR Tag is free for up to two items, and you have two. To tag something else, upgrade your plan or delete one first.'
+          ? 'Free accounts can tag up to three items.'
+          : membership.item_limit === 3
+            ? 'QuR Tag is free for up to three items, and you have three. To tag something else, upgrade your plan or delete one first.'
             : `Your plan covers ${membership.item_limit} items. To tag something else, delete one first.`}
       </p>
       {memberships && (

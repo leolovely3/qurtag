@@ -80,9 +80,7 @@ export QURTAG_LOCAL_PORT=$API_PORT
 # (Nothing here is a real key and nothing reaches Stripe or RevenueCat.)
 export STRIPE_SECRET_KEY="sk_test_local_fixture"
 export STRIPE_WEBHOOK_SECRET="whsec_local_fixture_$(openssl rand -hex 8)"
-export STRIPE_PRICE_PLUS_MONTHLY="price_test_plus_month"
 export STRIPE_PRICE_PLUS_YEARLY="price_test_plus_year"
-export STRIPE_PRICE_FAMILY_MONTHLY="price_test_family_month"
 export STRIPE_PRICE_FAMILY_YEARLY="price_test_family_year"
 # The test makes more requests a minute than a person would.
 export QURTAG_BILLING_RATE_PER_ACCOUNT=1000

@@ -170,7 +170,7 @@ export function AppLayout() {
                   ? membership.item_limit === null
                     ? `${membership.items_used} items, no limit`
                     : `${membership.items_used} of ${membership.item_limit} items`
-                  : 'QuR Tag is free for up to two items.'}
+                  : 'QuR Tag is free for up to three items.'}
               </span>
             </Link>
           )}

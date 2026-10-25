@@ -2,7 +2,7 @@
 
 A free QR tag, so a kind stranger can message you. Live at https://www.qurtag.com.
 
-An owner makes an account, adds things (a water bottle, a violin case, keys; up to two on the Free
+An owner makes an account, adds things (a water bottle, a violin case, keys; up to three on the Free
 plan) and prints a QR tag for each. Someone who finds the thing scans the tag with their phone camera:
 a page opens with no app and no account, shows a finder-safe card for the item, and lets
 them send a note. The owner reads it in the inbox at /app and replies; the finder reads the
@@ -76,9 +76,9 @@ The rollout that creates the schema and logins in production is
 
 | Plan | Items | People | Scan history | Price (US) |
 | --- | --- | --- | --- | --- |
-| Free | 2 | 1 | last 30 days | $0 |
-| Plus | unlimited | 1 | all | $2.99 a month or $19 a year |
-| Family | unlimited, shared | up to 5, invited by email | all | $4.99 a month or $39 a year |
+| Free | 3 | 1 | last 30 days | $0 |
+| Plus | unlimited | 1 | all | $19 a year |
+| Family | unlimited, shared | up to 5, invited by email | all | $29 a year |
 
 The plans and prices are written once, in `server/billing/catalog.ts`, which the server and the screens
 both import.
@@ -95,11 +95,11 @@ The app never decides a plan: the screens ask `my_membership`.
   paid. Events: `checkout.session.completed`, `customer.subscription.created`, `.updated`, `.deleted`.
 - RevenueCat webhook `POST /api/fn/revenuecat-webhook`: trusted only with `Authorization` equal to
   `REVENUECAT_WEBHOOK_AUTH`. The account is RevenueCat's app user id, which the app sets to the QuR Tag
-  account id. Products other than the four below are ignored.
+  account id. Products other than the two yearly ones below are ignored.
 - Idempotent: every delivery id is kept (`qurtag.billing_events`); a repeat changes nothing, and an event
   older than the one already applied to a subscription never overwrites it. A failed write answers 500 so
   the sender retries.
-- The limit follows the plan: `create_item` allows 2 on Free and any number on Plus and Family.
+- The limit follows the plan: `create_item` allows 3 on Free and any number on Plus and Family.
   **Downgrading never deletes anything.** Past the limit the oldest items stay editable and the rest become
   read-only (`guard_item`, `guard_tag`): they can be read, printed and deleted, but not changed, marked
   lost or given a new tag. Finders can still scan their tags and write, and the owner can still reply.
@@ -123,23 +123,23 @@ the Membership screen say "Coming soon"):
 | --- | --- |
 | `STRIPE_SECRET_KEY` | Stripe secret key (`sk_live_...`) |
 | `STRIPE_WEBHOOK_SECRET` | the webhook endpoint's signing secret (`whsec_...`) |
-| `STRIPE_PRICE_PLUS_MONTHLY`, `STRIPE_PRICE_PLUS_YEARLY`, `STRIPE_PRICE_FAMILY_MONTHLY`, `STRIPE_PRICE_FAMILY_YEARLY` | the four recurring prices (`price_...`) |
+| `STRIPE_PRICE_PLUS_YEARLY`, `STRIPE_PRICE_FAMILY_YEARLY` | the two yearly recurring prices (`price_...`) |
 | `REVENUECAT_WEBHOOK_AUTH` | a long random string, also pasted into RevenueCat's webhook as the Authorization value |
 | `VITE_REVENUECAT_IOS_API_KEY` | RevenueCat's public iOS SDK key (`appl_...`). Public. A build setting for the iPhone app (`.env.local` on the building Mac), not a Vercel one |
 
 Optional: `QURTAG_BILLING_RATE_PER_ACCOUNT` (default 12 a minute) and `QURTAG_BILLING_RATE_PER_IP` (60).
 `.env.example` lists them all.
 
-**Stripe setup.** Make one product "QuR Tag Plus" with a monthly price of $2.99 and a yearly price of $19,
-and one "QuR Tag Family" with $4.99 and $39 (all recurring, USD). Put the four price ids in the settings
+**Stripe setup.** Make one product "QuR Tag Plus" with a yearly price of $19,
+and one "QuR Tag Family" with a yearly price of $29 (both recurring, USD). Put the two price ids in the settings
 above. Add a webhook endpoint `https://www.qurtag.com/api/fn/stripe-webhook` for the four events listed
 above and put its signing secret in `STRIPE_WEBHOOK_SECRET`. In the customer portal settings allow
-cancelling, changing the payment method and switching between the four prices.
+cancelling, changing the payment method and switching between the two prices.
 
-**iPhone setup.** The four auto-renewable subscriptions are in the group "QuR Tag Membership" in App Store
-Connect: `app.impactconsultingai.qurtag.plus.monthly`, `.plus.yearly`, `.family.monthly`, `.family.yearly`
+**iPhone setup.** The two auto-renewable subscriptions are in the group "QuR Tag Membership" in App Store
+Connect: `app.impactconsultingai.qurtag.plus.yearly` and `.family.yearly`
 (Family Sharing off). In RevenueCat: a project with the iOS app (bundle id `app.impactconsultingai.qurtag`,
-connected to App Store Connect with an In-App Purchase key), the four products, one offering holding them,
+connected to App Store Connect with an In-App Purchase key), the two products, one offering holding them,
 and a webhook to `https://www.qurtag.com/api/fn/revenuecat-webhook` with the Authorization value from
 `REVENUECAT_WEBHOOK_AUTH`. Then build the app with the public key (`VITE_REVENUECAT_IOS_API_KEY`) and
 `npm run cap:sync`. The app signs RevenueCat in with the QuR Tag account id (`src/lib/iap.ts`). It shows
@@ -148,7 +148,7 @@ Until the key is set in the build and RevenueCat returns offerings, the app hide
 pricing link (`membershipsAvailableInApp()` in `src/lib/iap.ts`, the rule in `src/lib/membership-flag.ts`); the website is
 unchanged, and `/join/<token>` still works.
 
-Database changes are the rollout files 5 (memberships) and 6 (family) in
+Database changes are the rollout files 5 (memberships), 6 (family) and 11 (Free allows 3 items; it changes only `household_item_limit`, which `db/membership.sql` already holds with 3) in
 `~/Claude/Rollouts/QurTag-rollout-schema` (copies of `db/membership.sql` and `db/family.sql`, each with an
 undo). The schema comments in those two files explain every rule.
 

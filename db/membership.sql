@@ -6,7 +6,7 @@
 -- household on top of it.
 --
 -- The plans
---   Free    2 items, 1 person. Scan history: the last 30 days.
+--   Free    3 items, 1 person. Scan history: the last 30 days.
 --   Plus    unlimited items and the full scan history, 1 person.
 --   Family  as Plus, shared by up to 5 people (db/family.sql).
 --
@@ -39,7 +39,7 @@
 -- their plan in the meantime. A cancelled one (auto-renew off) ends exactly at its period end.
 --
 -- What it changes in the rules db/qurtag.sql made (undo: rollout file undo-5-membership.sql)
---   create_item        the limit follows the plan (it was a fixed 2).
+--   create_item        the limit follows the plan (it was a fixed 2; the rollout file 11-free-three.sql moved Free to 3).
 --   guard_item         also refuses a change to a read-only item.
 --   own_scans_read     a Free household sees the last 30 days of scans, a paid one all.
 --   delete_my_account  refuses while a membership still renews (it would keep charging).
@@ -127,10 +127,10 @@ language sql stable security definer set search_path = '' as $$
   ), 'free')
 $$;
 
--- How many items a household may have: 2 on Free, no limit (null) on Plus and Family.
+-- How many items a household may have: 3 on Free, no limit (null) on Plus and Family.
 create function qurtag.household_item_limit(p_household uuid) returns integer
 language sql stable security definer set search_path = '' as $$
-  select case when qurtag.household_plan(p_household) = 'free' then 2 end
+  select case when qurtag.household_plan(p_household) = 'free' then 3 end
 $$;
 
 -- Whether an item may be changed: it is within its household's limit, counting from the

@@ -231,7 +231,12 @@ const created2 = await owner.db.rpc('create_item', { p_name: 'Violin case' });
 const tag2 = created2.data?.public_id;
 {
   const third = await owner.db.rpc('create_item', { p_name: 'House keys' });
-  check('free covers two items: a third is refused', third.error?.message === 'item_limit', JSON.stringify(third.error));
+  check('free covers three items: a third is allowed', !third.error, JSON.stringify(third.error));
+  const fourth = await owner.db.rpc('create_item', { p_name: 'Bike lock' });
+  check('free covers three items: a fourth is refused', fourth.error?.message === 'item_limit', JSON.stringify(fourth.error));
+  // Back to two items, so the checks further down count what they always counted.
+  const dropThird = await owner.db.from('items').delete().eq('id', third.data?.item_id);
+  check('the third item can be deleted again', !dropThird.error, JSON.stringify(dropThird.error));
 
   const cross = await finder.send(tag2, token, 'wrong tag');
   check("a conversation token works only under its own tag", cross.status === 404, `${cross.status}`);

@@ -27,40 +27,34 @@ export function Pricing() {
   }, []);
 
   function buy(plan: PaidPlan) {
-    return (['month', 'year'] as const).map((interval) => {
-      const p = productFor(plan, interval);
-      const label = `${interval === 'month' ? 'Pay monthly' : 'Pay yearly'}, ${priceLabel(p.cents)}`;
-      if (available === undefined) {
-        return (
-          <button key={interval} type="button" disabled className={`${button} border border-hairline-strong text-muted`}>
-            {label}
-          </button>
-        );
-      }
-      if (!available || !available[`${plan}_${interval}`]) {
-        return (
-          <button key={interval} type="button" disabled className={`${button} border border-hairline-strong text-muted`}>
-            {interval === 'month' ? 'Pay monthly' : 'Pay yearly'}: coming soon
-          </button>
-        );
-      }
+    const p = productFor(plan, 'year');
+    const label = `Pay ${priceLabel(p.cents)} a year`;
+    if (available === undefined) {
       return (
-        <Link
-          key={interval}
-          to="/app/membership"
-          className={`${button} ${interval === 'year' ? 'bg-ink-900 text-canvas hover:bg-ink-700' : 'border border-hairline-strong text-ink-900 hover:border-ink-900'}`}
-        >
+        <button type="button" disabled className={`${button} border border-hairline-strong text-muted`}>
           {label}
-        </Link>
+        </button>
       );
-    });
+    }
+    if (!available || !available[`${plan}_year`]) {
+      return (
+        <button type="button" disabled className={`${button} border border-hairline-strong text-muted`}>
+          Coming soon
+        </button>
+      );
+    }
+    return (
+      <Link to="/app/membership" className={`${button} bg-ink-900 text-canvas hover:bg-ink-700`}>
+        {label}
+      </Link>
+    );
   }
 
   return (
     <>
       <PageHero
         eyebrow="Plans"
-        title="Free for two things. Plus for everything."
+        title="Free for three things. Plus for everything."
         lede={`Start free with up to ${FREE_ITEM_LIMIT} items. Move to Plus for no limit, or Family to share with the people you live with.`}
       />
       <section className="border-t border-hairline bg-paper">
@@ -98,7 +92,7 @@ export function Pricing() {
         </Section>
         <Section title="Paying and canceling">
           <P>
-            Plus and Family renew automatically every month or every year, whichever you pick, until you cancel. Cancel at any time and you
+            Plus and Family renew automatically every year until you cancel. Cancel at any time and you
             keep your plan until the end of the period you paid for. On the web, you pay with a card through Stripe and manage or cancel
             your membership from the Membership page. On iPhone, you pay through Apple and manage or cancel it in your iPhone's
             Subscriptions settings. A membership bought either way works on the web and on iPhone when you sign in to the same account.
