@@ -125,7 +125,7 @@ export function AddItemButton({ membership, first = false }: { membership?: Memb
   const to = first ? '/app/first-tag' : '/start/setup';
   return (
     <>
-      <Link to={to} aria-label={first ? 'Make your first tag' : 'Add item'} className="grid size-11 place-items-center rounded-pill text-ink-900 hover:bg-ink-50 active:bg-ink-50 md:hidden">
+      <Link to={to} aria-label={first ? 'Make your first tag' : 'Add item'} className="grid size-[44px] place-items-center rounded-pill text-ink-900 hover:bg-ink-50 active:bg-ink-50 md:hidden">
         <Plus size={24} strokeWidth={2} aria-hidden />
       </Link>
       <Link to={to} className={buttonClasses({ variant: 'primary', className: 'hidden px-4 md:inline-flex' })}>

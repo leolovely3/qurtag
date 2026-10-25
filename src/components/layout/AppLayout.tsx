@@ -178,7 +178,7 @@ export function AppLayout() {
                     to={item.to}
                     aria-current={active ? 'page' : undefined}
                     className={cn(
-                      'flex h-14 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors duration-150',
+                      'flex h-14 flex-col items-center justify-center gap-1 text-[min(0.75rem,3.2vw)] font-medium transition-colors duration-150',
                       active ? 'text-ink-900' : 'text-muted hover:text-ink-900',
                     )}
                   >

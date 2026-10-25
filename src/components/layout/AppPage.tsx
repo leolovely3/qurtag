@@ -100,8 +100,8 @@ function TopLevel({
           scrolled ? 'border-hairline bg-canvas/85 backdrop-blur-xl' : 'border-transparent bg-canvas',
         )}
       >
-        <div className="grid h-11 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1 pl-3 pr-1">
-          <Link to="/app" aria-label="QuR Tag, go to Items" className="inline-flex h-11 items-center rounded-card pr-1">
+        <div className="grid h-[44px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1 pl-3 pr-1">
+          <Link to="/app" aria-label="QuR Tag, go to Items" className="inline-flex h-[44px] items-center rounded-card pr-1">
             <Wordmark />
           </Link>
           <span aria-hidden className={cn('truncate text-center text-base font-semibold text-ink-900 transition-opacity duration-150', scrolled ? 'opacity-100' : 'opacity-0')}>
@@ -117,7 +117,7 @@ function TopLevel({
       <div className={cn('mx-auto w-full px-4 pb-8 pt-1 md:px-8 md:pt-10', widths[width])}>
         <header className="mb-5 flex items-center justify-between gap-3 md:mb-6">
           <div className="flex min-w-0 flex-col gap-1">
-            <h1 ref={largeTitle} className="text-[2rem] font-bold leading-tight tracking-[-0.02em] text-ink-900 md:text-[2rem] md:font-semibold">{title}</h1>
+            <h1 ref={largeTitle} className="text-[min(2rem,10vw)] font-bold leading-tight tracking-[-0.02em] text-ink-900 md:text-[2rem] md:font-semibold">{title}</h1>
             {subtitle && <p className="text-sm text-muted text-pretty">{subtitle}</p>}
           </div>
           <div className="hidden shrink-0 items-center gap-1 md:flex">
