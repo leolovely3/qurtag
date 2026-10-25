@@ -47,7 +47,7 @@ export function usePlanLine(): string | null {
 /** The round avatar at the top left of Items, on a phone: opens the account. 44 points to tap. */
 export function AccountButton() {
   return (
-    <Link to="/app/account" aria-label="Account" className="grid size-11 place-items-center rounded-pill hover:bg-ink-50 active:bg-ink-50">
+    <Link to="/app/account" aria-label="Account" className="grid size-[44px] place-items-center rounded-pill hover:bg-ink-50 active:bg-ink-50">
       <Avatar size={32} />
     </Link>
   );
@@ -59,7 +59,7 @@ export function HelpButton({ section, className }: { section: string; className?
     <Link
       to={`/app/help#${section}`}
       aria-label="Help"
-      className={cn('grid size-11 place-items-center rounded-pill text-ink-900 hover:bg-ink-50 active:bg-ink-50', className)}
+      className={cn('grid size-[44px] place-items-center rounded-pill text-ink-900 hover:bg-ink-50 active:bg-ink-50', className)}
     >
       <CircleHelp size={22} strokeWidth={1.75} aria-hidden />
     </Link>
