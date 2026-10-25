@@ -25,6 +25,7 @@ project's own data API.
 | Schema, rules, functions | `db/qurtag.sql` | applied once as `postgres` |
 | Logins and their passwords | `db/logins.sql` | applied once as `postgres` |
 | Sign-in (Better Auth, email and password) | `api/auth`, `server/auth/qurtagAuth.ts` | `qurtag_auth`: the `auth_*` tables only |
+| Schema, rules, functions for the Super Admin role | `db/admin.sql` | applied once as `postgres`, after the two above |
 | Data API for signed-in owners (PostgREST-style) | `api/data`, `server/data/` | `qurtag_authenticator`, which can only become `qurtag_user` or `qurtag_anon` |
 | Finder routes | `api/fn` (`finder-view`, `finder-send`), `server/routes/finder.ts` | `qurtag_server`: no table rights, only the `server_*` functions |
 | Outbox and daily job | `api/jobs`, `server/routes/outbox.ts`, Vercel cron 05:00 UTC | `qurtag_server` |
@@ -43,6 +44,18 @@ address, and the answer is the same whether or not the account exists. Until `RE
 is set, new accounts are confirmed at once, the forgot-password page says "We couldn't send
 the email right now, please try again later", and owners read notes in the inbox (the outbox
 finishes its rows unsent).
+
+### Super admin
+
+`db/admin.sql` (rollout step 3) adds the Super Admin role. Who is one is stored in
+`qurtag.super_admins`, written only by a rollout file run by the founder
+(`4-make-admin.sql`), never by the app or any request. The admin screens are at `/app/admin`
+(counts, accounts with search, an account's items and tags, switch a tag off, hide a
+finder message, delete an account after typing its email) and appear only for a super
+admin. Every `admin_*` function checks in the database, on every call, that the live
+session belongs to a super admin, and writes the action to `qurtag.admin_audit` (who,
+what, when; add-only) in the same step. Admins never see finder tokens, sign-in data or
+private notes. Tested in `scripts/qurtag/e2e.test.mjs`.
 
 ### Settings (Vercel, project `qurtag`)
 

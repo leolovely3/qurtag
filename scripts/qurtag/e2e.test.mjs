@@ -366,6 +366,218 @@ let threadId;
   check("a deleted item's tag answers not registered", (await finder2.view(extraTag)).status === 404);
 }
 
+// ------------------------------------------------------------------ the Super Admin role (db/admin.sql)
+
+{
+  const ADMIN_CALLS = [
+    ['admin_overview', {}],
+    ['admin_list_accounts', { p_search: null, p_limit: 5, p_offset: 0 }],
+    ['admin_account', { p_user: owner.id }],
+    ['admin_set_tag', { p_tag: '00000000-0000-0000-0000-000000000000', p_active: false }],
+    ['admin_set_message_hidden', { p_message: '00000000-0000-0000-0000-000000000000', p_hidden: true }],
+    ['admin_delete_account', { p_user: other.id, p_confirm_email: 'other@example.com' }],
+  ];
+  const auditCount = async () => Number((await sql('select count(*) as n from qurtag.admin_audit')).rows[0].n);
+
+  const boss = new Person('super admin', '10.0.0.30');
+  await signUp(boss, 'boss@example.com', 'Bea Boss');
+  const doomed = new Person('doomed account', '10.0.0.31');
+  await signUp(doomed, 'doomed@example.com', 'Dan Doomed');
+  const finder3 = new Person('third finder', '10.0.0.32');
+
+  // Nobody becomes a super admin through the app: not by a request, not by a table.
+  const before = await auditCount();
+  const noFlag = await sql('select count(*)::int as n from qurtag.super_admins');
+  check('nobody is a super admin until a rollout file says so', noFlag.rows[0].n === 0);
+  check('a normal owner: is_super_admin answers false', (await owner.db.rpc('is_super_admin')).data === false);
+  for (const [fn, args] of ADMIN_CALLS) {
+    const r = await owner.db.rpc(fn, args);
+    check(`a normal owner is refused ${fn} (403)`, r.status === 403 && r.data === null, `${r.status} ${JSON.stringify(r.error)}`);
+  }
+  for (const [fn, args] of ADMIN_CALLS) {
+    const r = await new Person('visitor', '10.0.0.33').req(`/api/data/rpc/${fn}`, { method: 'POST', body: args });
+    check(`a visitor with no pass is refused ${fn} (401)`, r.status === 401, `${r.status}`);
+  }
+  for (const path of ['/api/data/super_admins', '/api/data/admin_audit']) {
+    const r = await owner.req(path, { headers: { authorization: `Bearer ${owner.pass}` } });
+    check(`a normal owner cannot read ${path.split('/').pop()}`, r.status >= 400, `${r.status}`);
+  }
+  for (const fn of ['admin_check', 'admin_log']) {
+    const r = await owner.req(`/api/data/rpc/${fn}`, { method: 'POST', headers: { authorization: `Bearer ${owner.pass}` }, body: {} });
+    check(`${fn} cannot be called from the app`, r.status >= 400, `${r.status}`);
+  }
+  {
+    const c = new pg.Client({ connectionString: process.env.QURTAG_TEST_LOGIN_DB_DATA });
+    await c.connect();
+    await c.query('set role qurtag_user');
+    for (const q of ['select * from qurtag.super_admins', 'select * from qurtag.admin_audit', `insert into qurtag.super_admins (user_id) values ('${owner.id}')`,
+                     `select qurtag.admin_check()`, `select qurtag.admin_log('${owner.id}', 'view_overview', null, null, '{}')`]) {
+      let code = null;
+      try {
+        await c.query(q);
+      } catch (e) {
+        code = e.code;
+      }
+      check(`qurtag_user is refused at the database: ${q.slice(0, 48)}`, code === '42501', `${code}`);
+    }
+    await c.query('reset role');
+    await c.end();
+  }
+  for (const login of ['QURTAG_TEST_LOGIN_DB_SERVER', 'QURTAG_TEST_LOGIN_DB_AUTH']) {
+    const c = new pg.Client({ connectionString: process.env[login] });
+    await c.connect();
+    let code = null;
+    try {
+      await c.query('select qurtag.admin_overview()');
+    } catch (e) {
+      code = e.code;
+    }
+    check(`${login.replace('QURTAG_TEST_LOGIN_DB_', '').toLowerCase()} login cannot run admin functions`, code === '42501', `${code}`);
+    await c.end();
+  }
+  check('refused calls write nothing to the admin log', (await auditCount()) === before);
+
+  // The rollout file's job, done here directly.
+  await sql('insert into qurtag.super_admins (user_id) select id from qurtag.auth_users where email = $1', ['boss@example.com']);
+  check('a super admin: is_super_admin answers true', (await boss.db.rpc('is_super_admin')).data === true);
+  check('an admin flag is not carried by anyone else', (await owner.db.rpc('is_super_admin')).data === false);
+
+  // Counts.
+  {
+    const o = await boss.db.rpc('admin_overview');
+    const { rows } = await sql(`select (select count(*) from qurtag.auth_users)::int as accounts, (select count(*) from qurtag.items)::int as items,
+      (select count(*) from qurtag.tags)::int as tags, (select count(*) from qurtag.scans where scanned_at > now() - interval '7 days')::int as scans_7d,
+      (select count(*) from qurtag.messages where created_at > now() - interval '30 days')::int as messages_30d`);
+    const d = o.data ?? {};
+    check('admin: the counts match the database', !o.error && d.accounts === rows[0].accounts && d.items === rows[0].items && d.tags === rows[0].tags && d.scans_7d === rows[0].scans_7d && d.messages_30d === rows[0].messages_30d,
+      `${JSON.stringify(o.error)} ${JSON.stringify(d)} ${JSON.stringify(rows[0])}`);
+    check('admin: the counts cover 7 and 30 days', ['accounts_7d', 'accounts_30d', 'scans_7d', 'scans_30d', 'messages_7d', 'messages_30d'].every((k) => typeof d[k] === 'number'));
+  }
+
+  // The list, and search.
+  {
+    const all = await boss.db.rpc('admin_list_accounts', { p_search: null, p_limit: 100, p_offset: 0 });
+    const emails = (all.data?.accounts ?? []).map((a) => a.email);
+    check('admin: lists accounts with email, joined and item count', emails.includes('owner@example.com') && all.data.accounts.every((a) => a.joined && typeof a.item_count === 'number'), JSON.stringify(all.error));
+    const ownerRow = all.data?.accounts?.find((a) => a.email === 'owner@example.com');
+    check("admin: the owner's item count is right", ownerRow?.item_count === 2, `${ownerRow?.item_count}`);
+    const found = await boss.db.rpc('admin_list_accounts', { p_search: 'OWNER@exa', p_limit: 25, p_offset: 0 });
+    check('admin: search finds part of an email, any case', found.data?.total === 1 && found.data.accounts.some((a) => a.email === 'owner@example.com'), JSON.stringify(found.data));
+    const wild = await boss.db.rpc('admin_list_accounts', { p_search: '%', p_limit: 25, p_offset: 0 });
+    check('admin: a percent sign in the search is a plain character', wild.data?.total === 0, JSON.stringify(wild.data));
+    const page = await boss.db.rpc('admin_list_accounts', { p_search: null, p_limit: 1, p_offset: 1 });
+    check('admin: pages the list', page.data?.accounts?.length === 1 && page.data.total === all.data.total);
+  }
+
+  // One account.
+  const activeTag = (await sql(`select t.id, t.public_id from qurtag.tags t join qurtag.items i on i.id = t.current_item_id
+                                where i.household_id = $1 and t.status = 'active' and i.name = 'Blue water bottle'`, [owner.household])).rows[0];
+  const hashes = (await sql('select finder_token_sha256 as h from qurtag.threads')).rows.map((r) => r.h);
+  {
+    const a = await boss.db.rpc('admin_account', { p_user: owner.id });
+    const text = JSON.stringify(a.data);
+    check("admin: sees the account's items, tags and conversations", !a.error && a.data.items.length === 2 && a.data.tags.length >= 3 && a.data.threads.length >= 1 && a.data.threads[0].messages.length >= 3, JSON.stringify(a.error));
+    check('admin: never sees a finder token hash, sign-in data or private notes',
+      hashes.length > 0 && !hashes.some((h) => text.includes(h)) && !/finder_token|password|PRIVATE-NOTE|data:image|session|jwks/i.test(text));
+    check('admin: an unknown account is not found', (await boss.db.rpc('admin_account', { p_user: '00000000-0000-0000-0000-000000000000' })).status === 404);
+  }
+
+  // Switch a tag off.
+  {
+    const fresh = await finder3.send(activeTag.public_id, null, 'A rude note the owner should not have to read');
+    const tok = fresh.json?.token;
+    check('setup: a third finder opens a conversation', fresh.status === 200 && !!tok, `${fresh.status}`);
+    check('before: the tag opens', (await finder3.view(activeTag.public_id, tok)).status === 200);
+    const off = await boss.db.rpc('admin_set_tag', { p_tag: activeTag.id, p_active: false });
+    check('admin: switches a tag off', !off.error && off.data?.status === 'inactive', JSON.stringify(off.error));
+    check('a tag an admin switched off answers not registered', (await finder3.view(activeTag.public_id, tok)).status === 404);
+    const back = await owner.db.from('tags').update({ status: 'active' }).eq('id', activeTag.id).select();
+    check('the owner cannot switch it back on', (back.data ?? []).length === 0, JSON.stringify(back));
+    const rep = await owner.db.rpc('replace_tag', { p_item_id: itemId });
+    check('the owner cannot get around it with a new tag', rep.status === 403, `${rep.status} ${JSON.stringify(rep.error)}`);
+    const again = await boss.db.rpc('admin_set_tag', { p_tag: activeTag.id, p_active: true });
+    check('admin: switches it back on', !again.error && again.data?.status === 'active', JSON.stringify(again.error));
+    check('then the tag opens again', (await finder3.view(activeTag.public_id, tok)).status === 200);
+    const notOwn = await boss.db.rpc('admin_set_tag', { p_tag: activeTag.id, p_active: true });
+    check('admin: "on" only undoes an admin switch-off', notOwn.error?.message === 'not_disabled_by_admin', JSON.stringify(notOwn.error));
+    const replacedTag = (await sql(`select id from qurtag.tags where status = 'replaced' limit 1`)).rows[0];
+    check('admin: a replaced tag cannot be switched', (await boss.db.rpc('admin_set_tag', { p_tag: replacedTag.id, p_active: false })).error?.message === 'tag_replaced');
+
+    // Hide a message.
+    const thread = (await sql('select id from qurtag.threads where tag_id = $1', [activeTag.id])).rows[0];
+    const msg = (await sql(`select id from qurtag.messages where thread_id = $1 and sender_kind = 'finder'`, [thread.id])).rows[0];
+    const mine = await owner.db.from('messages').select('id').eq('thread_id', thread.id);
+    check('before: the owner reads the note', mine.data?.some((m) => m.id === msg.id));
+    const hide = await boss.db.rpc('admin_set_message_hidden', { p_message: msg.id, p_hidden: true });
+    check('admin: hides a message', !hide.error && hide.data?.hidden === true, JSON.stringify(hide.error));
+    const after = await owner.db.from('messages').select('id').eq('thread_id', thread.id);
+    check("a hidden message is gone from the owner's inbox", !after.data?.some((m) => m.id === msg.id) && !after.error);
+    const seen = await finder3.view(activeTag.public_id, tok);
+    check("a hidden message is gone from the finder's page", !(seen.json?.thread?.messages ?? []).some((m) => m.id === msg.id));
+    const stillThere = await boss.db.rpc('admin_account', { p_user: owner.id });
+    check('the admin still sees it, marked hidden', stillThere.data.threads.flatMap((t) => t.messages).some((m) => m.id === msg.id && m.hidden === true));
+    check('admin: shows it again', (await boss.db.rpc('admin_set_message_hidden', { p_message: msg.id, p_hidden: false })).data?.hidden === false);
+    check('then the owner reads it again', (await owner.db.from('messages').select('id').eq('thread_id', thread.id)).data?.some((m) => m.id === msg.id));
+  }
+
+  // Delete an account.
+  {
+    const made = await doomed.db.rpc('create_item', { p_name: 'Doomed umbrella' });
+    check('setup: the account to delete has an item', !made.error);
+    const doomedTag = made.data?.public_id;
+    await finder3.send(doomedTag, null, 'a note to a doomed owner');
+    const wrong = await boss.db.rpc('admin_delete_account', { p_user: doomed.id, p_confirm_email: 'someone@else.com' });
+    check('admin: a wrong typed email deletes nothing', wrong.error?.message === 'confirmation_mismatch', JSON.stringify(wrong.error));
+    const none = await boss.db.rpc('admin_delete_account', { p_user: doomed.id, p_confirm_email: null });
+    check('admin: no typed email deletes nothing', !!none.error);
+    check('the account is still there', (await sql('select count(*)::int as n from qurtag.auth_users where id = $1', [doomed.id])).rows[0].n === 1);
+    const self = await boss.db.rpc('admin_delete_account', { p_user: boss.id, p_confirm_email: 'boss@example.com' });
+    check("admin: a super admin's account cannot be deleted", self.error?.message === 'cannot_delete_admin', JSON.stringify(self.error));
+    const ok = await boss.db.rpc('admin_delete_account', { p_user: doomed.id, p_confirm_email: ' Doomed@Example.com ' });
+    check('admin: deletes the account after the typed email', !ok.error && ok.data?.deleted === true, JSON.stringify(ok.error));
+    const gone = await sql(`select (select count(*) from qurtag.auth_users where id = $1)::int as users, (select count(*) from qurtag.households where owner_user_id = $1)::int as hh,
+      (select count(*) from qurtag.items where name = 'Doomed umbrella')::int as items, (select count(*) from qurtag.tags where public_id = $2)::int as tags,
+      (select count(*) from qurtag.auth_sessions where "userId" = $1)::int as sessions`, [doomed.id, doomedTag]);
+    check('the account, its items, tags and sign-ins are gone', Object.values(gone.rows[0]).every((n) => n === 0), JSON.stringify(gone.rows[0]));
+    check("the deleted account's tag answers not registered", (await finder3.view(doomedTag)).status === 404);
+  }
+
+  // The log.
+  {
+    const rows = (await sql('select * from qurtag.admin_audit order by id')).rows;
+    const actions = new Set(rows.map((r) => r.action));
+    for (const a of ['view_overview', 'list_accounts', 'view_account', 'disable_tag', 'enable_tag', 'hide_message', 'unhide_message', 'delete_account']) {
+      check(`the admin log holds ${a}`, actions.has(a));
+    }
+    check('every log row says who (id and email) and when', rows.length > 0 && rows.every((r) => r.actor_id === boss.id && r.actor_email === 'boss@example.com' && r.at instanceof Date));
+    const del = rows.find((r) => r.action === 'delete_account');
+    check('the log keeps what was deleted after the account is gone', del?.detail?.email === 'doomed@example.com' && del.detail.items === 1 && del.target_id === doomed.id, JSON.stringify(del));
+    check('failed attempts (wrong email, an admin) left no delete row', rows.filter((r) => r.action === 'delete_account').length === 1);
+    check('only the admin actions above were logged', rows.every((r) => r.actor_id === boss.id));
+    let blocked = 0;
+    for (const q of ["update qurtag.admin_audit set actor_email = 'x'", 'delete from qurtag.admin_audit', 'truncate qurtag.admin_audit']) {
+      try {
+        await sql(q);
+      } catch {
+        blocked++;
+      }
+    }
+    check('the admin log can only be added to', blocked === 3, `${blocked}`);
+    // The log row is written in the same step as the action: a failed action leaves none.
+    const n0 = await auditCount();
+    await boss.db.rpc('admin_set_tag', { p_tag: '00000000-0000-0000-0000-000000000001', p_active: false });
+    check('an action that fails leaves no log row', (await auditCount()) === n0);
+  }
+
+  // A signed-out admin pass is dead at once.
+  {
+    const pass = boss.pass;
+    await boss.req('/api/auth/sign-out', { method: 'POST', body: {} });
+    const r = await owner.req('/api/data/rpc/admin_overview', { method: 'POST', headers: { authorization: `Bearer ${pass}` }, body: {} });
+    check("after sign-out, an admin's unexpired pass is refused", r.status === 403, `${r.status}`);
+  }
+}
+
 // ------------------------------------------------------------------ sign-out and deletion
 
 {

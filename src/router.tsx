@@ -19,6 +19,7 @@ import { Privacy } from '@/routes/marketing/Privacy';
 import { SecurityPage } from '@/routes/marketing/Security';
 import { Terms } from '@/routes/marketing/Terms';
 import { Tags } from '@/routes/marketing/Tags';
+import { Admin, AdminAccountPage } from '@/routes/app/Admin';
 import { AppHome } from '@/routes/app/Home';
 import { Inbox } from '@/routes/app/Inbox';
 import { InboxThread } from '@/routes/app/InboxThread';
@@ -71,6 +72,8 @@ export const router = createBrowserRouter([
       { path: '/app/inbox/:threadId', element: <InboxThread /> },
       ...(FEATURES.trips ? [{ path: '/app/trips', element: <Trips /> }] : []),
       { path: '/app/settings', element: <Settings /> },
+      { path: '/app/admin', element: <Admin /> },
+      { path: '/app/admin/accounts/:userId', element: <AdminAccountPage /> },
     ],
   },
   {
