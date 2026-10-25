@@ -23,6 +23,7 @@ final class QurTagNotifications: NSObject, UNUserNotificationCenterDelegate {
 
     static let categoryFound = "QURTAG_FOUND"
     static let categoryMessage = "QURTAG_MESSAGE"
+    static let categoryAdmin = "QURTAG_ADMIN"
     static let replyAction = "QURTAG_REPLY"
 
     /// Capacitor's router, set when the page's bridge is up.
@@ -48,7 +49,9 @@ final class QurTagNotifications: NSObject, UNUserNotificationCenterDelegate {
         let message = UNNotificationCategory(
             identifier: Self.categoryMessage, actions: [reply], intentIdentifiers: [],
             hiddenPreviewsBodyPlaceholder: placeholder, options: [])
-        center.setNotificationCategories([found, message])
+        // Admin alerts carry no actions: a tap opens Admin.
+        let admin = UNNotificationCategory(identifier: Self.categoryAdmin, actions: [], intentIdentifiers: [], options: [])
+        center.setNotificationCategories([found, message, admin])
     }
 
     func attach(router: NotificationRouter?) {

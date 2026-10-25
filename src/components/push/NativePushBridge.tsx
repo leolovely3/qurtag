@@ -32,7 +32,7 @@ export function NativePushBridge({ unread }: { unread: number | null }) {
     if (isNative() && unread !== null) void setAppBadge(unread);
   }, [unread]);
 
-  useEffect(() => onPushTap(({ thread }) => navigate(thread ? `/app/inbox/${thread}` : '/app/items')), [navigate]);
+  useEffect(() => onPushTap(({ thread, open }) => navigate(open ?? (thread ? `/app/inbox/${thread}` : '/app/items'))), [navigate]);
 
   useEffect(() => {
     const m = /^\/app\/inbox\/([0-9a-f-]{36})$/i.exec(pathname);

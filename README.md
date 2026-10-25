@@ -53,7 +53,7 @@ finishes its rows unsent).
 `db/admin.sql` (rollout step 3) adds the Super Admin role. Who is one is stored in
 `qurtag.super_admins`, written only by a rollout file run by the founder
 (`4-make-admin.sql`), never by the app or any request. The admin screens are at `/app/admin`
-(counts, accounts with search, an account's items and tags, switch a tag off, hide a
+(counts, reported notes, accounts with search, an account's items and tags, switch a tag off, hide a
 finder message, delete an account after typing its email) and appear only for a super
 admin. Every `admin_*` function checks in the database, on every call, that the live
 session belongs to a super admin, and writes the action to `qurtag.admin_audit` (who,
@@ -232,6 +232,36 @@ by any request; only `server_support_create` writes and only the Super Admin fun
 - With `RESEND_API_KEY` set, a notice goes to info@impactconsulting.ai with reply-to set to the sender.
   Without it the message is only stored.
 
+## Moderation of finders' notes (App Store guideline 1.2)
+
+A finder is an anonymous stranger who writes to an owner, so the app has the four things Apple asks for.
+Database half: `db/moderation.sql` (rollout step 9, needs steps 3, 7 and 8). Server half: `server/moderation/`.
+
+| Need | What it is | Where |
+| --- | --- | --- |
+| Filter | Every note is checked in the finder route before it reaches the database. A slur or a threat (a small hand-kept list in `server/moderation/wordlist.ts`, no outside service) is accepted and **held**: the finder sees the normal confirmation, the owner sees "This note may be offensive. Show it?" with Show it and Report, and the text reaches the owner's phone only after Show it (the owner's read policy leaves held notes out; alerts for a held note carry no text). A note that is only links, or has more than 2, is refused with a plain sentence. Limits in the database: 5 notes a minute and 30 an hour per conversation, 60 an hour per tag, 20 new conversations per tag a day, plus the route's 12 notes a minute per network address. An identical note within 10 minutes is accepted but stored once | `server/moderation/filter.ts`, `server/routes/finder.ts`, `qurtag.server_finder_open` and `server_finder_post` |
+| Report | Under each finder note in a conversation: Report, with a reason (harassment, spam, threats, inappropriate, other) and an optional comment. The note is hidden from the owner at once and goes to `qurtag.message_reports`. After a report the app offers to block the finder | `src/routes/app/InboxThread.tsx`, `qurtag.report_message` |
+| Respond within 24 hours | Super Admin area (`/app/admin`), "Reported notes": open reports oldest first, with the note's text, the reason, the owner's comment and the item. Actions: **Hide for everyone**, **Dismiss**, **Block finder**. Each closes the report and is written to the admin log (`hide_message`, `dismiss_report`, `block_finder`) in the same step | `src/routes/app/Admin.tsx`, `qurtag.admin_reports_list`, `admin_report_resolve` |
+| Block | "Block this finder" on a conversation. The finder's conversation token can no longer write (a trigger on `messages` refuses it, whichever function inserts), the conversation and its notes leave the owner's inbox, and the finder gets only "This conversation is closed." Owners see and unblock blocked finders in Settings, under Blocked finders; a finder a Super Admin blocked cannot be unblocked by the owner. A block is per conversation token: a finder who clears their browser can start a new conversation, which the limits above still cover | `src/components/moderation/BlockedFinders.tsx`, `qurtag.block_finder`, `unblock_finder`, `my_blocked_finders` |
+| Published contact | /terms section 9 (zero tolerance, how to report and block, reports reviewed within 24 hours), the Help answer "Report or block a finder", and a "Report a problem with this page" link on the finder's page. Contact stays info@impactconsulting.ai | `src/routes/marketing/Terms.tsx`, `Help.tsx`, `src/routes/finder/FinderView.tsx` |
+
+- The Company OS counts: `qurtag.factory_metrics` returns `reports_open`, `reports_30d` and
+  `reports_oldest_open_days`, and **also adds open reports to `support_open`, `support_30d` and
+  `support_oldest_open_days`**, because those three names are all the Factory's support-ticket reader knows.
+  A report is an item that must be answered within 24 hours, so it belongs in that queue.
+- Alerts to the founder (`db/admin-alerts.sql`, rollout step 9b, needs step 9): each new report, and each note the filter holds, queues one `admin_alert` outbox row
+  (`server/routes/outbox.ts`). Every super admin with "Admin alerts" on (Settings, shown to super admins only,
+  on by default; `push_settings.admin_on`) gets an iPhone push, category `QURTAG_ADMIN`, time-sensitive: "New
+  report on QuR Tag. Review it in Admin." (or "N new reports on QuR Tag"), never any note text; a tap opens
+  `/app/admin#reported-notes`. With `RESEND_API_KEY` set, a plain email with a link to /app/admin goes to
+  info@impactconsulting.ai; without it, no email. At most one alert per 10 minutes (`admin_alert_state`):
+  rows queued inside the window wait for it to end and the next alert says how many are waiting, so none is
+  dropped; a failed send puts the window back and is retried. Tested in `scripts/qurtag/push.test.mjs`.
+- A held note counts as unread for the owner and in the app icon badge, but its text is not in the inbox
+  preview or any notification.
+- Tested in `scripts/qurtag/moderation.test.mjs` (database and routes) and `scripts/qurtag/unit/moderation.test.ts`
+  (the filter). To change the word list, edit `server/moderation/wordlist.ts` only.
+
 ## Tag styles, short codes and print-ready files
 
 **Styles** (tag page, `src/routes/app/TagPrint.tsx`): six styles, each in three looks (Clean, Bold, Playful), on US
@@ -271,7 +301,7 @@ sell tags.
 
 `src/lib/features.ts` hides code built for a bigger plan that cannot work yet: cash rewards,
 courier labels, trips, partner drop-off points, insurance packets, wallet passes, location
-sharing, web push (the browser kind; the iPhone app's alerts are described above), and block or report tools. Their tables are not in
+sharing and web push (the browser kind; the iPhone app's alerts are described above). Their tables are not in
 schema `qurtag`. `VITE_QURTAG_LABS=1` shows them for local work only. The old Supabase
 migrations and Edge Functions for them are kept in `supabase/` for reference; they are not
 deployed.

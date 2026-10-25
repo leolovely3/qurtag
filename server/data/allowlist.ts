@@ -125,6 +125,14 @@ export const RPCS: Readonly<Record<string, RpcRule>> = {
   owner_reply: { args: { p_thread_id: 'uuid', p_body: 'text' }, returns: 'value', callers: ['user'] },
   mark_thread_read: { args: { p_thread_id: 'uuid' }, returns: 'void', callers: ['user'] },
   delete_my_account: { args: {}, returns: 'void', callers: ['user'] },
+  // Moderation of finders' notes (db/moderation.sql): report a note, block or unblock a finder,
+  // the finders blocked, and the notes the filter held (no text) with the choice to show one.
+  report_message: { args: { p_message: 'uuid', p_reason: 'text', p_comment: 'text' }, returns: 'value', callers: ['user'] },
+  block_finder: { args: { p_thread: 'uuid' }, returns: 'value', callers: ['user'] },
+  unblock_finder: { args: { p_thread: 'uuid' }, returns: 'value', callers: ['user'] },
+  my_blocked_finders: { args: {}, returns: 'value', callers: ['user'] },
+  my_held_notes: { args: { p_thread: 'uuid' }, returns: 'value', callers: ['user'] },
+  release_held_note: { args: { p_message: 'uuid' }, returns: 'value', callers: ['user'] },
   // Super admins (db/admin.sql). Listed for every signed-in person; each function checks
   // for itself, in the database, that the live session belongs to a super admin, and
   // refuses everyone else with 403. is_super_admin only answers true or false.
@@ -136,6 +144,10 @@ export const RPCS: Readonly<Record<string, RpcRule>> = {
   admin_set_message_hidden: { args: { p_message: 'uuid', p_hidden: 'boolean' }, returns: 'value', callers: ['user'] },
   admin_support_list: { args: { p_status: 'text' }, returns: 'value', callers: ['user'] },
   admin_support_close: { args: { p_id: 'uuid' }, returns: 'value', callers: ['user'] },
+  my_admin_alerts: { args: {}, returns: 'value', callers: ['user'] },
+  set_admin_alerts: { args: { p_on: 'boolean' }, returns: 'value', callers: ['user'] },
+  admin_reports_list: { args: { p_status: 'text' }, returns: 'value', callers: ['user'] },
+  admin_report_resolve: { args: { p_id: 'uuid', p_action: 'text' }, returns: 'value', callers: ['user'] },
   admin_delete_account: { args: { p_user: 'uuid', p_confirm_email: 'text' }, returns: 'value', callers: ['user'] },
   // Membership (db/membership.sql) and the Family household (db/family.sql).
   my_membership: { args: {}, returns: 'value', callers: ['user'] },

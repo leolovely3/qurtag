@@ -1,7 +1,6 @@
 import { db as supabase } from './db';
 import { shrinkPhoto } from './photo';
 import type {
-  AbuseKind,
   CourierOrder,
   Household,
   Item,
@@ -154,6 +153,8 @@ export interface ThreadWithItem extends Thread {
   item: Pick<Item, 'id' | 'name' | 'brand' | 'hero_photo_url' | 'lost_mode'> | null;
   last_message: Pick<Message, 'body' | 'sender_kind' | 'created_at'> | null;
   unread_count: number;
+  /** Notes the filter held that the owner has not chosen to show (no text). */
+  held_count: number;
 }
 
 /** The owner's reply in one of their conversations. */
@@ -218,6 +219,7 @@ export async function fetchThreadsForHousehold(_householdId?: string): Promise<T
   }
 
   const threadIds = threadRows.map((t) => t.id);
+  const held = await fetchHeldNotes();
   const { data: msgs } = await supabase
     .from('messages')
     .select('thread_id, body, sender_kind, created_at, read_by_owner_at')
@@ -241,11 +243,15 @@ export async function fetchThreadsForHousehold(_householdId?: string): Promise<T
     }
   }
 
+  // A held note has no text here; it still counts as waiting until it is read.
+  for (const h of held) if (!h.read) unreadByThread.set(h.thread_id, (unreadByThread.get(h.thread_id) ?? 0) + 1);
+
   return threadRows.map((t) => ({
     ...t,
     item: itemMap.get(t.item_id) ?? null,
     last_message: lastByThread.get(t.id) ?? null,
     unread_count: unreadByThread.get(t.id) ?? 0,
+    held_count: held.filter((h) => h.thread_id === t.id).length,
   }));
 }
 
@@ -265,7 +271,8 @@ export async function countUnreadForHousehold(_householdId?: string): Promise<nu
     console.error('[QuR Tag] countUnreadForHousehold', error);
     return 0;
   }
-  return count ?? 0;
+  const held = (await fetchHeldNotes()).filter((h) => !h.read).length;
+  return (count ?? 0) + held;
 }
 
 export async function fetchCourierOrderForThread(threadId: string): Promise<CourierOrder | null> {
@@ -552,32 +559,92 @@ export async function markThreadStatus(
   if (error) console.error('[QuR Tag] markThreadStatus', error);
 }
 
-export async function blockFinderSession(input: {
-  householdId: string;
-  finderSessionId: string;
-  reason?: string;
-}): Promise<void> {
-  const { error } = await supabase.from('blocked_finder_sessions').insert({
-    household_id: input.householdId,
-    finder_session_id: input.finderSessionId,
-    reason: input.reason ?? null,
+/* ─────────────── moderation of finders' notes (db/moderation.sql) ─────────────── */
+
+export type ReportReason = 'harassment' | 'spam' | 'threats' | 'inappropriate' | 'other';
+
+export const REPORT_REASONS: { id: ReportReason; label: string; hint: string }[] = [
+  { id: 'harassment', label: 'Harassment', hint: 'Insults, bullying or unwanted contact' },
+  { id: 'spam', label: 'Spam', hint: 'Ads, links or the same note again and again' },
+  { id: 'threats', label: 'Threats', hint: 'Talk of hurting you or someone else' },
+  { id: 'inappropriate', label: 'Inappropriate', hint: 'Sexual, hateful or otherwise not okay' },
+  { id: 'other', label: 'Something else', hint: 'Tell us in the comment' },
+];
+
+/** Reports a finder's note. It is hidden from the owner at once. */
+export async function reportMessage(input: {
+  messageId: string;
+  reason: ReportReason;
+  comment?: string;
+}): Promise<{ ok: true; threadId: string } | { ok: false }> {
+  const { data, error } = await supabase.rpc('report_message', {
+    p_message: input.messageId,
+    p_reason: input.reason,
+    p_comment: input.comment?.trim() ? input.comment.trim().slice(0, 1000) : null,
   });
-  if (error) console.error('[QuR Tag] blockFinderSession', error);
+  if (error) {
+    console.error('[QuR Tag] reportMessage', error);
+    return { ok: false };
+  }
+  return { ok: true, threadId: (data as { thread_id: string }).thread_id };
 }
 
-export async function reportAbuse(input: {
-  householdId: string;
-  threadId: string;
-  kind: AbuseKind;
-  body?: string;
-}): Promise<void> {
-  const { error } = await supabase.from('abuse_reports').insert({
-    household_id: input.householdId,
-    thread_id: input.threadId,
-    kind: input.kind,
-    body: input.body ?? null,
-  });
-  if (error) console.error('[QuR Tag] reportAbuse', error);
+/** Blocks the finder of a conversation: no more notes, and the conversation leaves the inbox. */
+export async function blockFinder(threadId: string): Promise<boolean> {
+  const { error } = await supabase.rpc('block_finder', { p_thread: threadId });
+  if (error) console.error('[QuR Tag] blockFinder', error);
+  return !error;
+}
+
+export async function unblockFinder(threadId: string): Promise<{ ok: true } | { ok: false; byAdmin: boolean }> {
+  const { error } = await supabase.rpc('unblock_finder', { p_thread: threadId });
+  if (error) {
+    console.error('[QuR Tag] unblockFinder', error);
+    return { ok: false, byAdmin: error.message === 'blocked_by_admin' };
+  }
+  return { ok: true };
+}
+
+export interface BlockedFinder {
+  thread_id: string;
+  item_name: string;
+  started_at: string;
+  blocked_at: string;
+  by_admin: boolean;
+  notes: number;
+}
+
+export async function fetchBlockedFinders(): Promise<BlockedFinder[]> {
+  const { data, error } = await supabase.rpc('my_blocked_finders');
+  if (error) {
+    console.error('[QuR Tag] fetchBlockedFinders', error);
+    return [];
+  }
+  return (data ?? []) as BlockedFinder[];
+}
+
+/** A note the filter held. The text is not sent until the owner chooses to show it. */
+export interface HeldNote {
+  id: string;
+  thread_id: string;
+  created_at: string;
+  read: boolean;
+}
+
+/** The held notes of one conversation, or of every conversation when no id is given. */
+export async function fetchHeldNotes(threadId?: string): Promise<HeldNote[]> {
+  const { data, error } = await supabase.rpc('my_held_notes', threadId ? { p_thread: threadId } : {});
+  if (error) {
+    console.error('[QuR Tag] fetchHeldNotes', error);
+    return [];
+  }
+  return (data ?? []) as HeldNote[];
+}
+
+export async function showHeldNote(messageId: string): Promise<boolean> {
+  const { error } = await supabase.rpc('release_held_note', { p_message: messageId });
+  if (error) console.error('[QuR Tag] showHeldNote', error);
+  return !error;
 }
 
 export async function markThreadReadByOwner(threadId: string): Promise<void> {

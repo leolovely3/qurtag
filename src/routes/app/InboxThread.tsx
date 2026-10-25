@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ChevronRight, ExternalLink, Flag, Lock, ShieldOff, Truck } from 'lucide-react';
+import { ChevronRight, ExternalLink, Lock, ShieldOff, Truck } from 'lucide-react';
 import { AppPage } from '@/components/layout/AppPage';
 import { buttonClasses } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -11,16 +11,21 @@ import { Modal } from '@/components/ui/Modal';
 import { ThreadView } from '@/components/ui/ThreadView';
 import { useAuth } from '@/lib/auth';
 import {
-  blockFinderSession,
+  blockFinder,
   fetchActiveRewardForItem,
+  fetchHeldNotes,
   fetchCourierOrderForThread,
   fetchItemById,
   fetchMessagesForThread,
   fetchThreadById,
   markThreadReadByOwner,
   markThreadStatus,
-  reportAbuse,
+  REPORT_REASONS,
+  reportMessage,
   sendOwnerReply,
+  showHeldNote,
+  type HeldNote,
+  type ReportReason,
 } from '@/lib/queries';
 import { FEATURES } from '@/lib/features';
 import { releaseReward, startStripeCheckout } from '@/lib/stripe';
@@ -50,78 +55,47 @@ function centsToUSD(cents: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(cents / 100);
 }
 
-interface ReportFormProps {
-  onClose: () => void;
-  onSubmit: (kind: 'spam' | 'harassment' | 'fraud' | 'other', body: string) => Promise<void>;
-}
-
-function ReportForm({ onClose, onSubmit }: ReportFormProps) {
-  const [kind, setKind] = useState<'spam' | 'harassment' | 'fraud' | 'other'>('spam');
-  const [body, setBody] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-
+/** Why a note is being reported: one reason and an optional comment. */
+function ReportForm({ onSubmit, pending }: { onSubmit: (reason: ReportReason, comment: string) => void; pending: boolean }) {
+  const [reason, setReason] = useState<ReportReason>('harassment');
+  const [comment, setComment] = useState('');
   return (
-    <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 mb-qurtag-5 flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <h2 className="font-display font-semibold text-h5 text-ink-900 tracking-[-0.018em]">Report this conversation</h2>
-        <button
-          type="button"
-          onClick={onClose}
-          className="text-caption text-muted hover:text-ink-900 transition-colors"
-        >
-          Close
-        </button>
-      </div>
-      <p className="text-caption text-muted text-pretty">
-        Tell us what happened. We read every report sent to info@impactconsulting.ai.
-      </p>
-      <div className="flex gap-2 flex-wrap">
-        {(['spam', 'harassment', 'fraud', 'other'] as const).map((k) => (
-          <button
-            key={k}
-            type="button"
-            onClick={() => setKind(k)}
-            className={`inline-flex h-9 items-center rounded-pill px-3 text-caption font-medium border transition-colors duration-qurtag ${
-              kind === k
-                ? 'bg-ink-900 text-canvas border-ink-900'
-                : 'bg-canvas text-ink-900 border-hairline-strong hover:border-ink-900'
+    <div className="flex flex-col gap-3">
+      <fieldset className="flex flex-col gap-2">
+        <legend className="sr-only">Reason</legend>
+        {REPORT_REASONS.map((r) => (
+          <label
+            key={r.id}
+            className={`flex min-h-11 cursor-pointer items-start gap-3 rounded-card border px-3 py-2 ${
+              reason === r.id ? 'border-ink-900 bg-ink-50' : 'border-hairline-strong'
             }`}
           >
-            {k[0].toUpperCase() + k.slice(1)}
-          </button>
+            <input type="radio" name="report-reason" value={r.id} checked={reason === r.id} onChange={() => setReason(r.id)} className="mt-1" />
+            <span className="flex flex-col">
+              <span className="text-base font-medium text-ink-900">{r.label}</span>
+              <span className="text-sm text-muted">{r.hint}</span>
+            </span>
+          </label>
         ))}
-      </div>
-      <textarea
-        value={body}
-        onChange={(e) => setBody(e.target.value)}
-        placeholder="Anything we should know."
-        rows={4}
-        className="w-full rounded-card border border-hairline-strong bg-canvas p-3 text-body text-ink-900 placeholder:text-muted focus:outline-none focus:border-ink-900 transition-colors duration-qurtag resize-none"
-      />
-      <div className="flex items-center justify-end gap-3">
-        <button
-          type="button"
-          onClick={onClose}
-          className="text-caption text-muted hover:text-ink-900 transition-colors"
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          onClick={async () => {
-            setSubmitting(true);
-            try {
-              await onSubmit(kind, body.trim());
-            } finally {
-              setSubmitting(false);
-            }
-          }}
-          disabled={submitting}
-          className="inline-flex h-11 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-5 hover:bg-ink-700 disabled:opacity-50 transition-colors duration-qurtag"
-        >
-          {submitting ? 'Sending…' : 'Send report'}
-        </button>
-      </div>
+      </fieldset>
+      <label className="flex flex-col gap-1">
+        <span className="text-sm font-medium text-ink-900">Anything we should know? (optional)</span>
+        <textarea
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          maxLength={1000}
+          rows={3}
+          className="w-full resize-none rounded-card border border-hairline-strong bg-canvas p-3 text-base text-ink-900 focus:border-ink-900 focus:outline-none"
+        />
+      </label>
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() => onSubmit(reason, comment)}
+        className={buttonClasses({ variant: 'primary', className: 'w-full' })}
+      >
+        {pending ? 'Sending...' : 'Send report'}
+      </button>
     </div>
   );
 }
@@ -149,7 +123,9 @@ export function InboxThread() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionPending, setActionPending] = useState<string | null>(null);
-  const [reportOpen, setReportOpen] = useState(false);
+  const [reportFor, setReportFor] = useState<string | null>(null);
+  const [offerBlock, setOfferBlock] = useState(false);
+  const [held, setHeld] = useState<HeldNote[]>([]);
   const [reunitedOpen, setReunitedOpen] = useState(false);
   const [blockOpen, setBlockOpen] = useState(false);
   const [closeOpen, setCloseOpen] = useState(false);
@@ -160,8 +136,9 @@ export function InboxThread() {
   const toast = useToast();
 
   const refetchMessages = useCallback(async (tid: string) => {
-    const msgs = await fetchMessagesForThread(tid);
+    const [msgs, heldNotes] = await Promise.all([fetchMessagesForThread(tid), fetchHeldNotes(tid)]);
     setMessages(msgs);
+    setHeld(heldNotes);
   }, []);
 
   useEffect(() => {
@@ -182,14 +159,16 @@ export function InboxThread() {
         return;
       }
       setThread(t);
-      const [it, msgs, co] = await Promise.all([
+      const [it, msgs, heldNotes, co] = await Promise.all([
         fetchItemById(t.item_id),
         fetchMessagesForThread(t.id),
+        fetchHeldNotes(t.id),
         FEATURES.courier ? fetchCourierOrderForThread(t.id) : Promise.resolve(null),
       ]);
       if (cancelled) return;
       setItem(it);
       setMessages(msgs);
+      setHeld(heldNotes);
       setCourier(co);
       setLoading(false);
       // Mark as read on view.
@@ -203,8 +182,9 @@ export function InboxThread() {
   // New notes from the finder: ask again every few seconds while the page is open.
   usePoll(async () => {
     if (!threadId) return;
-    const [t, msgs] = await Promise.all([fetchThreadById(threadId), fetchMessagesForThread(threadId)]);
+    const [t, msgs, heldNotes] = await Promise.all([fetchThreadById(threadId), fetchMessagesForThread(threadId), fetchHeldNotes(threadId)]);
     if (t) setThread(t);
+    setHeld(heldNotes);
     setMessages((prev) => {
       if (msgs.length > prev.length && msgs.some((m) => m.sender_kind === 'finder' && !m.read_by_owner_at)) {
         void markThreadReadByOwner(threadId);
@@ -281,25 +261,27 @@ export function InboxThread() {
     }
   }
 
-  // Hidden feature (safety tools): conversations no longer carry a finder session id.
-  const finderSessionId = (thread as (Thread & { finder_session_id?: string | null }) | null)?.finder_session_id ?? null;
-
   async function confirmBlockFinder() {
-    if (!thread || !finderSessionId) return;
+    if (!thread) return;
     setBlockOpen(false);
+    setOfferBlock(false);
     setActionPending('block');
     try {
-      await blockFinderSession({
-        householdId: thread.household_id,
-        finderSessionId,
-        reason: 'Manually blocked from inbox',
-      });
-      await markThreadStatus(thread.id, 'closed');
-      toast.show({ kind: 'info', title: 'Finder blocked', body: "They can't open new threads on any of your tags." });
+      const ok = await blockFinder(thread.id);
+      if (!ok) {
+        toast.show({ kind: 'error', title: "Couldn't block this finder", body: 'Check your connection and try again.' });
+        return;
+      }
+      toast.show({ kind: 'info', title: 'Finder blocked', body: 'They cannot write to you again. You can unblock them in Settings.' });
       navigate('/app/inbox');
     } finally {
       setActionPending(null);
     }
+  }
+
+  async function handleShowHeld(messageId: string) {
+    if (!thread) return;
+    if (await showHeldNote(messageId)) await refetchMessages(thread.id);
   }
 
   async function handleCourierPay() {
@@ -321,18 +303,19 @@ export function InboxThread() {
     }
   }
 
-  async function handleReport(kind: 'spam' | 'harassment' | 'fraud' | 'other', body: string) {
-    if (!thread) return;
+  async function handleReport(reason: ReportReason, comment: string) {
+    if (!thread || !reportFor) return;
     setActionPending('report');
     try {
-      await reportAbuse({
-        householdId: thread.household_id,
-        threadId: thread.id,
-        kind,
-        body,
-      });
-      toast.show({ kind: 'success', title: 'Report submitted', body: 'A real person reviews every report. We respond within 24 hours.' });
-      setReportOpen(false);
+      const r = await reportMessage({ messageId: reportFor, reason, comment });
+      if (!r.ok) {
+        toast.show({ kind: 'error', title: "Couldn't send your report", body: 'Check your connection and try again.' });
+        return;
+      }
+      setReportFor(null);
+      await refetchMessages(thread.id);
+      toast.show({ kind: 'success', title: 'Reported and hidden', body: 'We review every report within 24 hours.' });
+      setOfferBlock(true);
     } finally {
       setActionPending(null);
     }
@@ -410,34 +393,35 @@ export function InboxThread() {
           >
             {thread.status === 'closed' ? 'Closed' : 'Close conversation'}
           </button>
-          {FEATURES.safetyTools && (
-            <>
-              <button
-                type="button"
-                onClick={() => setReportOpen(true)}
-                disabled={!!actionPending}
-                className={buttonClasses({ variant: 'secondary', className: 'flex-1 basis-[8.5rem] px-3' })}
-              >
-                <Flag size={16} strokeWidth={1.75} aria-hidden />
-                Report
-              </button>
-              <button
-                type="button"
-                onClick={() => finderSessionId && setBlockOpen(true)}
-                disabled={!!actionPending || !finderSessionId}
-                className={buttonClasses({ variant: 'danger', className: 'flex-1 basis-[8.5rem] px-3' })}
-              >
-                <ShieldOff size={16} strokeWidth={1.75} aria-hidden />
-                Block this finder
-              </button>
-            </>
-          )}
+          <button
+            type="button"
+            onClick={() => setBlockOpen(true)}
+            disabled={!!actionPending}
+            className={buttonClasses({ variant: 'danger', className: 'flex-1 basis-[8.5rem] px-3' })}
+          >
+            <ShieldOff size={16} strokeWidth={1.75} aria-hidden />
+            Block this finder
+          </button>
         </div>
       </section>
 
-      {reportOpen && (
-        <ReportForm onClose={() => setReportOpen(false)} onSubmit={handleReport} />
-      )}
+      <Modal
+        open={reportFor !== null}
+        onClose={() => setReportFor(null)}
+        title="Report this note"
+        description="The note is hidden from you right away. We review every report within 24 hours, and you can also block this finder."
+      >
+        <ReportForm onSubmit={handleReport} pending={actionPending === 'report'} />
+      </Modal>
+
+      <Modal
+        open={offerBlock}
+        onClose={() => setOfferBlock(false)}
+        title="Block this finder too?"
+        description="They will not be able to write to you again. You can unblock them in Settings."
+        primaryAction={{ label: 'Block this finder', tone: 'destructive', onClick: confirmBlockFinder, pending: actionPending === 'block' }}
+        secondaryAction={{ label: 'Not now', onClick: () => setOfferBlock(false) }}
+      />
 
       <Modal
         open={reunitedOpen}
@@ -489,7 +473,7 @@ export function InboxThread() {
         onClose={() => setBlockOpen(false)}
         eyebrow="Block this finder"
         title="Block this finder from contacting you again?"
-        description="The conversation closes and the same browser session can't open new threads on any of your tags. You can unblock from /app/settings later."
+        description="This finder can no longer write to you, and their notes disappear from your inbox. They are only told that the conversation is closed. You can unblock them in Settings."
         primaryAction={{
           label: 'Block them',
           tone: 'destructive',
@@ -550,7 +534,13 @@ export function InboxThread() {
 
       {/* Thread */}
       <div className="mb-4 rounded-modal border border-hairline bg-canvas p-4">
-        <ThreadView messages={messages} viewerKind="owner" />
+        <ThreadView
+          messages={messages}
+          viewerKind="owner"
+          held={held}
+          onShowHeld={(id) => void handleShowHeld(id)}
+          onReport={(id) => setReportFor(id)}
+        />
       </div>
 
       {/* Composer */}

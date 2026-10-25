@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { MapPin, Truck, ShieldCheck, PartyPopper } from 'lucide-react';
+import { MapPin, Truck, ShieldCheck, PartyPopper, Flag } from 'lucide-react';
 import type { Message, SenderKind } from '@/lib/database.types';
 import { parseSystemPayload, type SystemPayload } from '@/lib/systemMessages';
 import { mapboxStaticUrl, isMapboxConfigured } from '@/lib/mapbox';
@@ -10,6 +10,11 @@ interface ThreadViewProps {
   viewerKind: SenderKind;
   autoScroll?: boolean;
   className?: string;
+  /** Owner only: a "Report" action under each note from the finder. */
+  onReport?: (messageId: string) => void;
+  /** Owner only: notes the filter held. Their text is not here until the owner shows one. */
+  held?: { id: string; created_at: string }[];
+  onShowHeld?: (messageId: string) => void;
 }
 
 function timestamp(iso: string): string {
@@ -119,18 +124,25 @@ function SystemCard({ payload }: { payload: SystemPayload }) {
   }
 }
 
-export function ThreadView({ messages, viewerKind, autoScroll = true, className }: ThreadViewProps) {
+export function ThreadView({ messages, viewerKind, autoScroll = true, className, onReport, held = [], onShowHeld }: ThreadViewProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // A new message scrolls into view; opening the screen does not, so it starts at its title.
-  const seen = useRef(messages.length);
+  const count = messages.length + held.length;
+  const seen = useRef(count);
   useEffect(() => {
     if (!autoScroll) return;
-    if (messages.length > seen.current) bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-    seen.current = messages.length;
-  }, [messages.length, autoScroll]);
+    if (count > seen.current) bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    seen.current = count;
+  }, [count, autoScroll]);
 
-  if (messages.length === 0) {
+  // Notes and held notes in the order they were written.
+  const entries = [
+    ...messages.map((m) => ({ kind: 'message' as const, at: m.created_at, m })),
+    ...held.map((h) => ({ kind: 'held' as const, at: h.created_at, h })),
+  ].sort((a, b) => a.at.localeCompare(b.at));
+
+  if (count === 0) {
     return (
       <div
         className={cn(
@@ -145,7 +157,37 @@ export function ThreadView({ messages, viewerKind, autoScroll = true, className 
 
   return (
     <div className={cn('flex flex-col gap-3', className)}>
-      {messages.map((m) => {
+      {entries.map((entry) => {
+        if (entry.kind === 'held') {
+          return (
+            <div key={entry.h.id} className="flex max-w-[85%] flex-col items-start gap-1 self-start sm:max-w-[75%]" data-testid="held-note">
+              <div className="rounded-[1.25rem] rounded-bl-md border border-hairline-strong bg-paper px-4 py-3 text-base text-ink-900">
+                <p>This note may be offensive. Show it?</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onShowHeld?.(entry.h.id)}
+                    className="inline-flex h-11 items-center rounded-pill bg-ink-900 px-4 text-sm font-medium text-canvas hover:bg-ink-700"
+                  >
+                    Show it
+                  </button>
+                  {onReport && (
+                    <button
+                      type="button"
+                      onClick={() => onReport(entry.h.id)}
+                      className="inline-flex h-11 items-center gap-1.5 rounded-pill border border-hairline-strong px-4 text-sm font-medium text-ink-900 hover:border-ink-900"
+                    >
+                      <Flag size={14} strokeWidth={1.75} aria-hidden />
+                      Report
+                    </button>
+                  )}
+                </div>
+              </div>
+              <span className="px-2 text-xs text-muted">The finder · {timestamp(entry.at)}</span>
+            </div>
+          );
+        }
+        const m = entry.m;
         const system = m.sender_kind === 'system';
         const structured = system ? parseSystemPayload(m.body) : null;
         const mine = m.sender_kind === viewerKind;
@@ -182,8 +224,21 @@ export function ThreadView({ messages, viewerKind, autoScroll = true, className 
             >
               {m.body}
             </div>
-            <span className="px-2 text-xs text-muted">
-              {senderLabel(m.sender_kind, viewerKind)} · {timestamp(m.created_at)}
+            <span className="flex items-center gap-3 px-2 text-xs text-muted">
+              <span>
+                {senderLabel(m.sender_kind, viewerKind)} · {timestamp(m.created_at)}
+              </span>
+              {onReport && m.sender_kind === 'finder' && (
+                <button
+                  type="button"
+                  onClick={() => onReport(m.id)}
+                  className="-my-3 inline-flex min-h-11 items-center gap-1 px-1 font-medium text-ink-700 underline underline-offset-4 hover:text-ink-900"
+                  aria-label={`Report this note, ${timestamp(m.created_at)}`}
+                >
+                  <Flag size={12} strokeWidth={1.75} aria-hidden />
+                  Report
+                </button>
+              )}
             </span>
           </div>
         );

@@ -522,6 +522,108 @@ await sleep(6000); // the push copy's own pending nudge, as above
   check('the note\'s outbox row is finished, not stuck', !!row?.sent_at);
 }
 
+// ------------------------------------------------------------------ 9. alerts to super admins (db/moderation.sql)
+
+{
+  const adminAlerts = () => apple.filter((r) => r.payload.aps.category === 'QURTAG_ADMIN');
+  const adminMails = () => mails().filter((m) => m.kind === 'admin-report');
+  const NOTE = 'SECRET-NOTE-TEXT you stupid faggot';
+  const boss = new Person('bea (super admin)', '10.8.251.1', PUSH);
+  await signUp(boss, 'push.bea@example.com', 'Bea Boss');
+  await sql('insert into qurtag.super_admins (user_id) values ($1)', [boss.id]);
+  const BT = hex('b');
+  await register(boss, BT);
+  const nia = new Person('nia (owner)', '10.8.251.2', PUSH);
+  await signUp(nia, 'push.nia@example.com', 'Nia Owner');
+  const NT = hex('c');
+  await register(nia, NT);
+  const coat = await newItem(nia, 'Wool coat');
+  // Time passes: the last alert, and the events it covered, are now more than 10 minutes old.
+  const windowEnds = async () => {
+    await sql(`update qurtag.outbox set created_at = created_at - interval '12 minutes' where kind = 'admin_alert' and sent_at is not null`);
+    await sql(`update qurtag.admin_alert_state set last_sent_at = now() - interval '11 minutes'`);
+  };
+  const reportNote = async (text) => {
+    const f = finder();
+    const tok = (await f.send(coat.public_id, null, text)).json?.token;
+    const th = (await sql(`select th.id from qurtag.threads th where th.finder_token_sha256 = encode(sha256(convert_to($1, 'UTF8')), 'hex')`, [tok])).rows[0].id;
+    const m = (await sql('select id from qurtag.messages where thread_id = $1', [th])).rows[0].id;
+    return { th, m };
+  };
+  await sleep(1500);
+  await drain(); // the notes' own alerts
+
+  check('the admin alert setting is shown to a super admin, on by default', (await boss.db.rpc('my_admin_alerts')).data === true);
+  check('and to nobody else', (await nia.db.rpc('my_admin_alerts')).data === null);
+  check('a normal owner cannot change it', !!(await nia.db.rpc('set_admin_alerts', { p_on: false })).error);
+
+  const first = await reportNote('Please stop writing to me about my coat');
+  const r1 = await nia.db.rpc('report_message', { p_message: first.m, p_reason: 'harassment', p_comment: 'SECRET-COMMENT' });
+  check('a report is accepted', !r1.error, JSON.stringify(r1.error));
+  await drain();
+  const a = adminAlerts();
+  check('a report sends the super admin one push', a.length === 1 && a[0].token === BT, `${a.length}`);
+  const p = a[0]?.payload;
+  check('it says only that a report is waiting, with the Admin deep link and a time-sensitive level',
+    p?.aps.alert.title === 'New report on QuR Tag' && p.aps.alert.body === 'Review it in Admin.' && p.aps.category === 'QURTAG_ADMIN'
+    && p.aps['interruption-level'] === 'time-sensitive' && p.open === '/app/admin#reported-notes' && p.thread === undefined && p.aps['thread-id'] === undefined, JSON.stringify(p));
+  check('the push carries no note text, comment or owner address', !/SECRET|stop writing|coat|nia|@/i.test(alertedBody(a[0])), alertedBody(a[0]));
+  check('the owner who reported gets no admin push', to(NT).every((r) => r.payload.aps.category !== 'QURTAG_ADMIN'));
+  const mail1 = adminMails();
+  check('one email goes to info@impactconsulting.ai with a link to Admin and no note text',
+    mail1.length === 1 && mail1[0].to === 'info@impactconsulting.ai' && /\/app\/admin/.test(mail1[0].text) && !/stop writing|SECRET|coat/i.test(JSON.stringify(mail1[0])), JSON.stringify(mail1));
+  check('the alert row is finished', (await sql(`select count(*)::int as n from qurtag.outbox where kind = 'admin_alert' and sent_at is null`)).rows[0].n === 0);
+
+  // Bursts: three more reports and a held note within the window.
+  const burst = [];
+  for (let i = 0; i < 3; i++) burst.push(await reportNote(`burst note ${i}`));
+  for (const b of burst) await nia.db.rpc('report_message', { p_message: b.m, p_reason: 'spam' });
+  await reportNote(NOTE); // held by the filter
+  const waiting = (await sql(`select count(*)::int as n, min(next_attempt_at) > now() + interval '8 minutes' as later from qurtag.outbox where kind = 'admin_alert' and sent_at is null`)).rows[0];
+  check('events inside the 10 minute window are queued, due when it ends (the filter\'s held note too)', waiting.n === 4 && waiting.later === true, JSON.stringify(waiting));
+  await drain();
+  check('nothing more is sent inside the window', adminAlerts().length === 1 && adminMails().length === 1);
+
+  // The window ends.
+  await windowEnds();
+  await sql(`update qurtag.outbox set next_attempt_at = now() where kind = 'admin_alert' and sent_at is null`);
+  await drain();
+  const b = adminAlerts();
+  check('then one push says how many are waiting', b.length === 2 && b[1].payload.aps.alert.title === '4 new reports on QuR Tag' && b[1].payload.aps.alert.body === 'Review them in Admin.', JSON.stringify(b[1]?.payload.aps.alert));
+  check('the second push also carries no note text', !/SECRET|burst|faggot/i.test(alertedBody(b[1])));
+  check('and one email', adminMails().length === 2 && /4 new reports/.test(adminMails()[1].text));
+  check('every queued alert row is finished, none dropped', (await sql(`select count(*)::int as n from qurtag.outbox where kind = 'admin_alert' and sent_at is null`)).rows[0].n === 0);
+
+  // A failure puts the window back.
+  answers.set(BT, { status: 500, reason: 'InternalServerError' });
+  await windowEnds();
+  const fail = await reportNote('another one');
+  await nia.db.rpc('report_message', { p_message: fail.m, p_reason: 'other' });
+  await sql(`update qurtag.outbox set next_attempt_at = now() where kind = 'admin_alert' and sent_at is null`);
+  await drain();
+  const afterFail = (await sql(`select a.last_sent_at < now() - interval '10 minutes' as reopened, (select count(*)::int from qurtag.outbox where kind = 'admin_alert' and sent_at is null) as open from qurtag.admin_alert_state a`)).rows[0];
+  check('when Apple cannot be reached the alert is not lost: the window reopens and the row waits', afterFail.reopened === true && afterFail.open === 1, JSON.stringify(afterFail));
+  answers.delete(BT);
+  await sql(`update qurtag.outbox set next_attempt_at = now() where kind = 'admin_alert' and sent_at is null`);
+  await drain();
+  check('and it goes out on the next try', adminAlerts().length >= 4 && adminAlerts().at(-1).payload.aps.alert.title === 'New report on QuR Tag');
+
+  // The switch.
+  const off = await boss.db.rpc('set_admin_alerts', { p_on: false });
+  check('a super admin can turn admin alerts off', off.data === false && (await boss.db.rpc('my_admin_alerts')).data === false);
+  const sentBefore = adminAlerts().length;
+  const mailsBefore = adminMails().length;
+  await windowEnds();
+  const quiet = await reportNote('quiet one');
+  await nia.db.rpc('report_message', { p_message: quiet.m, p_reason: 'spam' });
+  await sql(`update qurtag.outbox set next_attempt_at = now() where kind = 'admin_alert' and sent_at is null`);
+  await drain();
+  check('with the switch off no push goes to that admin, but the email still does', adminAlerts().length === sentBefore && adminMails().length === mailsBefore + 1);
+  await boss.db.rpc('set_admin_alerts', { p_on: true });
+  check('and it can be turned back on', (await boss.db.rpc('my_admin_alerts')).data === true);
+  check('a report from a normal owner never alerts a normal owner', to(NT).every((r) => r.payload.aps.category !== 'QURTAG_ADMIN'));
+}
+
 mock.close();
 await admin.end();
 console.log(`\n${passed} checks passed, ${failures.length} failed`);

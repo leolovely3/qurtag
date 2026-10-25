@@ -92,6 +92,8 @@ function words(error: { message?: string } | null | undefined): string {
       return 'That tag was switched off by its owner, not by an admin.';
     case 'cannot_delete_admin':
       return 'A super admin account cannot be deleted here.';
+    case 'already_closed':
+      return 'That report was already handled.';
     case 'confirmation_mismatch':
       return 'The email you typed does not match this account.';
     default:
@@ -145,6 +147,35 @@ export const adminSupportList = (status: 'open' | 'closed' = 'open') =>
   call<{ open: number; requests: SupportRequestRow[] }>('admin_support_list', { p_status: status });
 
 export const adminSupportClose = (id: string) => call<{ id: string; status: string }>('admin_support_close', { p_id: id });
+
+export type ReportAction = 'hide' | 'dismiss' | 'block';
+
+export interface ReportRow {
+  id: string;
+  created_at: string;
+  reason: 'harassment' | 'spam' | 'threats' | 'inappropriate' | 'other';
+  comment: string | null;
+  status: 'open' | 'closed';
+  resolution: 'hidden' | 'dismissed' | 'blocked' | null;
+  resolved_at: string | null;
+  message_id: string;
+  message_text: string;
+  message_at: string;
+  hidden_for_everyone: boolean;
+  was_held: boolean;
+  thread_id: string;
+  finder_blocked: boolean;
+  item_id: string;
+  item_name: string;
+  reporter_email: string | null;
+}
+
+/** Reports of finders' notes, oldest open first. */
+export const adminReportsList = (status: 'open' | 'closed' = 'open') =>
+  call<{ open: number; reports: ReportRow[] }>('admin_reports_list', { p_status: status });
+
+export const adminReportResolve = (id: string, action: ReportAction) =>
+  call<{ id: string; status: string; action: ReportAction }>('admin_report_resolve', { p_id: id, p_action: action });
 
 export const adminDeleteAccount = (userId: string, confirmEmail: string) =>
   call<{ deleted: boolean }>('admin_delete_account', { p_user: userId, p_confirm_email: confirmEmail });

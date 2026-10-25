@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Bell, BellOff, EyeOff, Mail, ScanLine, MessageCircle } from 'lucide-react';
+import { Bell, BellOff, EyeOff, Mail, ScanLine, MessageCircle, ShieldAlert } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { db } from '@/lib/db';
 import { pushPermission, turnOnPush, type PushPermission } from '@/lib/nativePush';
@@ -83,11 +83,15 @@ export function NotificationSettings({ emailAvailable }: { emailAvailable: boole
   const toast = useToast();
   const [settings, setSettings] = useState<PushSettings | null>(null);
   const [permission, setPermission] = useState<PermissionState>('unknown');
+  // null: not a super admin (or not known yet), so nothing is shown.
+  const [adminAlerts, setAdminAlerts] = useState<boolean | null>(null);
 
   const load = useCallback(async () => {
     const { data } = await db.rpc('my_push_settings');
     setSettings({ ...DEFAULTS, ...((data as Partial<PushSettings> | null) ?? {}) });
     if (isNative()) setPermission(await pushPermission());
+    const a = await db.rpc('my_admin_alerts');
+    setAdminAlerts(typeof a.data === 'boolean' ? a.data : null);
   }, []);
 
   useEffect(() => {
@@ -105,6 +109,16 @@ export function NotificationSettings({ emailAvailable }: { emailAvailable: boole
       return;
     }
     setSettings({ ...DEFAULTS, ...(data as Partial<PushSettings>) });
+  }
+
+  async function changeAdmin(next: boolean) {
+    const before = adminAlerts;
+    setAdminAlerts(next);
+    const { error } = await db.rpc('set_admin_alerts', { p_on: next });
+    if (error) {
+      setAdminAlerts(before);
+      toast.show({ kind: 'error', title: "Couldn't save that", body: 'Check your connection and try again.' });
+    }
   }
 
   async function allow() {
@@ -166,6 +180,15 @@ export function NotificationSettings({ emailAvailable }: { emailAvailable: boole
             label={EMAIL_ROW.title}
             onChange={(next) => void change(EMAIL_ROW.key, EMAIL_ROW.param, next)}
           />
+        </SettingRow>
+      )}
+      {adminAlerts !== null && (
+        <SettingRow
+          icon={ShieldAlert}
+          title="Admin alerts"
+          body="An alert on your iPhone when a note is reported or held back, so you can answer within 24 hours. At most one every 10 minutes. It never shows a note."
+        >
+          <Switch checked={adminAlerts} label="Admin alerts" onChange={(next) => void changeAdmin(next)} />
         </SettingRow>
       )}
     </>

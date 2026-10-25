@@ -31,8 +31,6 @@ export const FEATURES = {
   shareLocation: labs,
   /** Web push to the owner's devices (needs push keys). */
   push: labs,
-  /** Owner blocks a finder or reports abuse (tables not built yet). */
-  safetyTools: labs,
 } as const;
 
 export type Feature = keyof typeof FEATURES;

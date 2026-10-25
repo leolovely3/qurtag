@@ -14,6 +14,15 @@
  *   push_scan       2 minutes after a scan: "Your tag was scanned" to the people who asked for it,
  *                   once an hour per tag and person, unless the finder wrote a note meanwhile.
  *
+ *   admin_alert     a new report of a finder's note, or a note the filter held: every super admin who
+ *                   has "Admin alerts" on gets an iPhone alert ("New report on QuR Tag. Review it in
+ *                   Admin.", time-sensitive, no note text; a tap opens Admin at Reported notes), and
+ *                   info@impactconsulting.ai gets an email with a link to Admin when email is set up.
+ *                   At most one alert goes out per 10 minutes (qurtag.server_admin_alert_claim); the
+ *                   rows queued meanwhile wait for the window to end and the alert says how many are
+ *                   waiting, so none is dropped. If sending fails the window is put back and the row
+ *                   is tried again.
+ *
  * Runs when the finder route nudges /api/jobs/outbox after a note, and every 5 minutes from the
  * scheduler (the email copy and the scan alert are due minutes later; vercel.json). Each run takes
  * up to 25 due rows (rows another run holds are skipped). A row that fails is tried again later
@@ -35,7 +44,7 @@
  * server_outbox_finish and the server_* functions of db/qurtag.sql and db/push.sql.
  */
 import type pg from 'pg';
-import { finderMessageMail, mailConfigured, senderFromEnv, type MailSender } from '../auth/mailer.js';
+import { adminReportMail, finderMessageMail, mailConfigured, senderFromEnv, type MailSender } from '../auth/mailer.js';
 import { siteUrl } from '../auth/origins.js';
 import { apnsFromEnv, buildPayload, devicesFor, type Apns, type Device, type PushInput, type PushKind } from '../push/apns.js';
 import { serverPool } from './core.js';
@@ -60,7 +69,7 @@ export interface DrainResult {
 
 interface Row {
   id: string;
-  kind: 'finder_message' | 'push_email' | 'push_scan';
+  kind: 'finder_message' | 'push_email' | 'push_scan' | 'admin_alert';
   ref: string;
   attempts: number;
 }
@@ -191,12 +200,39 @@ export async function drainOutbox(env: NodeJS.ProcessEnv = process.env, db: pg.P
     }
   }
 
+  async function adminAlert(): Promise<void> {
+    const { rows: got } = await db.query<{ c: { waiting: number; previous?: string | null; admins?: { user_id: string; unread: number; devices: Device[] }[] } }>(
+      'select qurtag.server_admin_alert_claim() as c',
+    );
+    const c = got[0]?.c;
+    if (!c || !c.waiting) return;
+    try {
+      let retry = false;
+      for (const a of c.admins ?? []) {
+        if (a.devices.length === 0) continue;
+        const r = await pushTo(a.devices, 'admin', { itemName: '', hideText: false, unread: a.unread, waiting: c.waiting });
+        if (!r.sent && r.transient) retry = true;
+      }
+      if (sendMail) {
+        await sendMail(adminReportMail(c.waiting, `${siteUrl(env)}/app/admin`));
+        result.emailed++;
+      } else {
+        result.unsent++;
+      }
+      if (retry) throw new Error('Apple could not be reached; the admin alert will be tried again');
+    } catch (e) {
+      await db.query('select qurtag.server_admin_alert_restore($1)', [c.previous ?? null]);
+      throw e;
+    }
+  }
+
   try {
     for (const row of rows) {
       try {
         if (row.kind === 'finder_message') await note(row);
         else if (row.kind === 'push_email') await copy(row);
         else if (row.kind === 'push_scan') await scan(row);
+        else if (row.kind === 'admin_alert') await adminAlert();
         await db.query('select qurtag.server_outbox_finish($1, null, 0)', [row.id]);
         result.done++;
       } catch (e) {

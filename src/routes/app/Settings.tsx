@@ -14,6 +14,7 @@ import { saveFile } from '@/lib/saveFile';
 import { fetchEmailAvailable } from '@/lib/membership';
 import { Modal } from '@/components/ui/Modal';
 import { NotificationSettings } from '@/components/push/NotificationSettings';
+import { BlockedFinders } from '@/components/moderation/BlockedFinders';
 import type { Household } from '@/lib/database.types';
 import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/lib/cn';
@@ -273,6 +274,10 @@ export function Settings() {
         )}
 
         <NotificationSettings emailAvailable={emailAvailable} />
+      </AppSection>
+
+      <AppSection title="Blocked finders" description="Finders you blocked cannot write to you, and their notes stay out of your inbox.">
+        <BlockedFinders />
       </AppSection>
 
       {/* Appearance */}

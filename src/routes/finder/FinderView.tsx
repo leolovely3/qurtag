@@ -237,7 +237,7 @@ export function FinderView() {
 
       {closed ? (
         <p className="rounded-card border border-hairline bg-paper px-4 py-3 text-sm text-ink-700">
-          The owner closed this conversation.
+          This conversation is closed.
         </p>
       ) : (
         <div className="flex flex-col gap-2">
@@ -277,7 +277,14 @@ export function FinderView() {
         <Lock size={16} strokeWidth={1.75} className="mt-0.5 shrink-0 text-muted" aria-hidden />
         <p className="text-sm text-muted text-pretty">
           The owner sees only what you write. They do not see your phone number, email or location, and
-          you do not see theirs. Do not share more than you want to.
+          you do not see theirs. Do not share more than you want to.{' '}
+          <a
+            href="mailto:info@impactconsulting.ai?subject=Problem%20with%20a%20QuR%20Tag%20page"
+            className="underline underline-offset-4 hover:text-ink-900"
+          >
+            Report a problem with this page
+          </a>
+          .
         </p>
       </div>
     </div>
