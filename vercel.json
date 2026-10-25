@@ -9,7 +9,7 @@
     { "source": "/api/data/(.*)", "destination": "/api/data" },
     { "source": "/api/fn/(.*)", "destination": "/api/fn" },
     { "source": "/api/jobs/(.*)", "destination": "/api/jobs" },
-    { "source": "/:code((?=[A-Za-z]*[2-9])[2-9A-HJ-KM-NP-Za-hj-km-np-z]{5,6})", "destination": "/api/fn?go=:code" },
+    { "source": "/((?=[A-Za-z2-9]*[2-9])[2-9A-HJ-KM-NP-Za-hj-km-np-z]{5,6})", "destination": "/api/fn?go=$1" },
     { "source": "/((?!api/|assets/|.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
   ],
   "functions": {
