@@ -6,7 +6,7 @@
 # Starts Supabase's Postgres 17 image as a stand-in for the shared project (container
 # qurtag-e2e-pg on 127.0.0.1:56850, removed at the end), adds decoy apps
 # (scripts/qurtag/decoys.sql), applies db/qurtag.sql and db/logins.sql exactly as
-# the rollout does (as `postgres`, which is not a superuser there, with fresh passwords
+# the rollout does (db/admin.sql too; as `postgres`, which is not a superuser there, with fresh passwords
 # sent as SCRAM verifiers), starts the four server functions (with email off, as in production today: accounts are confirmed at once) on 127.0.0.1:56851, and
 # runs scripts/qurtag/e2e.test.mjs. QURTAG_E2E_KEEP=1 leaves the database running
 # afterwards. QURTAG_LOCAL_SERVE=1 skips the tests and keeps the server functions up for
@@ -53,7 +53,8 @@ psql "$PLATFORM" -X -q -v ON_ERROR_STOP=1 -f scripts/qurtag/decoys.sql
 psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/qurtag.sql
 AUTH_PW="$AUTH_PW" DATA_PW="$DATA_PW" SERVER_PW="$SERVER_PW" FACTORY_TOKEN="$FACTORY_TOKEN" ADMIN="$ADMIN" \
   node scripts/qurtag/apply-logins.mjs
-echo "schema and logins applied"
+psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/admin.sql
+echo "schema, logins and the admin role applied"
 
 export QURTAG_AUTH_URL="http://127.0.0.1:$API_PORT"
 export QURTAG_DATABASE_URL="postgres://qurtag_auth:$AUTH_PW@127.0.0.1:$PG_PORT/postgres"

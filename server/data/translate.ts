@@ -523,6 +523,10 @@ function argValue(type: ArgType, v: unknown): unknown {
     if (typeof v === 'string' && /^-?\d{1,9}(\.\d{1,12})?$/.test(v)) return v;
     throw bad();
   }
+  if (type === 'boolean') {
+    if (typeof v === 'boolean') return v;
+    throw bad();
+  }
   const limit = type === 'photo' ? MAX_PHOTO_LENGTH : type === 'text' ? 6000 : MAX_VALUE_LENGTH;
   if (typeof v === 'string' && v.length <= limit) return v;
   if (typeof v === 'number' && Number.isFinite(v) && type === 'text') return String(v);

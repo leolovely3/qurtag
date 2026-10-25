@@ -104,7 +104,7 @@ export const EMBEDS: Readonly<Record<string, Readonly<Record<string, EmbedRule>>
 };
 
 /** `photo` is text sent as text: a small picture as a data: address (checked by the database). */
-export type ArgType = 'text' | 'photo' | 'uuid' | 'integer' | 'double precision' | 'timestamp with time zone';
+export type ArgType = 'text' | 'photo' | 'uuid' | 'integer' | 'boolean' | 'double precision' | 'timestamp with time zone';
 
 export interface RpcRule {
   args: Readonly<Record<string, ArgType>>;
@@ -125,6 +125,16 @@ export const RPCS: Readonly<Record<string, RpcRule>> = {
   owner_reply: { args: { p_thread_id: 'uuid', p_body: 'text' }, returns: 'value', callers: ['user'] },
   mark_thread_read: { args: { p_thread_id: 'uuid' }, returns: 'void', callers: ['user'] },
   delete_my_account: { args: {}, returns: 'void', callers: ['user'] },
+  // Super admins (db/admin.sql). Listed for every signed-in person; each function checks
+  // for itself, in the database, that the live session belongs to a super admin, and
+  // refuses everyone else with 403. is_super_admin only answers true or false.
+  is_super_admin: { args: {}, returns: 'value', callers: ['user'] },
+  admin_overview: { args: {}, returns: 'value', callers: ['user'] },
+  admin_list_accounts: { args: { p_search: 'text', p_limit: 'integer', p_offset: 'integer' }, returns: 'value', callers: ['user'] },
+  admin_account: { args: { p_user: 'uuid' }, returns: 'value', callers: ['user'] },
+  admin_set_tag: { args: { p_tag: 'uuid', p_active: 'boolean' }, returns: 'value', callers: ['user'] },
+  admin_set_message_hidden: { args: { p_message: 'uuid', p_hidden: 'boolean' }, returns: 'value', callers: ['user'] },
+  admin_delete_account: { args: { p_user: 'uuid', p_confirm_email: 'text' }, returns: 'value', callers: ['user'] },
   // With no pass: the Factory's counts (which check a token of their own).
   factory_metrics: { args: { p_token: 'text' }, returns: 'value', callers: ['anon'] },
 };

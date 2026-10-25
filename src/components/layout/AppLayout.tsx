@@ -12,9 +12,11 @@ import {
   LogOut,
   Menu,
   X,
+  ShieldCheck,
 } from 'lucide-react';
 import { Wordmark } from '@/components/brand/Wordmark';
 import { useAuth } from '@/lib/auth';
+import { useIsSuperAdmin } from '@/lib/admin';
 import { countUnreadForHousehold, fetchPrimaryHouseholdId } from '@/lib/queries';
 import { cn } from '@/lib/cn';
 
@@ -29,6 +31,7 @@ const nav = [
 
 export function AppLayout() {
   const { user, loading, signOut } = useAuth();
+  const isSuperAdmin = useIsSuperAdmin();
   const navigate = useNavigate();
   const location = useLocation();
   const [unread, setUnread] = useState(0);
@@ -79,7 +82,7 @@ export function AppLayout() {
 
   const navItems = (
     <nav className="flex flex-col gap-0.5 px-qurtag-3 py-qurtag-3">
-      {nav.map((item) => (
+      {[...nav, ...(isSuperAdmin ? [{ to: '/app/admin', label: 'Admin', icon: ShieldCheck, end: false, key: 'admin' }] : [])].map((item) => (
         <NavLink
           key={item.to}
           to={item.to}
