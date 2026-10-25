@@ -1,14 +1,18 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
-import { HelpButton } from '@/components/account/Account';
+import { AccountButton, HelpButton } from '@/components/account/Account';
+import { Wordmark } from '@/components/brand/Wordmark';
 import { cn } from '@/lib/cn';
 
 /**
  * The frame of every screen inside the app (/app and the screens nested under it).
  *
  * A top-level screen (Items, Inbox, Settings) shows its title as a calm page heading with an
- * optional action beside it, the way Things 3 and Apple's Find My title their lists. A nested
+ * optional action beside it, the way Things 3 and Apple's Find My title their lists. On a phone
+ * its top row carries the QuR Tag brand at the left (to Items) and, at the right, the action
+ * (+ on Items), Help and the account avatar; the large title scrolls away into a small title
+ * between them (it takes the room that is left and is cut short before it can touch a control). A nested
  * screen (an item, a conversation, adding an item, a tag) gets a navigation bar instead: Back on
  * the left with the name of the screen it returns to, the title in the middle, an optional
  * action on the right. On a phone the bar sticks under the status bar; from tablet width it
@@ -22,8 +26,6 @@ interface AppPageProps {
   action?: ReactNode;
   /** A short line under a top-level title. */
   subtitle?: ReactNode;
-  /** Top-level screens, phone bar: something at the left (the account button on Items). */
-  leading?: ReactNode;
   /** Top-level screens: the Help section this screen's "?" opens (src/routes/app/HelpCenter.tsx). */
   help?: string;
   width?: 'narrow' | 'normal' | 'wide';
@@ -37,7 +39,7 @@ const widths = {
   wide: 'max-w-5xl',
 } as const;
 
-export function AppPage({ title, back, action, subtitle, leading, help, width = 'normal', children, className }: AppPageProps) {
+export function AppPage({ title, back, action, subtitle, help, width = 'normal', children, className }: AppPageProps) {
   if (back) {
     return (
       <div className={cn('w-full', className)}>
@@ -64,7 +66,7 @@ export function AppPage({ title, back, action, subtitle, leading, help, width = 
     );
   }
   return (
-    <TopLevel title={title} action={action} subtitle={subtitle} leading={leading} help={help} width={width} className={className}>
+    <TopLevel title={title} action={action} subtitle={subtitle} help={help} width={width} className={className}>
       {children}
     </TopLevel>
   );
@@ -74,12 +76,11 @@ function TopLevel({
   title,
   action,
   subtitle,
-  leading,
   help,
   width,
   className,
   children,
-}: Pick<AppPageProps, 'title' | 'action' | 'subtitle' | 'leading' | 'help' | 'className' | 'children'> & { width: keyof typeof widths }) {
+}: Pick<AppPageProps, 'title' | 'action' | 'subtitle' | 'help' | 'className' | 'children'> & { width: keyof typeof widths }) {
   const largeTitle = useRef<HTMLHeadingElement>(null);
   const [scrolled, setScrolled] = useState(false);
   // The bar's small title and its hairline appear once the large title has scrolled under it.
@@ -99,14 +100,17 @@ function TopLevel({
           scrolled ? 'border-hairline bg-canvas/85 backdrop-blur-xl' : 'border-transparent bg-canvas',
         )}
       >
-        <div className="grid h-11 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-2">
-          <div className="flex justify-self-start">{leading}</div>
-          <span aria-hidden className={cn('max-w-[50vw] truncate text-base font-semibold text-ink-900 transition-opacity duration-150', scrolled ? 'opacity-100' : 'opacity-0')}>
+        <div className="grid h-11 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1 pl-3 pr-1">
+          <Link to="/app" aria-label="QuR Tag, go to Items" className="inline-flex h-11 items-center rounded-card pr-1">
+            <Wordmark />
+          </Link>
+          <span aria-hidden className={cn('truncate text-center text-base font-semibold text-ink-900 transition-opacity duration-150', scrolled ? 'opacity-100' : 'opacity-0')}>
             {title}
           </span>
           <div className="flex items-center justify-self-end">
-            {help && <HelpButton section={help} />}
             {action}
+            {help && <HelpButton section={help} />}
+            <AccountButton />
           </div>
         </div>
       </header>
@@ -117,8 +121,8 @@ function TopLevel({
             {subtitle && <p className="text-sm text-muted text-pretty">{subtitle}</p>}
           </div>
           <div className="hidden shrink-0 items-center gap-1 md:flex">
-            {help && <HelpButton section={help} />}
             {action}
+            {help && <HelpButton section={help} />}
           </div>
         </header>
         {children}

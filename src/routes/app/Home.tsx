@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { ChevronRight, Inbox as InboxIcon, Package, Plus, Tag as TagIcon } from 'lucide-react';
 import { AppPage } from '@/components/layout/AppPage';
-import { AccountButton } from '@/components/account/Account';
 import { GettingStarted } from '@/components/GettingStarted';
 import { SKIP_KEY } from '@/lib/gettingStarted';
 import { buttonClasses } from '@/components/ui/Button';
@@ -223,7 +222,6 @@ export function ItemsScreen() {
     <AppPage
       title="Items"
       subtitle={subtitle}
-      leading={<AccountButton />}
       help="getting-started"
       action={!loading ? <AddItemButton membership={membership} first={items.length === 0} /> : undefined}
     >

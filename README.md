@@ -396,8 +396,8 @@ shell (`capacitor.config.ts`, `ios/`). The old Expo stub in `mobile/` is not use
   real scan, because the finder routes cannot tell an owner from a stranger. Items shows a Getting started card until its steps
   are done or dismissed; progress is kept per account in the browser or phone (`src/lib/gettingStarted.ts`), as the database has
   no preferences table. Help at `/app/help` is grouped by task with search (`src/lib/helpContent.ts`), and each main screen has a
-  "?" in its top bar that opens the matching group. Each top-level screen has a phone navigation bar with a large title that
-  collapses (`AppPage`); the account card in Settings opens `/app/account` (name, password, data, deleting, signing out).
+  "?" in its top bar that opens the matching group. Each top-level screen has a phone top bar (the QuR Tag brand at the left; Add item on Items, Help and the account
+  avatar at the right) over a large title that collapses into it (`AppPage`); the account card in Settings opens `/app/account` (name, password, data, deleting, signing out).
   The How it works pictures are in `public/how` (tags drawn by `src/lib/tagStyles.ts`, two real screenshots, light and dark).
 - The app follows the phone's light or dark setting, and Settings lets the owner pick Light, Auto or Dark.
 - The app asks for notification permission once, right after the first item is saved, behind a short
