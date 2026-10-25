@@ -26,12 +26,12 @@ export function PlanCard({
     <section
       aria-label={`${info.name} plan`}
       className={cn(
-        'rounded-modal border bg-canvas p-qurtag-5 flex flex-col gap-qurtag-3',
+        'flex flex-col gap-4 rounded-modal border bg-canvas p-5 sm:p-6',
         current ? 'border-ink-900' : 'border-hairline',
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <h3 className="font-display font-semibold text-h4 text-ink-900 tracking-[-0.02em]">{info.name}</h3>
+        <h3 className="text-xl font-semibold text-ink-900">{info.name}</h3>
         {current && (
           <span className="text-caption px-2 py-0.5 rounded-pill bg-ink-900 text-canvas">Your plan</span>
         )}
@@ -53,7 +53,7 @@ export function PlanCard({
 
 function PriceLines({ plan, prices }: { plan: Plan; prices?: Map<string, string> }) {
   if (plan === 'free') {
-    return <p className="font-display font-semibold text-h3 text-ink-900 tracking-[-0.02em]">$0</p>;
+    return <p className="text-3xl font-semibold tracking-[-0.02em] text-ink-900">$0</p>;
   }
   const paid = plan as PaidPlan;
   const monthly = productFor(paid, 'month');
@@ -62,7 +62,7 @@ function PriceLines({ plan, prices }: { plan: Plan; prices?: Map<string, string>
   const year = prices?.get(yearly.appleId) ?? priceLabel(yearly.cents);
   return (
     <div className="flex flex-col gap-0.5">
-      <p className="font-display font-semibold text-h3 text-ink-900 tracking-[-0.02em]">
+      <p className="text-3xl font-semibold tracking-[-0.02em] text-ink-900">
         {month}
         <span className="text-body font-normal text-muted"> a month</span>
       </p>

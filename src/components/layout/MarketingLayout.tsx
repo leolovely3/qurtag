@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Menu, X } from 'lucide-react';
-import { Wordmark } from '@/components/brand/Wordmark';
+import { ChevronLeft, Menu, X } from 'lucide-react';
+import { Lockup, Wordmark } from '@/components/brand/Wordmark';
+import { buttonClasses } from '@/components/ui/Button';
 import { Container } from '@/components/ui/Container';
 import { cn } from '@/lib/cn';
 import { isNative } from '@/lib/platform';
@@ -14,7 +15,7 @@ const nav = [
 ];
 
 /** The pages the iPhone app shows on their own, without the marketing menu. */
-const APP_LEGAL_PATHS = ['/terms', '/privacy'];
+const APP_LEGAL_PATHS = ['/terms', '/privacy', '/help'];
 
 /**
  * In the iPhone app, Terms and Privacy open from the sign-in screen. They get a plain
@@ -23,7 +24,7 @@ const APP_LEGAL_PATHS = ['/terms', '/privacy'];
 function AppLegalShell() {
   const navigate = useNavigate();
   const location = useLocation();
-  const title = location.pathname.startsWith('/privacy') ? 'Privacy' : 'Terms';
+  const title = location.pathname.startsWith('/privacy') ? 'Privacy' : location.pathname.startsWith('/help') ? 'Help' : 'Terms';
 
   // Each page opens at its top, not where the sign-in page was scrolled to.
   useEffect(() => {
@@ -39,17 +40,17 @@ function AppLegalShell() {
 
   return (
     <div className="min-h-screen flex flex-col bg-canvas text-ink-900 antialiased">
-      <header className="sticky top-0 z-40 bg-canvas border-b border-hairline">
-        <div className="mx-auto max-w-3xl px-4 h-14 grid grid-cols-[1fr_auto_1fr] items-center">
+      <header className="sticky top-0 z-40 border-b border-hairline bg-canvas/90 backdrop-blur-xl">
+        <div className="mx-auto max-w-3xl px-4 h-12 grid grid-cols-[1fr_auto_1fr] items-center">
           <button
             type="button"
             onClick={goBack}
-            className="inline-flex h-11 items-center gap-1.5 -ml-2 px-2 text-body font-medium text-ink-900 justify-self-start"
+            className="-ml-2 inline-flex h-11 items-center gap-0.5 justify-self-start rounded-pill pl-1 pr-3 text-base text-ink-900 hover:bg-ink-50"
           >
-            <ArrowLeft size={18} strokeWidth={1.75} />
+            <ChevronLeft size={22} strokeWidth={2} aria-hidden />
             Back
           </button>
-          <span className="text-body font-semibold">{title}</span>
+          <span className="text-base font-semibold">{title}</span>
           <span />
         </div>
       </header>
@@ -106,18 +107,19 @@ function MarketingSite() {
       >
         <Container size="xl">
           <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-2">
-              <Wordmark />
+            <Link to="/" className="flex min-h-11 items-center rounded-card">
+              <Wordmark className="xl:hidden" />
+              <Lockup size="sm" className="hidden xl:inline-flex" />
             </Link>
-            <nav className="hidden md:flex items-center gap-7">
+            <nav aria-label="Main" className="hidden md:flex items-center gap-1">
               {nav.map((item) => (
                 <NavLink
                   key={item.to}
                   to={item.to}
                   className={({ isActive }) =>
                     cn(
-                      'text-caption font-sans font-medium transition-opacity duration-qurtag',
-                      isActive ? 'text-ink-900 opacity-100' : 'text-ink-700 hover:opacity-70',
+                      'inline-flex h-11 items-center rounded-pill px-3 text-sm font-medium transition-colors duration-150',
+                      isActive ? 'bg-ink-100 text-ink-900' : 'text-ink-700 hover:bg-ink-50 hover:text-ink-900',
                     )
                   }
                 >
@@ -127,15 +129,12 @@ function MarketingSite() {
             </nav>
             <div className="flex items-center gap-3 md:gap-5">
               <Link
-                to="/start"
-                className="hidden md:inline-flex min-h-11 items-center text-caption font-medium text-ink-700 hover:opacity-70 transition-opacity duration-qurtag"
+                to="/start?mode=signin"
+                className="hidden h-11 items-center rounded-pill px-3 text-sm font-medium text-ink-700 transition-colors hover:bg-ink-50 hover:text-ink-900 md:inline-flex"
               >
                 Sign in
               </Link>
-              <Link
-                to="/start"
-                className="inline-flex h-11 items-center rounded-pill bg-ink-900 px-4 text-caption font-medium text-canvas hover:bg-ink-700 transition-colors duration-qurtag"
-              >
+              <Link to="/start" className={buttonClasses({ variant: 'primary', className: 'px-4' })}>
                 Make a free tag
               </Link>
               <button
@@ -191,7 +190,7 @@ function MarketingSite() {
               ))}
               <div className="border-t border-hairline my-qurtag-2" />
               <Link
-                to="/start"
+                to="/start?mode=signin"
                 className="px-3 h-11 flex items-center rounded-card text-body font-medium text-ink-700 hover:bg-ink-50 hover:text-ink-900 transition-colors duration-qurtag"
               >
                 Sign in
@@ -213,29 +212,29 @@ function MarketingSite() {
 
       <footer className="border-t border-hairline bg-canvas">
         <Container size="xl">
-          <div className="py-qurtag-12 grid gap-qurtag-8 md:grid-cols-3">
-            <div className="flex flex-col gap-3 max-w-xs">
-              <Wordmark />
-              <p className="text-caption text-muted text-pretty">
+          <div className="grid gap-10 py-12 md:grid-cols-3 md:py-16">
+            <div className="flex max-w-xs flex-col gap-4">
+              <Lockup />
+              <p className="text-sm text-muted text-pretty">
                 A free QR tag, so a kind stranger can message you.
               </p>
             </div>
-            <div className="flex flex-col text-caption">
-              <span className="text-eyebrow uppercase tracking-[0.14em] text-muted mb-1">Product</span>
+            <div className="flex flex-col text-sm">
+              <h2 className="mb-1 text-sm font-semibold text-ink-900">Product</h2>
               <Link to="/how-it-works" className="min-h-11 flex items-center text-ink-700 hover:opacity-70 transition-opacity">How it works</Link>
               <Link to="/tags" className="min-h-11 flex items-center text-ink-700 hover:opacity-70 transition-opacity">Your tag</Link>
               <Link to="/pricing" className="min-h-11 flex items-center text-ink-700 hover:opacity-70 transition-opacity">Pricing</Link>
               <Link to="/help" className="min-h-11 flex items-center text-ink-700 hover:opacity-70 transition-opacity">Help</Link>
             </div>
-            <div className="flex flex-col text-caption">
-              <span className="text-eyebrow uppercase tracking-[0.14em] text-muted mb-1">Legal</span>
+            <div className="flex flex-col text-sm">
+              <h2 className="mb-1 text-sm font-semibold text-ink-900">Legal</h2>
               <Link to="/privacy" className="min-h-11 flex items-center text-ink-700 hover:opacity-70 transition-opacity">Privacy</Link>
               <Link to="/terms" className="min-h-11 flex items-center text-ink-700 hover:opacity-70 transition-opacity">Terms</Link>
               <Link to="/security" className="min-h-11 flex items-center text-ink-700 hover:opacity-70 transition-opacity">Security</Link>
               <a href="mailto:info@impactconsulting.ai" className="min-h-11 flex items-center text-ink-700 hover:opacity-70 transition-opacity break-all">info@impactconsulting.ai</a>
             </div>
           </div>
-          <div className="py-5 border-t border-hairline text-caption text-muted">
+          <div className="border-t border-hairline py-5 text-sm text-muted">
             <span>© 2026 Impact Consulting AI LLC</span>
           </div>
         </Container>

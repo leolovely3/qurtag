@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Link, Navigate, useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, ShieldCheck } from 'lucide-react';
-import { Eyebrow } from '@/components/brand/Typography';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
@@ -34,10 +33,10 @@ const stamp = (iso: string) => new Date(iso).toLocaleString(undefined, { month: 
 
 function Shell({ children, back }: { children: React.ReactNode; back?: { to: string; label: string } }) {
   return (
-    <div className="px-qurtag-5 md:px-qurtag-8 py-qurtag-8 max-w-3xl">
+    <div className="mx-auto w-full max-w-3xl px-4 pb-8 pt-6 md:px-8 md:pt-10">
       {back && (
-        <Link to={back.to} className="inline-flex items-center gap-1 min-h-11 text-caption font-medium text-muted hover:text-ink-900">
-          <ChevronLeft size={16} strokeWidth={1.75} aria-hidden />
+        <Link to={back.to} className="-ml-2 mb-2 inline-flex min-h-11 items-center gap-0.5 rounded-pill pl-1 pr-3 text-base text-ink-900 hover:bg-ink-50 md:text-sm md:text-muted">
+          <ChevronLeft size={22} strokeWidth={2} aria-hidden />
           {back.label}
         </Link>
       )}
@@ -48,12 +47,11 @@ function Shell({ children, back }: { children: React.ReactNode; back?: { to: str
 
 function Heading({ eyebrow, title, sub }: { eyebrow: string; title: string; sub?: string }) {
   return (
-    <div className="flex flex-col gap-2 mb-qurtag-5">
-      <Eyebrow>{eyebrow}</Eyebrow>
-      <h1 className="font-display font-semibold text-ink-900 text-h4 sm:text-h3 tracking-[-0.028em] leading-[1.1] text-balance break-words">
+    <div className="mb-6 flex flex-col gap-1" data-section={eyebrow}>
+      <h1 className="break-words text-2xl font-semibold tracking-[-0.02em] text-ink-900 text-balance md:text-[2rem] md:leading-tight">
         {title}
       </h1>
-      {sub && <p className="text-caption text-muted">{sub}</p>}
+      {sub && <p className="text-sm text-muted">{sub}</p>}
     </div>
   );
 }
@@ -61,7 +59,7 @@ function Heading({ eyebrow, title, sub }: { eyebrow: string; title: string; sub?
 function Box({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mb-qurtag-5">
-      <h2 className="font-display font-semibold text-h5 text-ink-900 mb-3">{title}</h2>
+      <h2 className="mb-3 text-lg font-semibold text-ink-900">{title}</h2>
       {children}
     </section>
   );
@@ -101,9 +99,9 @@ export function AdminAccountPage() {
 
 function Count({ label, value }: { label: string; value: number | string }) {
   return (
-    <div className="rounded-card border border-hairline bg-canvas p-3">
-      <div className="font-display font-semibold text-h4 text-ink-900 tabular-nums">{value}</div>
-      <div className="text-caption text-muted">{label}</div>
+    <div className="rounded-modal border border-hairline bg-canvas p-4">
+      <div className="text-2xl font-semibold tabular-nums text-ink-900">{value}</div>
+      <div className="text-sm text-muted">{label}</div>
     </div>
   );
 }

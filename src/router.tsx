@@ -57,7 +57,6 @@ export const router = createBrowserRouter([
     element: <MinimalLayout />,
     children: [
       { path: '/start', element: <StartSignIn /> },
-      { path: '/start/setup', element: <StartSetup /> },
       { path: '/forgot-password', element: <ForgotPassword /> },
       { path: '/reset-password', element: <ResetPassword /> },
       { path: '/auth/callback', element: <AuthCallback /> },
@@ -68,6 +67,9 @@ export const router = createBrowserRouter([
     element: <AppLayout />,
     children: [
       { path: '/app', element: <AppHome /> },
+      // Adding an item and printing its tag are app screens: tab bar, title and Back.
+      { path: '/start/setup', element: <StartSetup /> },
+      { path: '/app/tags/:tagId/print', element: <TagPrint /> },
       { path: '/app/items', element: <Items /> },
       { path: '/app/items/:itemId', element: <ItemDetail /> },
       { path: '/app/tags', element: <AppTags /> },
@@ -83,7 +85,6 @@ export const router = createBrowserRouter([
   {
     element: <PrintLayout />,
     children: [
-      { path: '/app/tags/:tagId/print', element: <TagPrint /> },
       ...(FEATURES.insurancePacket ? [{ path: '/app/items/:itemId/insurance-packet', element: <InsurancePacket /> }] : []),
     ],
   },

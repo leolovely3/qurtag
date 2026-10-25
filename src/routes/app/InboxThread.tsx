@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, ExternalLink, Flag, Package, Lock, ShieldOff, Truck } from 'lucide-react';
+import { ChevronRight, ExternalLink, Flag, Lock, ShieldOff, Truck } from 'lucide-react';
+import { AppPage } from '@/components/layout/AppPage';
+import { buttonClasses } from '@/components/ui/Button';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { ItemThumb } from './Home';
 import { Eyebrow } from '@/components/brand/Typography';
 import { MessageComposer } from '@/components/ui/MessageComposer';
 import { Modal } from '@/components/ui/Modal';
@@ -334,92 +338,102 @@ export function InboxThread() {
     }
   }
 
+  const back = { to: '/app/inbox', label: 'Inbox' };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="size-7 rounded-full border-2 border-ink-100 border-t-ink-900 animate-spin" />
-      </div>
+      <AppPage title="Conversation" back={back}>
+        <div className="flex flex-col gap-4" aria-busy="true" aria-label="Loading the conversation">
+          <Skeleton className="h-36 w-full rounded-modal" />
+          <Skeleton className="h-48 w-full rounded-modal" />
+        </div>
+      </AppPage>
     );
   }
 
   if (error || !thread) {
     return (
-      <div className="px-qurtag-5 md:px-qurtag-8 py-qurtag-8 max-w-3xl flex flex-col gap-5">
-        <Link
-          to="/app/inbox"
-          className="inline-flex items-center gap-2 text-caption text-muted hover:text-ink-900 transition-colors"
-        >
-          <ArrowLeft size={14} strokeWidth={1.75} />
-          Back to inbox
-        </Link>
-        <Eyebrow>Not available</Eyebrow>
-        <h1 className="font-display font-semibold text-h3 text-ink-900 tracking-[-0.022em]">
-          {error ?? 'This conversation isn\'t available.'}
-        </h1>
-      </div>
+      <AppPage title="Conversation" back={back}>
+        <section className="flex flex-col items-center gap-3 rounded-modal border border-hairline bg-paper px-6 py-10 text-center">
+          <h2 className="text-xl font-semibold text-ink-900">{error ?? "This conversation isn't available"}</h2>
+          <p className="max-w-sm text-base text-muted">It may have been deleted with its item.</p>
+          <Link to="/app/inbox" className={buttonClasses({ variant: 'secondary', className: 'mt-2' })}>
+            Back to Inbox
+          </Link>
+        </section>
+      </AppPage>
     );
   }
 
-  return (
-    <div className="px-qurtag-5 md:px-qurtag-8 py-qurtag-8 max-w-4xl">
-      {/* Top bar */}
-      <div className="flex items-center justify-between mb-qurtag-3">
-        <Link
-          to="/app/inbox"
-          className="inline-flex items-center gap-2 text-caption text-muted hover:text-ink-900 transition-colors"
-        >
-          <ArrowLeft size={14} strokeWidth={1.75} />
-          Inbox
-        </Link>
-        <span className="text-caption text-muted">
-          Started {relativeTime(thread.created_at)}
-          {thread.status !== 'open' && ` · ${thread.status}`}
-        </span>
-      </div>
+  const statusLabel = thread.status === 'reunited' ? 'Back with you' : thread.status === 'closed' ? 'Closed' : null;
 
-      {/* Action row */}
-      <div className="flex items-center gap-2 mb-qurtag-5 flex-wrap">
-        <button
-          type="button"
-          onClick={() => setReunitedOpen(true)}
-          disabled={!!actionPending || thread.status === 'reunited'}
-          className="inline-flex h-11 items-center gap-1.5 rounded-pill bg-verdigris-500 text-canvas text-caption font-medium px-4 hover:bg-verdigris-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-qurtag"
-        >
-          <CheckCircle2 size={14} strokeWidth={1.75} />
-          {actionPending === 'reunited' ? 'Saving…' : thread.status === 'reunited' ? 'Back with you' : 'I have it back'}
-        </button>
-        <button
-          type="button"
-          onClick={() => setCloseOpen(true)}
-          disabled={!!actionPending || thread.status === 'closed'}
-          className="inline-flex h-11 items-center gap-1.5 rounded-pill border border-hairline-strong text-ink-900 text-caption font-medium px-4 hover:border-ink-900 disabled:opacity-50 transition-colors duration-qurtag"
-        >
-          <ShieldOff size={14} strokeWidth={1.75} />
-          {thread.status === 'closed' ? 'Closed' : 'Close conversation'}
-        </button>
-        {FEATURES.safetyTools && (
-        <>
-        <button
-          type="button"
-          onClick={() => setReportOpen(true)}
-          disabled={!!actionPending}
-          className="inline-flex h-9 items-center gap-1.5 rounded-pill border border-hairline-strong text-ink-900 text-caption font-medium px-4 hover:border-ink-900 disabled:opacity-50 transition-colors duration-qurtag"
-        >
-          <Flag size={14} strokeWidth={1.75} />
-          Report
-        </button>
-        <button
-          type="button"
-          onClick={() => finderSessionId && setBlockOpen(true)}
-          disabled={!!actionPending || !finderSessionId}
-          className="inline-flex h-9 items-center gap-1.5 rounded-pill border border-hairline-strong text-muted text-caption font-medium px-4 hover:border-signal-500 hover:text-signal-700 disabled:opacity-50 transition-colors duration-qurtag"
-        >
-          <ShieldOff size={14} strokeWidth={1.75} />
-          Block this finder
-        </button>
-        </>
+  return (
+    <AppPage title="Conversation" back={back}>
+      {/* What it is about, and what the owner can do with it */}
+      <section className="mb-4 overflow-hidden rounded-modal border border-hairline bg-canvas">
+        {item ? (
+          <Link
+            to={`/app/items/${item.id}`}
+            className="flex items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-ink-50 focus-visible:outline-offset-[-2px] active:bg-ink-50"
+          >
+            <ItemThumb src={item.hero_photo_url} />
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <span className="line-clamp-2 break-words text-base font-semibold leading-snug text-ink-900">{item.name}</span>
+              <span className="flex flex-wrap items-center gap-2 text-sm text-muted">
+                {statusLabel && (
+                  <span className="inline-flex h-6 items-center rounded-pill bg-ink-100 px-2 text-xs font-medium text-ink-700">
+                    {statusLabel}
+                  </span>
+                )}
+                Started {relativeTime(thread.created_at)}
+              </span>
+            </div>
+            <ChevronRight size={20} strokeWidth={1.75} className="shrink-0 text-ink-300" aria-label="Open item" />
+          </Link>
+        ) : (
+          <p className="px-4 py-3 text-sm text-muted">Started {relativeTime(thread.created_at)}</p>
         )}
-      </div>
+        <div className="flex flex-wrap gap-2 border-t border-hairline p-3">
+          <button
+            type="button"
+            onClick={() => setReunitedOpen(true)}
+            disabled={!!actionPending || thread.status === 'reunited'}
+            className={buttonClasses({ variant: 'success', className: 'flex-1 basis-[8.5rem] px-3' })}
+          >
+            {actionPending === 'reunited' ? 'Saving…' : thread.status === 'reunited' ? 'Back with you' : 'I have it back'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setCloseOpen(true)}
+            disabled={!!actionPending || thread.status === 'closed'}
+            className={buttonClasses({ variant: 'secondary', className: 'flex-1 basis-[8.5rem] px-3' })}
+          >
+            {thread.status === 'closed' ? 'Closed' : 'Close conversation'}
+          </button>
+          {FEATURES.safetyTools && (
+            <>
+              <button
+                type="button"
+                onClick={() => setReportOpen(true)}
+                disabled={!!actionPending}
+                className={buttonClasses({ variant: 'secondary', className: 'flex-1 basis-[8.5rem] px-3' })}
+              >
+                <Flag size={16} strokeWidth={1.75} aria-hidden />
+                Report
+              </button>
+              <button
+                type="button"
+                onClick={() => finderSessionId && setBlockOpen(true)}
+                disabled={!!actionPending || !finderSessionId}
+                className={buttonClasses({ variant: 'danger', className: 'flex-1 basis-[8.5rem] px-3' })}
+              >
+                <ShieldOff size={16} strokeWidth={1.75} aria-hidden />
+                Block this finder
+              </button>
+            </>
+          )}
+        </div>
+      </section>
 
       {reportOpen && (
         <ReportForm onClose={() => setReportOpen(false)} onSubmit={handleReport} />
@@ -534,41 +548,8 @@ export function InboxThread() {
         </div>
       )}
 
-      {/* Item context */}
-      {item && (
-        <div className="rounded-modal border border-hairline bg-paper p-qurtag-5 mb-qurtag-5 flex items-center gap-qurtag-3">
-          {item.hero_photo_url ? (
-            <img
-              src={item.hero_photo_url}
-              alt=""
-              className="size-14 rounded-card object-cover bg-ink-50 shrink-0"
-            />
-          ) : (
-            <div className="size-14 rounded-card bg-ink-50 grid place-items-center shrink-0">
-              <Package size={18} strokeWidth={1.5} className="text-muted" />
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <Eyebrow>Conversation about</Eyebrow>
-            <h2 className="font-display font-semibold text-h5 text-ink-900 tracking-[-0.018em] mt-0.5 truncate">
-              {item.name}
-            </h2>
-            {item.brand && (
-              <p className="text-caption text-muted">{item.brand}</p>
-            )}
-          </div>
-          <Link
-            to={`/app/items/${item.id}`}
-            className="inline-flex items-center gap-1.5 text-caption font-medium text-ink-900 hover:opacity-70 transition-opacity shrink-0"
-          >
-            Open item
-            <ExternalLink size={12} strokeWidth={1.75} />
-          </Link>
-        </div>
-      )}
-
       {/* Thread */}
-      <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 mb-qurtag-3 max-h-[60vh] overflow-y-auto">
+      <div className="mb-4 rounded-modal border border-hairline bg-canvas p-4">
         <ThreadView messages={messages} viewerKind="owner" />
       </div>
 
@@ -582,13 +563,13 @@ export function InboxThread() {
       />
 
       {/* Privacy strip */}
-      <div className="mt-qurtag-3 rounded-card bg-paper border border-hairline p-qurtag-3 flex items-start gap-3">
-        <Lock size={16} strokeWidth={1.75} className="mt-0.5 text-ink-900 shrink-0" />
-        <p className="text-caption text-ink-700 text-pretty">
+      <div className="mt-4 flex items-start gap-3 px-1">
+        <Lock size={16} strokeWidth={1.75} className="mt-0.5 shrink-0 text-muted" aria-hidden />
+        <p className="text-sm text-muted text-pretty">
           The finder does not see your name, email or phone number. They read your reply on the
           tag's page. Only share an address or number if you want to.
         </p>
       </div>
-    </div>
+    </AppPage>
   );
 }

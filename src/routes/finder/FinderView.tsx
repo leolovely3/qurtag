@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Check, Copy, Gift, Lock, Package } from 'lucide-react';
-import { Display, Eyebrow, Lede } from '@/components/brand/Typography';
+import { Check, Copy, Gift, Lock, Package, SearchX, WifiOff } from 'lucide-react';
+import { buttonClasses } from '@/components/ui/Button';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { MessageComposer } from '@/components/ui/MessageComposer';
 import { ThreadView } from '@/components/ui/ThreadView';
 import {
@@ -102,25 +103,35 @@ export function FinderView() {
   }
 
   if (state === 'loading') {
+    // Shaped like the page it becomes, so nothing jumps when the tag arrives.
     return (
-      <div className="flex items-center justify-center min-h-[40vh]" role="status" aria-label="Loading">
-        <div className="size-7 rounded-full border-2 border-ink-100 border-t-ink-900 animate-spin" />
+      <div className="flex flex-col gap-5" role="status" aria-label="Loading this tag">
+        <Skeleton className="h-7 w-40 rounded-pill" />
+        <div className="flex flex-col gap-3">
+          <Skeleton className="h-8 w-4/5" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-2/3" />
+        </div>
+        <Skeleton className="h-24 w-full rounded-modal" />
+        <Skeleton className="h-36 w-full rounded-modal" />
       </div>
     );
   }
 
   if (state === 'missing') {
     return (
-      <div className="flex flex-col gap-qurtag-5 py-qurtag-8">
-        <Eyebrow>Tag not found</Eyebrow>
-        <Display level={2}>This tag isn't registered.</Display>
-        <Lede>
+      <div className="flex flex-col items-start gap-4 py-4">
+        <span className="grid size-12 place-items-center rounded-modal bg-ink-100">
+          <SearchX size={24} strokeWidth={1.75} className="text-ink-900" aria-hidden />
+        </span>
+        <h1 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900 sm:text-3xl">This tag isn't registered</h1>
+        <p className="text-base text-ink-700 text-pretty">
           The code may be mistyped, or the owner may have switched this tag off or printed a new one.
           Check the address on the tag and try again. If you found something, you could also hand it
           in where you found it.
-        </Lede>
-        <Link to="/" className="link-arrow text-body mt-2 min-h-11 inline-flex items-center">
-          What is QuR Tag? →
+        </p>
+        <Link to="/" className={buttonClasses({ variant: 'secondary', className: 'mt-2' })}>
+          What is QuR Tag?
         </Link>
       </div>
     );
@@ -128,17 +139,19 @@ export function FinderView() {
 
   if (state === 'offline' || !view) {
     return (
-      <div className="flex flex-col gap-qurtag-5 py-qurtag-8">
-        <Eyebrow>No connection</Eyebrow>
-        <Display level={2}>We couldn't load this tag.</Display>
-        <Lede>Check your signal and try again.</Lede>
+      <div className="flex flex-col items-start gap-4 py-4">
+        <span className="grid size-12 place-items-center rounded-modal bg-ink-100">
+          <WifiOff size={24} strokeWidth={1.75} className="text-ink-900" aria-hidden />
+        </span>
+        <h1 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900 sm:text-3xl">We couldn't load this tag</h1>
+        <p className="text-base text-ink-700">Check your signal and try again.</p>
         <button
           type="button"
           onClick={() => {
             setState('loading');
             void load(true, token);
           }}
-          className="self-start inline-flex h-11 items-center rounded-pill bg-ink-900 text-canvas text-caption font-medium px-5"
+          className={buttonClasses({ variant: 'primary', className: 'mt-2' })}
         >
           Try again
         </button>
@@ -157,11 +170,11 @@ export function FinderView() {
   const closed = thread?.status === 'closed';
 
   return (
-    <div className="flex flex-col gap-qurtag-5">
+    <div className="flex flex-col gap-5">
       <div className="flex items-center gap-2">
         <span
           className={cn(
-            'inline-flex items-center gap-1.5 rounded-pill px-2.5 py-1 text-caption font-medium',
+            'inline-flex h-8 items-center gap-2 rounded-pill px-3 text-sm font-medium',
             item.lost ? 'bg-signal-50 text-signal-700' : 'bg-ink-50 text-ink-700',
           )}
         >
@@ -171,45 +184,43 @@ export function FinderView() {
       </div>
 
       <div className="flex flex-col gap-3">
-        <Display level={2} className="text-pretty">
+        <h1 className="text-2xl font-semibold leading-tight tracking-[-0.02em] text-ink-900 text-pretty sm:text-3xl">
           {talking
             ? 'Your conversation with the owner.'
             : item.lost
               ? 'You found something someone is missing.'
               : 'You found something with a QuR Tag.'}
-        </Display>
-        <Lede className="text-pretty">
+        </h1>
+        <p className="text-base text-ink-700 text-pretty">
           {talking
             ? 'Replies from the owner show up here. Keep this page, or come back to this tag later on this phone.'
             : 'Send the owner a short note: where you found it and how they can get it back. You do not need an account or an app, and the owner will not see your phone number or email.'}
-        </Lede>
+        </p>
       </div>
 
-      <div className="rounded-modal border border-hairline bg-paper p-qurtag-5 flex items-start gap-qurtag-3">
+      <div className="flex items-center gap-4 rounded-modal border border-hairline bg-canvas p-4 shadow-card">
         {item.photo ? (
-          <img src={item.photo} alt={`Photo of the ${item.name}`} className="size-20 rounded-card object-cover bg-ink-100 shrink-0" />
+          <img src={item.photo} alt={`Photo of the ${item.name}`} className="size-20 shrink-0 rounded-card bg-ink-100 object-cover" />
         ) : (
-          <div className="size-20 rounded-card bg-ink-100 grid place-items-center shrink-0">
-            <Package size={22} strokeWidth={1.5} className="text-muted" aria-hidden />
+          <div className="grid size-20 shrink-0 place-items-center rounded-card bg-ink-100">
+            <Package size={28} strokeWidth={1.5} className="text-muted" aria-hidden />
           </div>
         )}
-        <div className="flex-1 min-w-0">
-          <Eyebrow>The item</Eyebrow>
-          <h2 className="font-display font-semibold text-h5 text-ink-900 tracking-[-0.018em] mt-0.5 text-balance break-words">
-            {item.name}
-          </h2>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm text-muted">The item</p>
+          <h2 className="break-words text-xl font-semibold leading-snug text-ink-900 text-balance">{item.name}</h2>
         </div>
       </div>
 
       {item.reward_text && (
-        <aside className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex items-start gap-qurtag-3">
-          <div className="size-10 rounded-pill bg-ink-900 grid place-items-center shrink-0">
-            <Gift size={18} strokeWidth={1.75} className="text-canvas" aria-hidden />
+        <aside className="flex items-start gap-3 rounded-modal border border-hairline bg-canvas p-4">
+          <div className="grid size-10 shrink-0 place-items-center rounded-pill bg-signal-50">
+            <Gift size={20} strokeWidth={1.75} className="text-signal-700" aria-hidden />
           </div>
-          <div className="flex-1 min-w-0">
-            <Eyebrow>A word from the owner</Eyebrow>
-            <p className="text-body text-ink-900 mt-0.5 text-pretty break-words">{item.reward_text}</p>
-            <p className="text-caption text-muted mt-1">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-ink-900">A word from the owner</p>
+            <p className="mt-0.5 break-words text-base text-ink-900 text-pretty">{item.reward_text}</p>
+            <p className="mt-1 text-sm text-muted">
               Any thank-you is between you and the owner. QuR Tag does not handle money.
             </p>
           </div>
@@ -217,14 +228,14 @@ export function FinderView() {
       )}
 
       {talking && (
-        <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3">
-          <Eyebrow>Conversation</Eyebrow>
+        <div className="flex flex-col gap-3 rounded-modal border border-hairline bg-canvas p-4">
+          <h2 className="text-sm font-semibold text-ink-700">Conversation</h2>
           <ThreadView messages={messages} viewerKind="finder" />
         </div>
       )}
 
       {closed ? (
-        <p className="rounded-card bg-paper border border-hairline px-3 py-3 text-caption text-ink-700">
+        <p className="rounded-card border border-hairline bg-paper px-4 py-3 text-sm text-ink-700">
           The owner closed this conversation.
         </p>
       ) : (
@@ -238,7 +249,7 @@ export function FinderView() {
             onSend={handleSend}
           />
           {error && (
-            <p role="alert" className="rounded-card bg-signal-50 px-3 py-2 text-caption text-signal-700">
+            <p role="alert" className="rounded-card bg-signal-50 px-4 py-3 text-sm text-signal-700">
               {error}
             </p>
           )}
@@ -246,24 +257,24 @@ export function FinderView() {
       )}
 
       {token && (
-        <div className="rounded-card border border-hairline bg-paper p-qurtag-3 flex flex-col sm:flex-row sm:items-center gap-3">
-          <p className="text-caption text-ink-700 text-pretty flex-1">
+        <div className="flex flex-col gap-3 rounded-modal border border-hairline bg-paper p-4 sm:flex-row sm:items-center">
+          <p className="flex-1 text-sm text-ink-700 text-pretty">
             This phone remembers your conversation. To open it somewhere else, keep this private link.
           </p>
           <button
             type="button"
             onClick={copyLink}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-pill border border-hairline-strong bg-canvas px-4 text-caption font-medium text-ink-900"
+            className={buttonClasses({ variant: 'secondary' })}
           >
-            {copied ? <Check size={14} aria-hidden /> : <Copy size={14} aria-hidden />}
+            {copied ? <Check size={16} aria-hidden /> : <Copy size={16} aria-hidden />}
             {copied ? 'Link copied' : 'Copy my private link'}
           </button>
         </div>
       )}
 
-      <div className="rounded-card bg-paper border border-hairline p-qurtag-3 flex items-start gap-3">
-        <Lock size={16} strokeWidth={1.75} className="mt-0.5 text-ink-900 shrink-0" aria-hidden />
-        <p className="text-caption text-ink-700 text-pretty">
+      <div className="flex items-start gap-3 px-1">
+        <Lock size={16} strokeWidth={1.75} className="mt-0.5 shrink-0 text-muted" aria-hidden />
+        <p className="text-sm text-muted text-pretty">
           The owner sees only what you write. They do not see your phone number, email or location, and
           you do not see theirs. Do not share more than you want to.
         </p>

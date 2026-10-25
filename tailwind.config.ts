@@ -3,6 +3,8 @@ import animate from 'tailwindcss-animate';
 
 const config: Config = {
   darkMode: 'class',
+  // Hover styles only where a pointer can hover, so a tap on a phone never sticks in a hover state.
+  future: { hoverOnlyWhenSupported: true },
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     container: {

@@ -188,6 +188,11 @@ To try the app by hand: `npm run dev:local` (a local database with the schema, p
 server functions on 127.0.0.1:56861), then in another Terminal
 `QURTAG_API_PROXY=http://127.0.0.1:56861 npm run dev` and open http://localhost:5173.
 
+The logo (the "QuR" mark, the lockup with the tagline "Stick it on. Get it back.") is drawn once
+in `scripts/brand/build-brand.mjs`; `npm run brand` writes the iPhone app icon and splash, the
+favicons, the web app icons, `public/brand/*.svg`, the share image `public/og.png` and the paths the
+`Wordmark` component draws (`src/components/brand/logoPaths.ts`).
+
 Stack: React 18, TypeScript, Vite, Tailwind, React Router 7, Better Auth 1.7.7, pg,
 postgrest-js. QR codes are drawn in the browser (`qrcode.react`); the tag page prints from
 the browser, or saves as PDF from the print dialog. Colours are CSS variables (`src/index.css`)
@@ -205,12 +210,17 @@ shell (`capacitor.config.ts`, `ios/`). The old Expo stub in `mobile/` is not use
   (`server/auth/origins.ts`). The session is a bearer token kept on the phone (Better Auth's
   `bearer` plugin), never a cookie across origins.
 - The app opens to `/app`. Links to other sites open in Safari's sheet, which has a Done button back to the app.
-- The app requests no camera, location, NFC or photo-library permission. "Print tag" draws the tag
+- The item photo picker offers Take Photo and the photo library, so `Info.plist` carries
+  `NSCameraUsageDescription` and `NSPhotoLibraryUsageDescription`; iOS asks the first time either is
+  used. The app requests no location or NFC permission. "Print tag" draws the tag
   (label and QR code) on the phone as a one-page PDF (`src/lib/tagPdf.ts`) and opens the iOS share
   sheet through `@capacitor/share` and `@capacitor/filesystem`, which offers Print, Save to Files and
   AirDrop. On the web it opens the browser's print dialog.
-- Terms and Privacy, opened inside the app, show a plain header with a Back button instead of the
-  website's menu (`src/components/layout/MarketingLayout.tsx`).
+- Terms, Privacy and Help, opened inside the app, show a plain header with a Back button instead of
+  the website's menu (`src/components/layout/MarketingLayout.tsx`).
+- On a phone (the app, and the website under 768px wide) the signed-in screens use a bottom tab bar
+  (Items, Inbox, Settings); wider screens use a sidebar (`src/components/layout/AppLayout.tsx`). Each
+  screen has a title, and nested screens a Back button (`src/components/layout/AppPage.tsx`).
 - The app follows the phone's light or dark setting, and Settings lets the owner pick Light, Auto or Dark.
 - Version and build number are `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` in
   `ios/App/App.xcodeproj/project.pbxproj`.

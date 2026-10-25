@@ -14,53 +14,56 @@ interface SkeletonProps {
 export function Skeleton({ className, count = 1, gap = 'gap-3' }: SkeletonProps) {
   if (count > 1) {
     return (
-      <div className={cn('flex flex-col', gap)}>
+      <div className={cn('flex flex-col', gap)} aria-hidden>
         {Array.from({ length: count }).map((_, i) => (
-          <div
-            key={i}
-            className={cn('animate-qurtag-pulse rounded-card bg-ink-50', className)}
-          />
+          <div key={i} className={cn('animate-qurtag-pulse rounded-card bg-ink-100', className)} />
         ))}
       </div>
     );
   }
-  return <div className={cn('animate-qurtag-pulse rounded-card bg-ink-50', className)} />;
+  return <div aria-hidden className={cn('animate-qurtag-pulse rounded-card bg-ink-100', className)} />;
 }
 
-/**
- * A skeleton sized like an item card on /app and /app/items.
- */
-export function ItemCardSkeleton() {
+/** A skeleton sized like a row in the Items list. */
+export function ItemRowSkeleton() {
   return (
-    <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex gap-qurtag-3">
-      <Skeleton className="size-16 rounded-card" />
-      <div className="flex-1 min-w-0 flex flex-col gap-2">
-        <div className="flex items-start justify-between gap-2">
-          <Skeleton className="h-2.5 w-16" />
-          <Skeleton className="h-4 w-14 rounded-pill" />
-        </div>
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-3 w-1/2 mt-auto" />
+    <div className="flex min-h-[4.5rem] items-center gap-3 px-4 py-3">
+      <Skeleton className="size-14" />
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <Skeleton className="h-4 w-2/3" />
+        <Skeleton className="h-3 w-1/3" />
       </div>
     </div>
   );
 }
 
-/**
- * A skeleton sized like an inbox thread row.
- */
+/** Kept for screens that still show item cards. */
+export const ItemCardSkeleton = ItemRowSkeleton;
+
+/** A skeleton sized like an inbox thread row. */
 export function ThreadRowSkeleton() {
   return (
-    <div className="flex items-start gap-qurtag-3 p-qurtag-3 border-b border-hairline last:border-b-0">
-      <Skeleton className="size-12 rounded-card" />
-      <div className="flex-1 min-w-0 flex flex-col gap-2">
+    <div className="flex items-start gap-3 px-4 py-3">
+      <Skeleton className="size-11" />
+      <div className="flex min-w-0 flex-1 flex-col gap-2 pt-0.5">
         <div className="flex items-center justify-between gap-3">
           <Skeleton className="h-4 w-1/2" />
-          <Skeleton className="h-3 w-12" />
+          <Skeleton className="h-3 w-10" />
         </div>
         <Skeleton className="h-3 w-3/4" />
-        <Skeleton className="h-2.5 w-1/3" />
       </div>
+    </div>
+  );
+}
+
+/** A full-screen placeholder for a screen that is loading: a title bar and a few blocks. */
+export function ScreenSkeleton({ rows = 3 }: { rows?: number }) {
+  return (
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 pt-6 md:px-8" aria-busy="true" aria-label="Loading">
+      <Skeleton className="h-6 w-40" />
+      {Array.from({ length: rows }).map((_, i) => (
+        <Skeleton key={i} className="h-24 w-full rounded-modal" />
+      ))}
     </div>
   );
 }

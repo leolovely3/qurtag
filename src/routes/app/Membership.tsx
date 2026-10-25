@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Eyebrow } from '@/components/brand/Typography';
+import { AppPage } from '@/components/layout/AppPage';
 import { PlanCard } from '@/components/membership/PlanCard';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
@@ -172,14 +172,14 @@ export function MembershipPage() {
   if (!user) return null;
 
   return (
-    <div className="px-qurtag-5 md:px-qurtag-8 py-qurtag-8 max-w-5xl flex flex-col gap-qurtag-8">
-      <div className="flex flex-col gap-2">
-        <Eyebrow>Membership</Eyebrow>
-        <h1 className="font-display font-semibold text-ink-900 text-h3 sm:text-h2 tracking-[-0.028em] leading-[1.04] text-balance">
-          {membership ? `You are on ${PLAN_INFO[membership.plan].name}.` : 'Your plan'}
-        </h1>
+    <AppPage title="Membership" back={{ to: '/app/settings', label: 'Settings' }} width="wide">
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-1 px-1">
+        <p className="text-lg font-semibold text-ink-900">
+          {membership ? `You are on ${PLAN_INFO[membership.plan].name}` : 'Your plan'}
+        </p>
         {membership && (
-          <p className="text-body text-muted text-pretty">
+          <p className="text-base text-muted text-pretty">
             {membership.item_limit === null
               ? `${membership.items_used} ${membership.items_used === 1 ? 'item' : 'items'}, no limit.`
               : `${membership.items_used} of ${membership.item_limit} items.`}
@@ -212,9 +212,9 @@ export function MembershipPage() {
       )}
 
       {manage && membership && (
-        <section aria-label="Your membership" className="rounded-modal border border-hairline bg-paper p-qurtag-5 flex flex-col gap-3">
-          <Eyebrow>Your membership</Eyebrow>
-          <p className="font-display font-semibold text-h5 text-ink-900">{manage.name}</p>
+        <section aria-label="Your membership" className="flex flex-col gap-3 rounded-modal border border-hairline bg-paper p-5">
+          <p className="text-sm font-semibold text-ink-700">Your membership</p>
+          <p className="text-xl font-semibold text-ink-900">{manage.name}</p>
           <p className="text-body text-ink-700 text-pretty">{manage.status}</p>
           <p className="text-caption text-muted">{manage.source}</p>
           {membership.provider === 'stripe' && !native && (
@@ -350,6 +350,7 @@ export function MembershipPage() {
         </p>
       </section>
     </div>
+    </AppPage>
   );
 }
 
@@ -412,9 +413,9 @@ function FamilySection({ family, onChanged, toast }: { family: Family; onChanged
   }
 
   return (
-    <section aria-label="Family" className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-qurtag-3">
-      <Eyebrow>Family</Eyebrow>
-      <h2 className="font-display font-semibold text-h4 text-ink-900 tracking-[-0.02em]">
+    <section aria-label="Family" className="flex flex-col gap-4 rounded-modal border border-hairline bg-canvas p-5">
+      <p className="text-sm font-semibold text-ink-700">Family</p>
+      <h2 className="text-xl font-semibold text-ink-900">
         {used > 0 || !owner ? `${members.length} of ${FAMILY_SEATS} places used` : 'Share with your family'}
       </h2>
 

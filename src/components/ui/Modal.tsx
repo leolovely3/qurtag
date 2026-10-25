@@ -2,12 +2,13 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { Eyebrow } from '@/components/brand/Typography';
+import { buttonClasses } from '@/components/ui/Button';
 
 interface ModalProps {
   open: boolean;
   onClose: () => void;
   title: string;
+  /** Not shown: the title says what the dialog is. Kept so callers need not change. */
   eyebrow?: string;
   description?: string;
   children?: ReactNode;
@@ -33,7 +34,6 @@ export function Modal({
   open,
   onClose,
   title,
-  eyebrow,
   description,
   children,
   primaryAction,
@@ -94,7 +94,7 @@ export function Modal({
       <div
         ref={dialogRef}
         className={cn(
-          'relative w-full bg-canvas rounded-modal shadow-modal flex flex-col gap-qurtag-3 p-qurtag-5',
+          'relative flex w-full flex-col gap-4 rounded-[1.25rem] bg-canvas p-5 shadow-modal sm:p-6',
           'animate-qurtag-fade-up',
           size === 'sm' ? 'max-w-md' : 'max-w-xl',
         )}
@@ -103,33 +103,27 @@ export function Modal({
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="absolute top-qurtag-2 right-qurtag-2 size-8 grid place-items-center rounded-pill text-muted hover:bg-ink-50 transition-colors duration-qurtag"
+          className="absolute right-2 top-2 grid size-11 place-items-center rounded-pill text-muted transition-colors hover:bg-ink-50 hover:text-ink-900"
         >
-          <X size={14} strokeWidth={2} />
+          <X size={18} strokeWidth={2} aria-hidden />
         </button>
 
-        <div className="flex flex-col gap-2 pr-qurtag-5">
-          {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-          <h2
-            id="qurtag-modal-title"
-            className="font-display font-semibold text-h4 text-ink-900 tracking-[-0.018em] text-balance"
-          >
+        <div className="flex flex-col gap-2 pr-10">
+          <h2 id="qurtag-modal-title" className="text-xl font-semibold leading-snug text-ink-900 text-balance">
             {title}
           </h2>
-          {description && (
-            <p className="text-body text-ink-700 text-pretty">{description}</p>
-          )}
+          {description && <p className="text-base text-ink-700 text-pretty">{description}</p>}
         </div>
 
         {children && <div className="flex flex-col gap-3">{children}</div>}
 
         {(primaryAction || secondaryAction) && (
-          <div className="flex items-center justify-end gap-3 mt-qurtag-2">
+          <div className="mt-2 grid grid-cols-2 gap-3 sm:flex sm:justify-end">
             {secondaryAction && (
               <button
                 type="button"
                 onClick={secondaryAction.onClick}
-                className="text-caption font-medium text-muted hover:text-ink-900 transition-colors px-2"
+                className={buttonClasses({ variant: 'secondary', className: 'w-full sm:w-auto' })}
               >
                 {secondaryAction.label}
               </button>
@@ -139,14 +133,14 @@ export function Modal({
                 type="button"
                 onClick={() => void primaryAction.onClick()}
                 disabled={primaryAction.disabled || primaryAction.pending}
-                className={cn(
-                  'inline-flex h-11 items-center gap-2 rounded-pill px-5 text-caption font-medium',
-                  'transition-colors duration-qurtag',
-                  'disabled:opacity-50 disabled:cursor-not-allowed',
-                  primaryAction.tone === 'destructive'
-                    ? 'bg-signal-500 text-canvas hover:bg-signal-600'
-                    : 'bg-ink-900 text-canvas hover:bg-ink-700',
-                )}
+                className={buttonClasses({
+                  variant: 'primary',
+                  className: cn(
+                    'w-full sm:w-auto',
+                    !secondaryAction && 'col-span-2',
+                    primaryAction.tone === 'destructive' && 'bg-signal-700 text-canvas hover:bg-signal-800',
+                  ),
+                })}
               >
                 {primaryAction.pending ? 'Working…' : primaryAction.label}
               </button>

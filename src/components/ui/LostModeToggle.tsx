@@ -1,4 +1,5 @@
-import { Loader2, ShieldCheck } from 'lucide-react';
+import { useId } from 'react';
+import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 interface LostModeToggleProps {
@@ -9,78 +10,58 @@ interface LostModeToggleProps {
 }
 
 /**
- * Big, calm toggle for lost mode. Slate when off, signal coral when on.
- * Never alarmist red. The component owns its visual gravity. It's the
- * single most consequential control on an item page.
+ * Lost mode, as a settings row with an iOS-sized switch. Calm when off, the brand orange when
+ * on. Never an alarm: it changes what the tag's page says to a finder, nothing more.
  */
 export function LostModeToggle({ value, onChange, pending, className }: LostModeToggleProps) {
+  const labelId = useId();
+  const descId = useId();
   return (
     <div
       className={cn(
-        'rounded-modal border p-qurtag-5 transition-colors duration-qurtag ease-qurtag',
-        value
-          ? 'border-signal-200 bg-signal-50'
-          : 'border-hairline bg-canvas',
+        'flex items-center justify-between gap-4 rounded-modal border px-4 py-4 transition-colors duration-150',
+        value ? 'border-signal-200 bg-signal-50' : 'border-hairline bg-canvas',
         className,
       )}
     >
-      <div className="flex items-start justify-between gap-qurtag-3">
-        <div className="flex items-start gap-3 min-w-0">
-          <div
-            className={cn(
-              'size-10 rounded-pill grid place-items-center shrink-0 transition-colors duration-qurtag',
-              value ? 'bg-signal-500 text-canvas' : 'bg-ink-50 text-ink-900',
-            )}
-          >
-            <ShieldCheck size={18} strokeWidth={1.75} />
-          </div>
-          <div className="flex flex-col gap-1 min-w-0">
-            <span className="text-eyebrow uppercase tracking-[0.14em] text-muted">Lost mode</span>
-            <h3
-              className={cn(
-                'font-display font-semibold text-h5 tracking-[-0.018em] text-balance',
-                value ? 'text-signal-900' : 'text-ink-900',
-              )}
-            >
-              {value ? 'Marked lost.' : 'Not lost.'}
-            </h3>
-            <p className="text-caption text-muted text-pretty max-w-md">
-              {value
-                ? 'The tag\'s page tells the finder you are looking for it. Check your inbox for notes.'
-                : 'Switch this on when you notice it is gone. The tag works either way.'}
-            </p>
-          </div>
-        </div>
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <span id={labelId} className="text-base font-semibold text-ink-900">
+          {value ? 'Marked lost' : 'Lost mode'}
+        </span>
+        <span id={descId} className="text-sm text-muted text-pretty">
+          {value
+            ? "The tag's page tells the finder you are looking for it. Check your inbox for notes."
+            : 'Switch this on when you notice it is gone. The tag works either way.'}
+        </span>
+      </div>
 
-        <button
-          type="button"
-          role="switch"
-          aria-checked={value}
-          aria-busy={pending}
-          onClick={() => !pending && onChange(!value)}
+      <button
+        type="button"
+        role="switch"
+        aria-checked={value}
+        aria-busy={pending}
+        aria-labelledby={labelId}
+        aria-describedby={descId}
+        onClick={() => !pending && onChange(!value)}
+        className="relative grid h-11 w-[3.75rem] shrink-0 place-items-center rounded-pill"
+      >
+        <span
           className={cn(
-            'relative inline-flex h-7 w-12 shrink-0 items-center rounded-pill transition-colors duration-qurtag ease-qurtag',
-            value ? 'bg-signal-500' : 'bg-ink-200',
-            pending && 'opacity-60 cursor-progress',
+            'relative inline-flex h-[1.9375rem] w-[3.1875rem] items-center rounded-pill transition-colors duration-200',
+            value ? 'bg-signal-700' : 'bg-ink-300',
+            pending && 'opacity-60',
           )}
         >
-          <span className="sr-only">Toggle lost mode</span>
           <span
             className={cn(
-              'inline-block size-5 rounded-full bg-canvas shadow-card transition-transform duration-qurtag ease-qurtag',
-              value ? 'translate-x-6' : 'translate-x-1',
+              'grid size-[1.6875rem] place-items-center rounded-full bg-white shadow-card transition-transform duration-200',
+              value ? 'translate-x-[1.375rem]' : 'translate-x-0.5',
             )}
           >
-            {pending && (
-              <Loader2
-                size={12}
-                strokeWidth={2}
-                className="absolute inset-0 m-auto text-ink-500 animate-spin"
-              />
-            )}
+            {pending && <Loader2 size={14} strokeWidth={2} className="animate-spin text-ink-500" aria-hidden />}
           </span>
-        </button>
-      </div>
+        </span>
+      </button>
     </div>
   );
 }

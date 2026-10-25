@@ -122,16 +122,19 @@ function SystemCard({ payload }: { payload: SystemPayload }) {
 export function ThreadView({ messages, viewerKind, autoScroll = true, className }: ThreadViewProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  // A new message scrolls into view; opening the screen does not, so it starts at its title.
+  const seen = useRef(messages.length);
   useEffect(() => {
     if (!autoScroll) return;
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    if (messages.length > seen.current) bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    seen.current = messages.length;
   }, [messages.length, autoScroll]);
 
   if (messages.length === 0) {
     return (
       <div
         className={cn(
-          'flex items-center justify-center text-caption text-muted py-qurtag-8',
+          'flex items-center justify-center py-8 text-sm text-muted',
           className,
         )}
       >
@@ -162,24 +165,24 @@ export function ThreadView({ messages, viewerKind, autoScroll = true, className 
           <div
             key={m.id}
             className={cn(
-              'flex flex-col gap-1 max-w-[85%]',
+              'flex max-w-[85%] flex-col gap-1 sm:max-w-[75%]',
               mine ? 'self-end items-end' : 'self-start items-start',
               system && 'self-center items-center max-w-md',
             )}
           >
             <div
               className={cn(
-                'rounded-modal px-4 py-3 text-body whitespace-pre-wrap text-pretty',
+                'whitespace-pre-wrap break-words rounded-[1.25rem] px-4 py-2.5 text-base leading-normal text-pretty',
                 system
-                  ? 'bg-paper text-muted italic text-caption border border-hairline'
+                  ? 'border border-hairline bg-paper text-sm text-muted'
                   : mine
-                    ? 'bg-ink-900 text-canvas rounded-br-card'
-                    : 'bg-paper text-ink-900 rounded-bl-card border border-hairline',
+                    ? 'rounded-br-md bg-ink-900 text-canvas'
+                    : 'rounded-bl-md bg-ink-100 text-ink-900',
               )}
             >
               {m.body}
             </div>
-            <span className="text-caption text-muted px-2">
+            <span className="px-2 text-xs text-muted">
               {senderLabel(m.sender_kind, viewerKind)} · {timestamp(m.created_at)}
             </span>
           </div>
