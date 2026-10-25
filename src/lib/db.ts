@@ -14,6 +14,7 @@
  */
 import { PostgrestClient } from '@supabase/postgrest-js';
 import { getDataPass } from './authClient';
+import { serverUrl } from './platform';
 
 export const POLL_MS = 10_000;
 
@@ -26,7 +27,7 @@ const withPass: typeof fetch = async (input, init) => {
 };
 
 // Untyped at the boundary; queries.ts gives each answer its row type.
-export const db = new PostgrestClient(`${window.location.origin}/api/data`, { schema: 'qurtag', fetch: withPass });
+export const db = new PostgrestClient(serverUrl('/api/data'), { schema: 'qurtag', fetch: withPass });
 
 /**
  * For the code of features that are not built yet (src/lib/features.ts): they used to

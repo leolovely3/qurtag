@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { authClient, clearDataPass } from './authClient';
+import { authClient, clearDataPass, forgetSession } from './authClient';
 import { db } from './db';
 
 /**
@@ -85,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const e = email.trim().toLowerCase();
       if (!EMAIL.test(e)) return { ok: false, error: 'Enter a valid email address.' };
       if (password.length < 8) return { ok: false, error: 'Use at least 8 characters for your password.' };
-      clearDataPass();
+      forgetSession();
       const { data, error } = await authClient.signUp.email({
         email: e,
         password,
@@ -101,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback<AuthContextValue['signIn']>(
     async (email, password) => {
-      clearDataPass();
+      forgetSession();
       const { error } = await authClient.signIn.email({ email: email.trim().toLowerCase(), password });
       if (error) return { ok: false, error: words(error, 'Could not sign in. Try again.') };
       await refresh();
@@ -115,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await authClient.signOut();
     } finally {
-      clearDataPass();
+      forgetSession();
       setUser(null);
     }
   }, []);
@@ -125,6 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) return { ok: false, error: 'Could not delete the account. Try again, or email info@impactconsulting.ai.' };
     clearDataPass();
     await authClient.signOut().catch(() => {});
+    forgetSession();
     setUser(null);
     return { ok: true };
   }, []);

@@ -29,6 +29,7 @@
  */
 import { betterAuth } from 'better-auth';
 import { APIError } from 'better-auth/api';
+import { bearer } from 'better-auth/plugins/bearer';
 import { jwt } from 'better-auth/plugins/jwt';
 import { PostgresDialect } from 'kysely';
 import pg from 'pg';
@@ -158,7 +159,12 @@ export function createQurtagAuth(env: NodeJS.ProcessEnv = process.env, overrides
       database: { generateId: 'uuid' },
     },
 
-    plugins: [jwt(jwtOptions)],
+    plugins: [
+      jwt(jwtOptions),
+      // The iPhone app cannot hold the web site's cookie (its pages come from
+      // capacitor://localhost); it sends the session token as Authorization: Bearer.
+      bearer(),
+    ],
   });
 }
 

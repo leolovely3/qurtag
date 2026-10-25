@@ -9,16 +9,19 @@
  * here instead. The auth object is built once per function instance, on the first
  * request, so a missing environment variable fails that request instead of the build.
  */
+import { withPhoneAppCors } from '../../server/auth/phoneCors.js';
 import { createQurtagAuth, type QurtagAuth } from '../../server/auth/qurtagAuth.js';
 
 export const config = { runtime: 'nodejs' };
 
 let auth: QurtagAuth | undefined;
 
-const handle = (request: Request): Promise<Response> => {
+const handle = withPhoneAppCors((request: Request): Promise<Response> => {
   auth ??= createQurtagAuth();
   return auth.handler(request);
-};
+});
 
 export const GET = handle;
 export const POST = handle;
+// OPTIONS: the iPhone app's browser asks first (see server/auth/phoneCors.ts).
+export const OPTIONS = handle;

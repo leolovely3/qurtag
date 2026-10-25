@@ -8,6 +8,7 @@
  * Both are in server/routes/finder.ts. Errors become a plain 500; nothing internal
  * reaches the caller.
  */
+import { withPhoneAppCors } from '../../server/auth/phoneCors.js';
 import { json } from '../../server/routes/core.js';
 import { createFinderRoutes } from '../../server/routes/finder.js';
 
@@ -20,7 +21,7 @@ const ROUTES: Record<string, (request: Request) => Promise<Response>> = {
   'finder-send': finder.send,
 };
 
-const handle = async (request: Request): Promise<Response> => {
+const handle = withPhoneAppCors(async (request: Request): Promise<Response> => {
   const name = new URL(request.url).pathname.replace(/^\/api\/fn\/?/, '').replace(/\/+$/, '');
   const route = Object.prototype.hasOwnProperty.call(ROUTES, name) ? ROUTES[name] : undefined;
   if (!route) return json(404, { error: 'not_found' });
@@ -30,7 +31,9 @@ const handle = async (request: Request): Promise<Response> => {
     console.error(`qurtag /api/fn/${name}: ${(e as Error)?.message ?? 'failed'}`);
     return json(500, { error: 'server_error', message: 'Something went wrong. Please try again.' });
   }
-};
+});
 
 export const GET = handle;
 export const POST = handle;
+// OPTIONS: the iPhone app's browser asks first (see server/auth/phoneCors.ts).
+export const OPTIONS = handle;
