@@ -168,7 +168,7 @@ export function NotificationSettings({ emailAvailable }: { emailAvailable: boole
           title="Notes from finders"
           body={
             emailAvailable
-              ? 'Notes arrive in your QuR Tag inbox here, and we email you when one comes in.'
+              ? 'Notes arrive in your QuR Tag inbox here, and we email you from no-reply@qurtag.com when one comes in. If you do not see our emails, check your spam or junk folder and add no-reply@qurtag.com to your contacts.'
               : 'Notes arrive in your QuR Tag inbox here. Check it, especially when something is lost.'
           }
         />

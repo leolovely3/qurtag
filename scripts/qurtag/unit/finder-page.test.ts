@@ -56,3 +56,15 @@ test('a held note is previewed without its words; replies are not called "You" i
   assert.equal(previewLine(row('a', 'x', 'z')), 'They wrote: Found it');
   assert.equal(previewLine(row('a', 'x', 'z', { last_message: { sender_kind: 'owner', body: 'Thanks' } })), 'Replied: Thanks');
 });
+
+test("the owner's emails say how to keep the next one out of spam", async () => {
+  const { finderMessageMail, signInMail, testAlertMail } = await import('../../../server/auth/mailer.ts');
+  for (const m of [
+    finderMessageMail('a@example.test', 'Purple backpack', 'https://www.qurtag.com/app/inbox'),
+    signInMail('verify-email', 'a@example.test', 'https://www.qurtag.com/x'),
+    testAlertMail('a@example.test', 'https://www.qurtag.com/app/settings'),
+  ]) {
+    assert.match(m.text, /spam or junk/);
+    assert.match(m.html, /spam or junk/);
+  }
+});

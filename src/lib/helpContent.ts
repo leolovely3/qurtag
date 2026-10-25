@@ -176,6 +176,12 @@ export const HELP: HelpSection[] = [
         action: { label: 'Change password', to: '/app/account' },
       },
       {
+        id: 'emails',
+        q: 'Not getting our emails?',
+        a: 'Our emails come from no-reply@qurtag.com. Check your spam or junk folder, and if one is there, mark it Not spam. Add no-reply@qurtag.com to your contacts so the next one reaches your inbox. On the website you can send yourself a test email in Settings.',
+        action: { label: 'Open Settings', to: '/app/settings#alerts' },
+      },
+      {
         id: 'name-email',
         q: 'How do I change my name or email?',
         a: 'Your name is on the Account screen. To change the email you sign in with, write to us and we will do it.',

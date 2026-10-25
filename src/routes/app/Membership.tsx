@@ -524,7 +524,7 @@ function FamilySection({ family, onChanged, toast }: { family: Family; onChanged
         <div role="status" className="rounded-card bg-ink-50 p-4 flex flex-col gap-2">
           <p className="text-body text-ink-900 text-pretty">
             {sent.emailed
-              ? `We emailed an invite to ${sent.email}. You can also send them this link yourself:`
+              ? `We emailed an invite to ${sent.email}. Ask them to check their spam or junk folder if it does not arrive. You can also send them this link yourself:`
               : `Email is not set up on our side yet, so nothing was sent. Copy this link and send it to ${sent.email} yourself:`}
           </p>
           <input

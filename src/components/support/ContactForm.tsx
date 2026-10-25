@@ -37,7 +37,7 @@ export function ContactForm({ initialTopic = 'other', onDone }: { initialTopic?:
   if (sent) {
     return (
       <p role="status" className="rounded-card bg-ink-50 px-4 py-3 text-body text-ink-900 text-pretty">
-        Thank you. We got your message and will reply by email{user ? ` to ${user.email}` : email ? ` to ${email}` : ''}.
+        Thank you. We got your message and will reply by email{user ? ` to ${user.email}` : email ? ` to ${email}` : ''}. If you do not see our reply, check your spam or junk folder.
       </p>
     );
   }

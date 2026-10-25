@@ -93,7 +93,7 @@ export function StartSignIn() {
                 </div>
                 <h2 className="text-xl font-semibold text-ink-900">Check your email</h2>
                 <p className="text-body text-muted">
-                  We sent a link to <strong className="text-ink-900">{email}</strong>. Open it to confirm your account.
+                  We sent a link to <strong className="text-ink-900">{email}</strong>. Open it to confirm your account. Check your inbox, and your spam or junk folder.
                 </p>
               </>
             ) : (
