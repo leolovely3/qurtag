@@ -164,6 +164,13 @@ export const RPCS: Readonly<Record<string, RpcRule>> = {
     returns: 'value',
     callers: ['user'],
   },
+  // First-party measures (db/measures.sql): a print or download of a tag file, and the platform in use.
+  record_tag_print: {
+    args: { p_style: 'text', p_look: 'text', p_paper: 'text', p_surface: 'text', p_action: 'text' },
+    returns: 'void',
+    callers: ['user'],
+  },
+  record_app_platform: { args: { p_platform: 'text' }, returns: 'void', callers: ['user'] },
   // With no pass: the Factory's counts (which check a token of their own).
   factory_metrics: { args: { p_token: 'text' }, returns: 'value', callers: ['anon'] },
 };

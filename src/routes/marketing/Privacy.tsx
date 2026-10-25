@@ -44,6 +44,7 @@ export function Privacy() {
               'Membership, if you buy one: which plan you have, whether it renews, when it ends, and the reference numbers Stripe or Apple give the subscription. We do not receive or keep your card number.',
               'Messages you send through the Contact us form: the text, the topic, the email address to reply to, and, if you were signed in, your account and plan. We keep them until the question is dealt with and as long after as we need to answer follow-ups.',
               'Notifications, if you allow them in the iPhone app: your phone\'s device token (a code Apple gives the app so that our server can send it alerts), whether the app is a test or a live build, and the notification choices you make in Settings. We keep the token until you sign out, delete your account, or Apple tells us it no longer works.',
+              'How the app is used, kept as counts in our own database and nowhere else: when you press "I have it back" on a conversation, when you print, share or download a tag file (which style, look and paper, and whether in the app or on the website), whether you use the iPhone app or the website, and which link brought you to QuR Tag if it carried a label such as ?ch=newsletter (kept in your browser tab until you create the account, then stored once on the account). None of this is used to profile you; it is used only to count.',
               'Family, if you use it: the email address you invite, until the invite is used, canceled or has expired (and for 30 days after), and the names and email addresses of the people in the family, which they can all see.',
             ]}
           />
@@ -73,7 +74,7 @@ export function Privacy() {
             items={[
               'To run QuR Tag: show the finder the item, deliver notes between you, and show you your inbox.',
               'To keep it safe: sign-in limits, stopping abuse and spam, and fixing faults.',
-              'To count how QuR Tag is used, as totals only (for example, how many tags were scanned this month).',
+              'To count how QuR Tag is used, as totals only (for example, how many tags were scanned this month, how many people printed a tag, or how many came from each link). We do this in our own database, with no analytics company.',
               'To answer you when you write to us.',
             ]}
           />
@@ -102,6 +103,7 @@ export function Privacy() {
               'Apple Inc. takes payment for memberships bought in the iPhone app, under Apple\'s own terms and privacy policy. We receive only whether a subscription is active, which plan it is and when it ends.',
               'Apple Inc. also delivers the alerts we send to your iPhone (the Apple Push Notification service). It receives your device token and the text of each alert: the item\'s name and the finder\'s note, or only "You have a new note" if you chose to hide the note on the lock screen. We use no other push service.',
               'RevenueCat, Inc. records iPhone app subscriptions for us and tells our server when one starts, renews or ends. It receives your QuR Tag account number (a random identifier, not your email address), your purchase records from Apple, and technical details of your device and network address.',
+              'Functional Software, Inc. (Sentry) receives an error report when the website or the app breaks: the error message, where in the code it happened, the kind of browser or phone and its system version, and the address of the page with any tag, invite or reset codes removed. We ask it not to record your network address, and we send no account, email address, notes, cookies or clicks. Reports are not sent from test machines.',
               'Resend (Resend, Inc.) sends our email: the link to reset your password, and the emails that confirm your address, tell you a finder wrote (at once, or as a copy ten minutes after an alert you have not opened), or carry a family invite. It receives your email address and the text of that email.',
             ]}
           />
@@ -111,7 +113,8 @@ export function Privacy() {
           <P>
             Owners get one sign-in cookie, which keeps you signed in. A finder's browser stores the private
             conversation key described above, so they can come back to their conversation. We use no
-            advertising or tracking cookies and no third-party analytics. If you pay on the web, the payment page is
+            advertising or tracking cookies and no third-party analytics. Your browser tab remembers the label of the
+            link that brought you here until you close the tab, and nowhere else. The error reports in section 7 set no cookies. If you pay on the web, the payment page is
             Stripe's and uses Stripe's own cookies.
           </P>
         </Section>
