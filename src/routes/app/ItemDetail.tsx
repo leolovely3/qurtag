@@ -22,8 +22,10 @@ import {
   fetchPrimaryHouseholdId,
   fetchScansForItem,
   fetchTags,
+  replaceTag,
   updateItem,
 } from '@/lib/queries';
+import { FEATURES } from '@/lib/features';
 import { Modal } from '@/components/ui/Modal';
 import { issueGoogleWalletPass, startStripeCheckout } from '@/lib/stripe';
 import { useToast } from '@/components/ui/Toast';
@@ -116,7 +118,10 @@ export function ItemDetail() {
   const [name, setName] = useState('');
   const [brand, setBrand] = useState('');
   const [declaredValue, setDeclaredValue] = useState('');
+  const [rewardText, setRewardText] = useState('');
   const [notes, setNotes] = useState('');
+  const [replacing, setReplacing] = useState(false);
+  const [replaceOpen, setReplaceOpen] = useState(false);
 
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const [lostMode, setLostMode] = useState(false);
@@ -143,16 +148,17 @@ export function ItemDetail() {
         setBrand(it.brand ?? '');
         setDeclaredValue(it.declared_value_cents != null ? String(it.declared_value_cents / 100) : '');
         setNotes(it.notes ?? '');
+        setRewardText(it.reward_text ?? '');
         setLostMode(it.lost_mode);
       }
       if (hh) {
         const tags = await fetchTags(hh);
         if (cancelled) return;
-        setTag(tags.find((t) => t.current_item_id === itemId) ?? null);
+        setTag(tags.find((t) => t.current_item_id === itemId && t.status === 'active') ?? null);
       }
       const [sc, rw] = await Promise.all([
         fetchScansForItem(itemId),
-        fetchActiveRewardForItem(itemId),
+        FEATURES.rewards ? fetchActiveRewardForItem(itemId) : Promise.resolve(null),
       ]);
       if (cancelled) return;
       setScans(sc);
@@ -199,7 +205,7 @@ export function ItemDetail() {
   }, [brand, item, queueSave]);
 
   useEffect(() => {
-    if (!item) return;
+    if (!item || !FEATURES.insurancePacket) return;
     const cents = declaredValue && !Number.isNaN(Number(declaredValue))
       ? Math.round(Number(declaredValue) * 100)
       : null;
@@ -213,6 +219,26 @@ export function ItemDetail() {
     if (value === item.notes) return;
     queueSave({ notes: value });
   }, [notes, item, queueSave]);
+
+  useEffect(() => {
+    if (!item) return;
+    const value = rewardText.trim() || null;
+    if (value === item.reward_text) return;
+    queueSave({ reward_text: value });
+  }, [rewardText, item, queueSave]);
+
+  async function onReplaceTag() {
+    if (!itemId) return;
+    setReplacing(true);
+    const next = await replaceTag(itemId);
+    setReplacing(false);
+    setReplaceOpen(false);
+    if (!next) {
+      toast.show({ kind: 'error', title: "Couldn't make a new tag", body: 'Try again in a moment.' });
+      return;
+    }
+    navigate(`/app/tags/${next.tagId}/print`);
+  }
 
   async function onToggleLostMode(next: boolean) {
     if (!itemId) return;
@@ -230,7 +256,7 @@ export function ItemDetail() {
 
   async function onChangeReward(cents: number | null) {
     if (!itemId) return;
-    const updated = await updateItem(itemId, { reward_amount_cents: cents });
+    const updated = await updateItem(itemId, { reward_amount_cents: cents } as Partial<Item>);
     if (updated) setItem(updated);
   }
 
@@ -339,7 +365,25 @@ export function ItemDetail() {
             onChange={onToggleLostMode}
           />
 
-          {lostMode && (
+          <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-2">
+            <label htmlFor="reward-text" className="flex flex-col gap-1">
+              <Eyebrow>A word for the finder (optional)</Eyebrow>
+              <span className="text-caption text-muted text-pretty">
+                Shown on the tag's page. For example "Coffee on me as a thank-you" or "Please hand in at the school office".
+              </span>
+            </label>
+            <input
+              id="reward-text"
+              value={rewardText}
+              maxLength={140}
+              onChange={(e) => setRewardText(e.target.value)}
+              placeholder="A small thank-you if you get it back to me"
+              className="h-12 rounded-card border border-hairline-strong bg-canvas px-4 text-body text-ink-900 placeholder:text-ink-300 focus:outline-none focus:border-ink-900"
+            />
+            <p className="text-caption text-muted">Do not put your phone number or address here.</p>
+          </div>
+
+          {FEATURES.rewards && lostMode && (
             <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3">
               <div className="flex items-start justify-between gap-3">
                 <Eyebrow>Reward (optional)</Eyebrow>
@@ -348,7 +392,7 @@ export function ItemDetail() {
                 )}
               </div>
               <RewardPicker
-                valueCents={item.reward_amount_cents}
+                valueCents={item.reward_amount_cents ?? null}
                 onChange={onChangeReward}
                 disabled={!!reward && reward.state === 'held'}
               />
@@ -369,7 +413,7 @@ export function ItemDetail() {
               )}
               {reward && reward.state === 'held' && (
                 <p className="text-caption text-verdigris-700">
-                  Funds held by QurTag. Released to the finder when you confirm reunion.
+                  Funds held by QuR Tag. Released to the finder when you confirm reunion.
                 </p>
               )}
               {escrowError && (
@@ -386,23 +430,33 @@ export function ItemDetail() {
             <div className="flex-1 min-w-0">
               <Eyebrow>Tag</Eyebrow>
               <p className="font-display font-semibold text-h6 text-ink-900 tracking-[-0.011em] mt-0.5">
-                {tag ? `QurTag · ${tag.public_id}` : 'No tag attached'}
+                {tag ? `QuR Tag · ${tag.public_id}` : 'No tag attached'}
               </p>
               <p className="text-caption text-muted mt-1">
                 {tag
-                  ? `${tag.hardware_tier === 'printable' ? 'Printable tag' : tag.hardware_tier} · activated ${relativeTime(tag.activated_at)}`
-                  : 'Add a tag to make this item recoverable.'}
+                  ? `Printable tag, made ${relativeTime(tag.activated_at)}`
+                  : 'This item has no working tag. Make a new one to print.'}
               </p>
+              <div className="flex flex-wrap gap-2 mt-3">
+                {tag && (
+                  <Link
+                    to={`/app/tags/${tag.id}/print`}
+                    className="inline-flex items-center gap-1.5 h-11 px-4 rounded-pill bg-ink-900 text-canvas text-caption font-medium hover:bg-ink-700 transition-colors duration-qurtag"
+                  >
+                    <Printer size={14} strokeWidth={1.75} />
+                    Print tag
+                  </Link>
+                )}
+                <button
+                  type="button"
+                  onClick={() => (tag ? setReplaceOpen(true) : void onReplaceTag())}
+                  disabled={replacing}
+                  className="inline-flex items-center h-11 px-4 rounded-pill border border-hairline-strong text-ink-900 text-caption font-medium disabled:opacity-50"
+                >
+                  {tag ? 'Make a new code' : 'Make a tag'}
+                </button>
+              </div>
             </div>
-            {tag && (
-              <Link
-                to={`/app/tags/${tag.id}/print`}
-                className="inline-flex items-center gap-1.5 h-9 px-4 rounded-pill bg-ink-900 text-canvas text-caption font-medium hover:bg-ink-700 transition-colors duration-qurtag shrink-0"
-              >
-                <Printer size={14} strokeWidth={1.75} />
-                Print
-              </Link>
-            )}
           </div>
 
           {/* Scan history */}
@@ -429,12 +483,10 @@ export function ItemDetail() {
                       </span>
                       <div className="flex flex-col min-w-0">
                         <span className="text-ink-900 font-medium truncate">
-                          {scan.ip_country ?? 'Somewhere'}
+                          Someone opened the tag's page
                         </span>
                         <span className="text-muted truncate">
-                          {scan.user_agent_class
-                            ? scan.user_agent_class.slice(0, 60)
-                            : 'Anonymous finder'}
+                          {scan.user_agent_class ? `On ${DEVICE[scan.user_agent_class] ?? 'a device'}` : 'On a device'}
                         </span>
                       </div>
                     </div>
@@ -456,11 +508,13 @@ export function ItemDetail() {
             />
             <Input
               name="brand"
-              label="Brand"
-              placeholder="Rimowa, Tumi, Away…"
+              label="Description (optional)"
+              placeholder="Blue, with stickers on the side"
               value={brand}
               onChange={(e) => setBrand(e.target.value)}
+              hint="Private to you, to tell your things apart."
             />
+            {FEATURES.insurancePacket && (
             <Input
               name="declaredValue"
               label="Declared value"
@@ -470,8 +524,10 @@ export function ItemDetail() {
               onChange={(e) => setDeclaredValue(e.target.value.replace(/[^0-9.]/g, ''))}
               hint={value ? `Currently ${value}.` : 'Used for insurance packets and courier coverage.'}
             />
+            )}
           </div>
 
+          {FEATURES.walletPasses && (
           <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3">
             <Eyebrow>Wallet</Eyebrow>
             <p className="text-caption text-muted text-pretty">
@@ -515,6 +571,9 @@ export function ItemDetail() {
             </div>
           </div>
 
+          )}
+
+          {FEATURES.insurancePacket && (
           <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3">
             <Eyebrow>Insurance packet</Eyebrow>
             <p className="text-caption text-muted text-pretty">
@@ -528,12 +587,13 @@ export function ItemDetail() {
               Generate packet
             </Link>
           </div>
+          )}
 
           <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-3">
             <Eyebrow>Danger</Eyebrow>
             <p className="text-caption text-muted text-pretty">
-              Deleting this item frees any tag assigned to it and removes all scan history, notes,
-              and recovery threads. You can't undo this from the app.
+              Deleting this item switches off its tag and removes its scans, notes and
+              conversations. You cannot undo this.
             </p>
             <button
               type="button"
@@ -550,7 +610,8 @@ export function ItemDetail() {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={4}
-              placeholder="A detail only you would know, useful for proving you're the owner."
+              placeholder="A detail only you would know, to check it is yours."
+              maxLength={1000}
               className="w-full rounded-card border border-hairline-strong bg-canvas p-3 text-body text-ink-900 placeholder:text-ink-300 focus:outline-none focus:border-ink-900 transition-colors duration-qurtag resize-none"
             />
             <p className="text-caption text-muted">
@@ -561,11 +622,21 @@ export function ItemDetail() {
       </div>
 
       <Modal
+        open={replaceOpen}
+        onClose={() => setReplaceOpen(false)}
+        eyebrow="New code"
+        title="Make a new code for this item?"
+        description="The tag you printed before stops working at once, and you print the new one. Use this if a tag was lost or you no longer want it to work. Your conversations stay in your inbox."
+        primaryAction={{ label: 'Make a new code', onClick: onReplaceTag, pending: replacing }}
+        secondaryAction={{ label: 'Cancel', onClick: () => setReplaceOpen(false) }}
+      />
+
+      <Modal
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}
         eyebrow="Delete item"
         title={`Permanently delete ${item.name}?`}
-        description="This removes the item, frees the tag, and deletes all scans, notes, and conversations associated with it. We can't bring it back."
+        description="This removes the item, switches off its tag, and deletes its scans, notes and conversations. We can't bring it back."
         primaryAction={{
           label: 'Delete forever',
           tone: 'destructive',
@@ -577,6 +648,15 @@ export function ItemDetail() {
     </div>
   );
 }
+
+const DEVICE: Record<string, string> = {
+  iphone: 'an iPhone',
+  ipad: 'an iPad',
+  android: 'an Android phone',
+  mac: 'a Mac',
+  windows: 'a Windows computer',
+  other: 'a device',
+};
 
 function SaveBadge({ state }: { state: SaveState }) {
   if (state === 'idle') return null;

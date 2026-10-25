@@ -1,4 +1,4 @@
-/* QurTag service worker. Handles incoming Web Push and routes the click.
+/* QuR Tag service worker. Handles incoming Web Push and routes the click.
  *
  * Updated only when the file's content changes (vite revs via cache busting).
  */
@@ -17,11 +17,11 @@ self.addEventListener('push', (event) => {
     try {
       payload = event.data.json();
     } catch {
-      payload = { title: 'QurTag', body: event.data.text() };
+      payload = { title: 'QuR Tag', body: event.data.text() };
     }
   }
 
-  const title = payload.title || 'QurTag';
+  const title = payload.title || 'QuR Tag';
   const options = {
     body: payload.body || '',
     icon: payload.icon || '/favicon.svg',

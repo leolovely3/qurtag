@@ -33,6 +33,8 @@ export const MessageComposer = forwardRef<HTMLTextAreaElement, MessageComposerPr
       try {
         await onSend(trimmed);
         setBody('');
+      } catch {
+        // The sender shows its own error; the note stays in the box to try again.
       } finally {
         setSending(false);
       }

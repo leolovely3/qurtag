@@ -1,11 +1,13 @@
-# QurTag — mobile strategy
+> Historical: this document describes an earlier plan for QuR Tag on a Supabase project of its own, with features that are switched off. The running product and its backend are described in README.md.
+
+# QurTag, mobile strategy
 
 The web app is the canonical product. Mobile is a delivery surface that
 unlocks three things the web can't:
 
 1. Reliable **Web Push** on iOS (Apple gates this behind home-screen install
    on the web; a real app gets it for free).
-2. **Live Activities** on iOS for lost mode — a calmly pulsing item card on
+2. **Live Activities** on iOS for lost mode, a calmly pulsing item card on
    the lock screen and Dynamic Island while a scan unfolds in real time.
 3. **NFC tap-to-write** for tag provisioning, where the iOS web app's NFC
    support is limited.
@@ -42,11 +44,11 @@ those calls through the bridge instead of the browser equivalents.
 A scaffolded Expo project lives at [`/mobile`](../mobile/) (sibling to the
 web `src/`). It is intentionally minimal:
 
-- `app.json` — Expo config, QurTag name + icon, scheme `qurtag://`, bundle id
+- `app.json`, Expo config, QurTag name + icon, scheme `qurtag://`, bundle id
   `co.qurtag.com`.
-- `eas.json` — EAS Build profiles (development / preview / production).
-- `App.tsx` — WebView shell with the bridge.
-- `package.json` — Expo SDK 53+, react-native-webview, expo-notifications.
+- `eas.json`, EAS Build profiles (development / preview / production).
+- `App.tsx`, WebView shell with the bridge.
+- `package.json`, Expo SDK 53+, react-native-webview, expo-notifications.
 
 ### Running it
 
@@ -65,7 +67,7 @@ eas build -p ios --profile preview
 eas build -p android --profile preview
 ```
 
-## Native modules — the order to build them
+## Native modules, the order to build them
 
 ### 1. Push (week 1)
 - Expo Notifications gives APNs + FCM out of the box.
@@ -133,7 +135,7 @@ parallel, (c) duplicate every future product change.
 The WebView wrapper:
 - Ships in days, not months.
 - Inherits every web-side product change automatically.
-- Loses zero capability because of the bridge — NFC, Wallet, Live Activity,
+- Loses zero capability because of the bridge, NFC, Wallet, Live Activity,
   Push all work native.
 - Trades only a tiny amount of "feels native" UX. Linear, Notion, Things,
   Arc all ship WebView-wrapped experiences in part of their product without

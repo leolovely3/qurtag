@@ -1,4 +1,6 @@
-# QurTag — local setup
+> Historical: this document describes an earlier plan for QuR Tag on a Supabase project of its own, with features that are switched off. The running product and its backend are described in README.md.
+
+# QurTag, local setup
 
 The site renders without any backend, but real auth, items, tags, messaging,
 realtime, push, location maps, transactional email, and courier labels each
@@ -22,7 +24,7 @@ VITE_SUPABASE_URL=https://<your-project>.supabase.co
 VITE_SUPABASE_ANON_KEY=<your-anon-key>
 ```
 
-Optional (each unlocks one capability — gracefully degraded when missing):
+Optional (each unlocks one capability, gracefully degraded when missing):
 
 ```
 VITE_MAPBOX_ACCESS_TOKEN=        # maps in finder threads + address autocomplete
@@ -67,7 +69,7 @@ What it unlocks:
 - Reverse geocoding so "42.36, -71.06" becomes "Boston Logan, Terminal B."
 - Address autocomplete in the courier flow (v2).
 
-Without this token, location messages still send — the thread just shows the
+Without this token, location messages still send, the thread just shows the
 coordinates as text instead of a map preview.
 
 ## 6. Web Push (optional, recommended)
@@ -107,7 +109,7 @@ Supabase Dashboard → **Database → Webhooks → Create webhook**:
 
 In the app: **Sign in → /app/settings → Push notifications → Turn on**.
 
-## 7. Transactional email — Resend (recommended)
+## 7. Transactional email, Resend (recommended)
 
 So owners get an email when a finder writes (with a deep link to the thread).
 
@@ -134,9 +136,9 @@ supabase functions deploy send-email --no-verify-jwt
 
 Add a second Database Webhook on `messages.insert` pointing at the
 `send-email` function. (You can run both `send-push` and `send-email` off the
-same INSERT — both filter for `sender_kind = 'finder'` server-side.)
+same INSERT, both filter for `sender_kind = 'finder'` server-side.)
 
-## 8. Courier labels — Shippo (optional, Phase 2)
+## 8. Courier labels, Shippo (optional, Phase 2)
 
 Skip unless you want real prepaid pickup labels generated.
 
@@ -166,15 +168,15 @@ the owner clicks "Pay & generate label"). It looks up the courier_orders
 row, calls Shippo to generate a label, stores the URL + tracking number, and
 emails the finder the label.
 
-> The current Edge Function is a sketch — production wiring needs:
-> - Owner's return address (from `households` — add a column)
+> The current Edge Function is a sketch, production wiring needs:
+> - Owner's return address (from `households`, add a column)
 > - Parcel dimensions and weight (from the item's declared category)
 > - Stripe payment flow before label generation (separate webhook)
 > - Insurance options based on declared value
 >
 > Treat this as the recovery path's "Phase 2" surface.
 
-## 9. Stripe — payments + reward escrow (recommended)
+## 9. Stripe, payments + reward escrow (recommended)
 
 Reward escrow and the prepaid courier label flow both ride on Stripe.
 
@@ -218,11 +220,11 @@ redeploy the function.
 ### 9e. Finder payouts (Phase 2)
 
 For v1 the released reward captures into your own Stripe account. To dispatch
-to the finder's bank, layer in **Stripe Connect Express** — the finder gets a
+to the finder's bank, layer in **Stripe Connect Express**, the finder gets a
 Connect onboarding link, you create a Transfer to their connected account
 when releasing.
 
-## 10. AeroAPI — live trip status (optional)
+## 10. AeroAPI, live trip status (optional)
 
 Lights up the trip card on finder pages with live flight status.
 
@@ -345,7 +347,7 @@ The shortest end-to-end check:
 ## Common gotchas
 
 - **Magic link goes to localhost:3000.** Update Site URL and redirect URLs.
-- **"Failed to fetch" on submit.** Env vars not loaded — restart `npm run dev`.
+- **"Failed to fetch" on submit.** Env vars not loaded, restart `npm run dev`.
 - **RLS violation.** Confirm all migrations ran cleanly.
 - **Realtime not firing.** Check `supabase_realtime` publication includes
   `messages` and `threads` (added by migration 3).

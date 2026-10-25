@@ -7,6 +7,7 @@ import { PhotoUploader } from '@/components/ui/PhotoUploader';
 import { Eyebrow } from '@/components/brand/Typography';
 import { useAuth } from '@/lib/auth';
 import { createItemWithPrintableTag, fetchPrimaryHouseholdId } from '@/lib/queries';
+import { Link } from 'react-router-dom';
 import { clearPendingItem, getPendingItem } from '@/lib/pendingItem';
 import { useToast } from '@/components/ui/Toast';
 
@@ -17,7 +18,8 @@ export function StartSetup() {
   const [householdId, setHouseholdId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [brand, setBrand] = useState('');
-  const [declaredValue, setDeclaredValue] = useState('');
+  const [rewardText, setRewardText] = useState('');
+  const [notes, setNotes] = useState('');
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,14 +51,11 @@ export function StartSetup() {
     }
     setSubmitting(true);
     const result = await createItemWithPrintableTag({
-      householdId,
       name: name.trim(),
       brand: brand.trim() || undefined,
-      declaredValueCents:
-        declaredValue && !Number.isNaN(Number(declaredValue))
-          ? Math.round(Number(declaredValue) * 100)
-          : undefined,
       heroPhotoUrl: photoUrl ?? undefined,
+      rewardText: rewardText.trim() || undefined,
+      notes: notes.trim() || undefined,
     });
     setSubmitting(false);
     if ('error' in result) {
@@ -65,29 +64,29 @@ export function StartSetup() {
     }
     toast.show({
       kind: 'success',
-      title: 'Item created',
-      body: `Tag ${result.tag.public_id} minted. Print it next.`,
+      title: 'Item saved',
+      body: `Tag ${result.publicId} is ready. Print it next.`,
     });
-    navigate(`/app/tags/${result.tag.id}/print`);
+    navigate(`/app/tags/${result.tagId}/print`);
   }
 
   return (
     <Container size="md">
       <div className="min-h-[70vh] py-qurtag-12 grid lg:grid-cols-12 gap-qurtag-12 items-start">
         <div className="lg:col-span-5 flex flex-col gap-5 lg:sticky lg:top-28">
-          <Eyebrow>Add your first thing</Eyebrow>
+          <Eyebrow>Add a thing</Eyebrow>
           <h1 className="font-display font-semibold text-ink-900 text-h2 sm:text-h1 tracking-[-0.032em] leading-[1.02] text-balance">
             Tell us what you'd hate to lose.
           </h1>
           <p className="text-lede text-muted text-pretty">
-            We'll mint a tag for you on the next screen. Print it on plain paper, slip it into a
-            luggage sleeve, and you're done.
+            You get its tag on the next screen. Print it at home, stick or tie it on, and you are
+            done. Free for up to two items.
           </p>
           <div className="rounded-card bg-paper border border-hairline p-qurtag-3 flex items-start gap-3 mt-2">
             <Lock size={16} strokeWidth={1.75} className="mt-0.5 text-ink-900 shrink-0" />
             <p className="text-caption text-ink-700 text-pretty">
-              Anyone who scans the tag sees only what you choose to show. Never your name, number,
-              email, or address. Privacy by structure, not by promise.
+              Someone who scans the tag sees the item's name, its photo and your note for the
+              finder. Never your name, email, phone number or address.
             </p>
           </div>
         </div>
@@ -97,28 +96,40 @@ export function StartSetup() {
             <Input
               name="name"
               label="What is it?"
-              placeholder="Rimowa Original Cabin"
+              placeholder="Blue water bottle"
               autoFocus
+              maxLength={80}
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              hint="A short, descriptive name. You can change it later."
+              hint="The finder sees this. You can change it later."
+            />
+            <Input
+              name="rewardText"
+              label="A word for the finder (optional)"
+              placeholder="A small thank-you if you get it back to me"
+              maxLength={140}
+              value={rewardText}
+              onChange={(e) => setRewardText(e.target.value)}
+              hint="The finder sees this too. Do not put your phone number or address here."
             />
             <Input
               name="brand"
-              label="Brand"
-              placeholder="Rimowa, Tumi, Away…"
+              label="Description (optional)"
+              placeholder="Blue, with stickers on the side"
+              maxLength={60}
               value={brand}
               onChange={(e) => setBrand(e.target.value)}
+              hint="Private to you."
             />
             <Input
-              name="declaredValue"
-              label="Declared value"
-              placeholder="$1200"
-              inputMode="decimal"
-              value={declaredValue}
-              onChange={(e) => setDeclaredValue(e.target.value.replace(/[^0-9.]/g, ''))}
-              hint="Used for insurance packets and courier coverage."
+              name="notes"
+              label="Private note (optional)"
+              placeholder="A detail only you would know"
+              maxLength={1000}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              hint="Private to you. Never shown to a finder."
             />
             <PhotoUploader
               householdId={householdId}
@@ -135,14 +146,15 @@ export function StartSetup() {
 
           <div className="flex items-center justify-between gap-3">
             <p className="text-caption text-muted max-w-sm">
-              Next: a one-page tag you can print at home. You'll be done in about a minute.
+              Next: a one-page tag you can print at home.{' '}
+              <Link to="/app" className="underline underline-offset-4">Skip for now</Link>
             </p>
             <button
               type="submit"
               disabled={submitting || !name.trim()}
               className="inline-flex h-12 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-body font-medium px-6 hover:bg-ink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-qurtag"
             >
-              {submitting ? 'Saving…' : 'Mint my tag'}
+              {submitting ? 'Saving…' : 'Make my tag'}
               <ArrowRight size={16} strokeWidth={1.75} />
             </button>
           </div>

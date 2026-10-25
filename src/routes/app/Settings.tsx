@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { LucideIcon } from 'lucide-react';
-import { Bell, BellOff, Home, LogOut, Mail, Monitor, Moon, Sun } from 'lucide-react';
+import { Bell, BellOff, Download, Home, LogOut, Mail, Monitor, Moon, Sun, Trash2 } from 'lucide-react';
 import { useTheme } from '@/lib/theme';
 import { Eyebrow } from '@/components/brand/Typography';
 import { Input } from '@/components/ui/Input';
 import { useAuth } from '@/lib/auth';
 import { usePushSubscription, isPushSupported } from '@/lib/push';
-import { fetchHousehold, fetchPrimaryHouseholdId, updateHousehold } from '@/lib/queries';
+import { exportMyData, fetchHousehold, fetchPrimaryHouseholdId, updateHousehold } from '@/lib/queries';
+import { FEATURES } from '@/lib/features';
+import { Modal } from '@/components/ui/Modal';
 import type { Household } from '@/lib/database.types';
 import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/lib/cn';
@@ -15,7 +17,10 @@ import { cn } from '@/lib/cn';
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
 export function Settings() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, deleteAccount } = useAuth();
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const navigate = useNavigate();
   const { permission, subscribed, pending, subscribe, unsubscribe } = usePushSubscription(
     user?.id ?? null,
@@ -33,7 +38,8 @@ export function Settings() {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (!user) return;
+    // The return address belongs to the courier feature, which is not built yet.
+    if (!user || !FEATURES.courier) return;
     (async () => {
       const hh = await fetchPrimaryHouseholdId();
       if (!hh) return;
@@ -109,13 +115,45 @@ export function Settings() {
     navigate('/start', { replace: true });
   }
 
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const data = await exportMyData();
+      const blob = new Blob([JSON.stringify({ account: { email: user?.email, name: user?.name }, ...data }, null, 2)], {
+        type: 'application/json',
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'qurtag-my-data.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.show({ kind: 'error', title: "Couldn't prepare your data", body: 'Try again in a moment.' });
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    const r = await deleteAccount();
+    setDeleting(false);
+    if (!r.ok) {
+      toast.show({ kind: 'error', title: "Couldn't delete your account", body: r.error });
+      return;
+    }
+    setDeleteOpen(false);
+    navigate('/', { replace: true });
+  }
+
   return (
     <div className="px-qurtag-5 md:px-qurtag-8 py-qurtag-8 max-w-3xl">
       <div className="flex items-end justify-between mb-qurtag-8 gap-3">
         <div className="flex flex-col gap-2">
           <Eyebrow>Settings</Eyebrow>
           <h1 className="font-display font-semibold text-ink-900 text-h3 sm:text-h2 tracking-[-0.028em] leading-[1.04] text-balance">
-            How QurTag finds you.
+            Your account.
           </h1>
         </div>
         {saveState === 'saving' && (
@@ -126,7 +164,8 @@ export function Settings() {
         )}
       </div>
 
-      {/* Return address */}
+      {/* Return address (courier feature, hidden) */}
+      {FEATURES.courier && (
       <section className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-qurtag-3 mb-qurtag-3">
         <div className="flex items-start gap-3">
           <div className="size-9 rounded-pill bg-ink-50 grid place-items-center shrink-0">
@@ -183,10 +222,13 @@ export function Settings() {
         </div>
       </section>
 
+      )}
+
       {/* Notifications */}
       <section className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-qurtag-3 mb-qurtag-3">
         <Eyebrow>Notifications</Eyebrow>
 
+        {FEATURES.push && (
         <Row
           icon={subscribed ? Bell : BellOff}
           title={subscribed ? 'Push notifications on' : 'Push notifications'}
@@ -226,22 +268,13 @@ export function Settings() {
             </button>
           )}
         </Row>
+        )}
 
         <Row
           icon={Mail}
-          title="Email"
-          body="A summary of finder messages, sent to the address you signed in with."
-        >
-          <span className="text-caption text-muted">Always on (for now)</span>
-        </Row>
-
-        <Row
-          icon={Moon}
-          title="Quiet hours"
-          body="Pause push between 10pm and 7am unless the tag is in lost mode."
-        >
-          <span className="text-caption text-muted">Coming soon</span>
-        </Row>
+          title="Notes from finders"
+          body="Notes arrive in your QuR Tag inbox. Email alerts are not switched on yet, so check your inbox here, especially when something is lost."
+        />
       </section>
 
       {/* Appearance */}
@@ -288,21 +321,50 @@ export function Settings() {
       {/* Account */}
       <section className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-qurtag-3">
         <Eyebrow>Account</Eyebrow>
-        <Row icon={Mail} title={user?.email ?? 'Signed in'} body="Where your magic link lands." />
-        <Row icon={LogOut} title="Sign out" body="You can sign back in with the same email anytime.">
+        <Row icon={Mail} title={user?.email ?? 'Signed in'} body="The email you sign in with. Finders never see it." />
+        <Row icon={Download} title="Download my data" body="Your items, tags, scans and conversations, as a file.">
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={exporting}
+            className="inline-flex h-11 items-center rounded-pill border border-hairline-strong px-4 text-caption font-medium text-ink-900 disabled:opacity-60"
+          >
+            {exporting ? 'Preparing…' : 'Download'}
+          </button>
+        </Row>
+        <Row icon={LogOut} title="Sign out" body="Sign back in with your email and password at any time.">
           <button
             type="button"
             onClick={handleSignOut}
-            className="text-caption font-medium text-muted hover:text-ink-900 transition-colors"
+            className="inline-flex h-11 items-center rounded-pill border border-hairline-strong px-4 text-caption font-medium text-ink-900"
           >
             Sign out
           </button>
         </Row>
+        <Row icon={Trash2} title="Delete my account" body="Deletes your account, items, tags and conversations for good. Your tags stop working.">
+          <button
+            type="button"
+            onClick={() => setDeleteOpen(true)}
+            className="inline-flex h-11 items-center rounded-pill border border-hairline-strong px-4 text-caption font-medium text-signal-700"
+          >
+            Delete
+          </button>
+        </Row>
       </section>
 
-      {!isPushSupported && (
+      <Modal
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        eyebrow="Delete account"
+        title="Delete your QuR Tag account?"
+        description="Your account, items, tags, scans and conversations are deleted at once and cannot be brought back. Any tag you printed stops working."
+        primaryAction={{ label: 'Delete everything', tone: 'destructive', onClick: handleDelete, pending: deleting }}
+        secondaryAction={{ label: 'Cancel', onClick: () => setDeleteOpen(false) }}
+      />
+
+      {FEATURES.push && !isPushSupported && (
         <p className="mt-qurtag-5 text-caption text-muted">
-          This browser doesn't support Web Push. iOS Safari requires installing QurTag as a home-screen
+          This browser doesn't support Web Push. iOS Safari requires installing QuR Tag as a home-screen
           app first.
         </p>
       )}

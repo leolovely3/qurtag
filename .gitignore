@@ -39,3 +39,4 @@ dist-ssr
 # Claude Code workspace
 .claude/
 
+.vercel

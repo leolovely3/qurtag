@@ -1,5 +1,5 @@
-import { supabase } from './supabase';
-import { generateTagPublicId } from './publicId';
+import { db as supabase } from './db';
+import { shrinkPhoto } from './photo';
 import type {
   AbuseKind,
   CourierOrder,
@@ -16,12 +16,16 @@ import type {
   Trip,
 } from './database.types';
 
-export const ITEM_PHOTOS_BUCKET = 'item-photos';
-
 /**
- * The Supabase client is untyped at the boundary (see supabase.ts), so each
- * helper asserts its row shape at the return type. Keep these helpers as the
- * single seam between raw queries and the rest of the app.
+ * Every query the owner's screens make, through QuR Tag's data API (src/lib/db.ts; the
+ * client is named `supabase` here only because these helpers were written for it).
+ * The client is untyped at the boundary, so each helper asserts its row shape at the
+ * return type. Keep these helpers as the single seam between raw queries and the rest
+ * of the app.
+ *
+ * Finders never come through here: their page uses src/lib/finder.ts. The helpers
+ * marked "hidden feature" serve screens switched off in src/lib/features.ts; their
+ * tables are not in schema qurtag yet, so they answer nothing until they are built.
  */
 
 export async function fetchPrimaryHouseholdId(): Promise<string | null> {
@@ -32,7 +36,7 @@ export async function fetchPrimaryHouseholdId(): Promise<string | null> {
     .limit(1)
     .maybeSingle();
   if (error) {
-    console.error('[QurTag] fetchPrimaryHouseholdId', error);
+    console.error('[QuR Tag] fetchPrimaryHouseholdId', error);
     return null;
   }
   return (data?.household_id as string | undefined) ?? null;
@@ -45,7 +49,7 @@ export async function fetchItems(householdId: string): Promise<Item[]> {
     .eq('household_id', householdId)
     .order('created_at', { ascending: false });
   if (error) {
-    console.error('[QurTag] fetchItems', error);
+    console.error('[QuR Tag] fetchItems', error);
     return [];
   }
   return (data ?? []) as Item[];
@@ -58,7 +62,7 @@ export async function fetchTags(householdId: string): Promise<Tag[]> {
     .eq('household_id', householdId)
     .order('created_at', { ascending: false });
   if (error) {
-    console.error('[QurTag] fetchTags', error);
+    console.error('[QuR Tag] fetchTags', error);
     return [];
   }
   return (data ?? []) as Tag[];
@@ -67,50 +71,16 @@ export async function fetchTags(householdId: string): Promise<Tag[]> {
 export async function fetchTagById(id: string): Promise<Tag | null> {
   const { data, error } = await supabase.from('tags').select('*').eq('id', id).maybeSingle();
   if (error) {
-    console.error('[QurTag] fetchTagById', error);
+    console.error('[QuR Tag] fetchTagById', error);
     return null;
   }
   return (data as Tag | null) ?? null;
-}
-
-/**
- * Anon-readable. Used by the finder page where the URL carries the
- * short public_id, not the internal UUID.
- */
-export async function fetchTagByPublicId(publicId: string): Promise<Tag | null> {
-  const { data, error } = await supabase
-    .from('tags')
-    .select('*')
-    .eq('public_id', publicId)
-    .eq('status', 'active')
-    .maybeSingle();
-  if (error) {
-    console.error('[QurTag] fetchTagByPublicId', error);
-    return null;
-  }
-  return (data as Tag | null) ?? null;
-}
-
-/**
- * Anon-insertable. Best-effort. Failures are logged, never thrown,
- * because the finder shouldn't see plumbing errors.
- */
-export async function recordScan(input: {
-  tagId: string;
-  itemId?: string | null;
-}): Promise<void> {
-  const { error } = await supabase.from('scans').insert({
-    tag_id: input.tagId,
-    item_id: input.itemId ?? null,
-    user_agent_class: typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 120) : null,
-  });
-  if (error) console.error('[QurTag] recordScan', error);
 }
 
 export async function fetchItemById(id: string): Promise<Item | null> {
   const { data, error } = await supabase.from('items').select('*').eq('id', id).maybeSingle();
   if (error) {
-    console.error('[QurTag] fetchItemById', error);
+    console.error('[QuR Tag] fetchItemById', error);
     return null;
   }
   return (data as Item | null) ?? null;
@@ -124,7 +94,7 @@ export async function fetchScansForItem(itemId: string, limit = 50): Promise<Sca
     .order('scanned_at', { ascending: false })
     .limit(limit);
   if (error) {
-    console.error('[QurTag] fetchScansForItem', error);
+    console.error('[QuR Tag] fetchScansForItem', error);
     return [];
   }
   return (data ?? []) as Scan[];
@@ -133,7 +103,7 @@ export async function fetchScansForItem(itemId: string, limit = 50): Promise<Sca
 export async function deleteItem(itemId: string): Promise<{ ok: true } | { ok: false; error: string }> {
   const { error } = await supabase.from('items').delete().eq('id', itemId);
   if (error) {
-    console.error('[QurTag] deleteItem', error);
+    console.error('[QuR Tag] deleteItem', error);
     return { ok: false, error: error.message };
   }
   return { ok: true };
@@ -144,16 +114,7 @@ export async function updateItem(
   patch: Partial<
     Pick<
       Item,
-      | 'name'
-      | 'brand'
-      | 'model'
-      | 'color'
-      | 'declared_value_cents'
-      | 'hero_photo_url'
-      | 'lost_mode'
-      | 'reward_amount_cents'
-      | 'drop_off_preference'
-      | 'notes'
+      'name' | 'brand' | 'color' | 'hero_photo_url' | 'lost_mode' | 'reward_text' | 'notes'
     >
   >,
 ): Promise<Item | null> {
@@ -164,39 +125,23 @@ export async function updateItem(
     .select()
     .single();
   if (error) {
-    console.error('[QurTag] updateItem', error);
+    console.error('[QuR Tag] updateItem', error);
     return null;
   }
   return (data as Item) ?? null;
 }
 
 /**
- * Upload an image to the item-photos bucket under the household's prefix.
- * Returns the public URL on success.
+ * Turns a picked photo into the small picture QuR Tag keeps with the item (a data:
+ * address, at most about 110 KB; see src/lib/photo.ts). Nothing is uploaded until the
+ * item is saved.
  */
-export async function uploadItemPhoto(input: {
-  householdId: string;
-  file: File;
-}): Promise<{ url: string } | { error: string }> {
-  const { householdId, file } = input;
-  const ext = (file.name.split('.').pop() ?? 'jpg').toLowerCase();
-  const safeExt = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'].includes(ext) ? ext : 'jpg';
-  // Path: <household_id>/<random>.<ext>
-  const filename = `${crypto.randomUUID()}.${safeExt}`;
-  const path = `${householdId}/${filename}`;
-
-  const { error: upErr } = await supabase.storage.from(ITEM_PHOTOS_BUCKET).upload(path, file, {
-    cacheControl: '31536000',
-    contentType: file.type || `image/${safeExt}`,
-    upsert: false,
-  });
-  if (upErr) {
-    console.error('[QurTag] uploadItemPhoto', upErr);
-    return { error: upErr.message };
+export async function uploadItemPhoto(input: { householdId: string | null; file: File }): Promise<{ url: string } | { error: string }> {
+  try {
+    return { url: await shrinkPhoto(input.file) };
+  } catch {
+    return { error: "That photo couldn't be read. Try a JPG or PNG." };
   }
-
-  const { data } = supabase.storage.from(ITEM_PHOTOS_BUCKET).getPublicUrl(path);
-  return { url: data.publicUrl };
 }
 
 /* ─────────────── messaging ─────────────── */
@@ -207,51 +152,16 @@ export interface ThreadWithItem extends Thread {
   unread_count: number;
 }
 
-export async function createThread(input: {
-  itemId: string;
-  householdId: string;
-  tagId: string | null;
-  finderSessionId: string;
-}): Promise<Thread | null> {
-  const { data, error } = await supabase
-    .from('threads')
-    .insert({
-      item_id: input.itemId,
-      household_id: input.householdId,
-      tag_id: input.tagId,
-      finder_session_id: input.finderSessionId,
-      status: 'open',
-    })
-    .select()
-    .single();
-  if (error) {
-    console.error('[QurTag] createThread', error);
-    return null;
-  }
-  return (data as Thread) ?? null;
-}
-
-export async function sendMessage(input: {
-  threadId: string;
-  senderKind: 'finder' | 'owner' | 'system';
-  body: string;
-}): Promise<Message | null> {
+/** The owner's reply in one of their conversations. */
+export async function sendOwnerReply(input: { threadId: string; body: string }): Promise<boolean> {
   const trimmed = input.body.trim();
-  if (!trimmed) return null;
-  const { data, error } = await supabase
-    .from('messages')
-    .insert({
-      thread_id: input.threadId,
-      sender_kind: input.senderKind,
-      body: trimmed.slice(0, 4000),
-    })
-    .select()
-    .single();
+  if (!trimmed) return false;
+  const { error } = await supabase.rpc('owner_reply', { p_thread_id: input.threadId, p_body: trimmed.slice(0, 2000) });
   if (error) {
-    console.error('[QurTag] sendMessage', error);
-    return null;
+    console.error('[QuR Tag] sendOwnerReply', error);
+    return false;
   }
-  return (data as Message) ?? null;
+  return true;
 }
 
 export async function fetchThreadById(threadId: string): Promise<Thread | null> {
@@ -261,7 +171,7 @@ export async function fetchThreadById(threadId: string): Promise<Thread | null> 
     .eq('id', threadId)
     .maybeSingle();
   if (error) {
-    console.error('[QurTag] fetchThreadById', error);
+    console.error('[QuR Tag] fetchThreadById', error);
     return null;
   }
   return (data as Thread | null) ?? null;
@@ -274,7 +184,7 @@ export async function fetchMessagesForThread(threadId: string): Promise<Message[
     .eq('thread_id', threadId)
     .order('created_at', { ascending: true });
   if (error) {
-    console.error('[QurTag] fetchMessagesForThread', error);
+    console.error('[QuR Tag] fetchMessagesForThread', error);
     return [];
   }
   return (data ?? []) as Message[];
@@ -287,7 +197,7 @@ export async function fetchThreadsForHousehold(householdId: string): Promise<Thr
     .eq('household_id', householdId)
     .order('last_message_at', { ascending: false });
   if (error) {
-    console.error('[QurTag] fetchThreadsForHousehold', error);
+    console.error('[QuR Tag] fetchThreadsForHousehold', error);
     return [];
   }
   if (!threads || threads.length === 0) return [];
@@ -350,7 +260,7 @@ export async function countUnreadForHousehold(householdId: string): Promise<numb
     .eq('sender_kind', 'finder')
     .is('read_by_owner_at', null);
   if (error) {
-    console.error('[QurTag] countUnreadForHousehold', error);
+    console.error('[QuR Tag] countUnreadForHousehold', error);
     return 0;
   }
   return count ?? 0;
@@ -365,7 +275,7 @@ export async function fetchCourierOrderForThread(threadId: string): Promise<Cour
     .limit(1)
     .maybeSingle();
   if (error) {
-    console.error('[QurTag] fetchCourierOrderForThread', error);
+    console.error('[QuR Tag] fetchCourierOrderForThread', error);
     return null;
   }
   return (data as CourierOrder | null) ?? null;
@@ -392,7 +302,7 @@ export async function createCourierOrder(input: {
     .select('id')
     .single();
   if (error) {
-    console.error('[QurTag] createCourierOrder', error);
+    console.error('[QuR Tag] createCourierOrder', error);
     return null;
   }
   return (data as { id: string }) ?? null;
@@ -407,7 +317,7 @@ export async function fetchHousehold(householdId: string): Promise<Household | n
     .eq('id', householdId)
     .maybeSingle();
   if (error) {
-    console.error('[QurTag] fetchHousehold', error);
+    console.error('[QuR Tag] fetchHousehold', error);
     return null;
   }
   return (data as Household | null) ?? null;
@@ -429,7 +339,7 @@ export async function updateHousehold(
     .select()
     .single();
   if (error) {
-    console.error('[QurTag] updateHousehold', error);
+    console.error('[QuR Tag] updateHousehold', error);
     return null;
   }
   return (data as Household) ?? null;
@@ -447,7 +357,7 @@ export async function fetchActiveRewardForItem(itemId: string): Promise<Reward |
     .limit(1)
     .maybeSingle();
   if (error) {
-    console.error('[QurTag] fetchActiveRewardForItem', error);
+    console.error('[QuR Tag] fetchActiveRewardForItem', error);
     return null;
   }
   return (data as Reward | null) ?? null;
@@ -469,7 +379,7 @@ export async function createPendingReward(input: {
     .select()
     .single();
   if (error) {
-    console.error('[QurTag] createPendingReward', error);
+    console.error('[QuR Tag] createPendingReward', error);
     return null;
   }
   return (data as Reward) ?? null;
@@ -485,7 +395,7 @@ export async function fetchActiveRewardForThread(threadId: string): Promise<Rewa
     .limit(1)
     .maybeSingle();
   if (error) {
-    console.error('[QurTag] fetchActiveRewardForThread', error);
+    console.error('[QuR Tag] fetchActiveRewardForThread', error);
     return null;
   }
   return (data as Reward | null) ?? null;
@@ -493,7 +403,7 @@ export async function fetchActiveRewardForThread(threadId: string): Promise<Rewa
 
 export async function setRewardThread(rewardId: string, threadId: string): Promise<void> {
   const { error } = await supabase.from('rewards').update({ thread_id: threadId }).eq('id', rewardId);
-  if (error) console.error('[QurTag] setRewardThread', error);
+  if (error) console.error('[QuR Tag] setRewardThread', error);
 }
 
 /* ─────────────── trips ─────────────── */
@@ -505,7 +415,7 @@ export async function fetchTripsForHousehold(householdId: string): Promise<Trip[
     .eq('household_id', householdId)
     .order('active_from', { ascending: false });
   if (error) {
-    console.error('[QurTag] fetchTripsForHousehold', error);
+    console.error('[QuR Tag] fetchTripsForHousehold', error);
     return [];
   }
   return (data ?? []) as Trip[];
@@ -532,7 +442,7 @@ export async function createTrip(input: {
     .select()
     .single();
   if (error) {
-    console.error('[QurTag] createTrip', error);
+    console.error('[QuR Tag] createTrip', error);
     return null;
   }
   return (data as Trip) ?? null;
@@ -544,7 +454,7 @@ export async function fetchActiveTripForItem(itemId: string): Promise<Trip | nul
     .select('trip_id')
     .eq('item_id', itemId);
   if (error) {
-    console.error('[QurTag] fetchActiveTripForItem', error);
+    console.error('[QuR Tag] fetchActiveTripForItem', error);
     return null;
   }
   const ids = (tripItems ?? []).map((r) => (r as { trip_id: string }).trip_id);
@@ -564,7 +474,7 @@ export async function addItemsToTrip(tripId: string, itemIds: string[]): Promise
   const { error } = await supabase
     .from('trip_items')
     .upsert(itemIds.map((id) => ({ trip_id: tripId, item_id: id })));
-  if (error) console.error('[QurTag] addItemsToTrip', error);
+  if (error) console.error('[QuR Tag] addItemsToTrip', error);
 }
 
 /* ─────────────── partners ─────────────── */
@@ -586,7 +496,7 @@ export async function fetchPartnerDropoffs(partnerId: string): Promise<PartnerDr
     .eq('partner_id', partnerId)
     .order('created_at', { ascending: false });
   if (error) {
-    console.error('[QurTag] fetchPartnerDropoffs', error);
+    console.error('[QuR Tag] fetchPartnerDropoffs', error);
     return [];
   }
   return (data ?? []) as PartnerDropoff[];
@@ -598,7 +508,8 @@ export async function logPartnerDropoff(input: {
   tagPublicId: string;
   notes?: string;
 }): Promise<PartnerDropoff | null> {
-  const tag = await fetchTagByPublicId(input.tagPublicId);
+  const { data: tagRows } = await supabase.from('tags').select('*').eq('public_id', input.tagPublicId).limit(1);
+  const tag = ((tagRows ?? [])[0] as Tag | undefined) ?? null;
   if (!tag) return null;
   const { data, error } = await supabase
     .from('partner_dropoffs')
@@ -612,7 +523,7 @@ export async function logPartnerDropoff(input: {
     .select()
     .single();
   if (error) {
-    console.error('[QurTag] logPartnerDropoff', error);
+    console.error('[QuR Tag] logPartnerDropoff', error);
     return null;
   }
   return (data as PartnerDropoff) ?? null;
@@ -626,7 +537,7 @@ export async function updatePartnerDropoffStatus(
     .from('partner_dropoffs')
     .update({ status })
     .eq('id', dropoffId);
-  if (error) console.error('[QurTag] updatePartnerDropoffStatus', error);
+  if (error) console.error('[QuR Tag] updatePartnerDropoffStatus', error);
 }
 
 /* ─────────────── inbox actions ─────────────── */
@@ -636,7 +547,7 @@ export async function markThreadStatus(
   status: 'open' | 'closed' | 'reunited',
 ): Promise<void> {
   const { error } = await supabase.from('threads').update({ status }).eq('id', threadId);
-  if (error) console.error('[QurTag] markThreadStatus', error);
+  if (error) console.error('[QuR Tag] markThreadStatus', error);
 }
 
 export async function blockFinderSession(input: {
@@ -649,7 +560,7 @@ export async function blockFinderSession(input: {
     finder_session_id: input.finderSessionId,
     reason: input.reason ?? null,
   });
-  if (error) console.error('[QurTag] blockFinderSession', error);
+  if (error) console.error('[QuR Tag] blockFinderSession', error);
 }
 
 export async function reportAbuse(input: {
@@ -658,70 +569,91 @@ export async function reportAbuse(input: {
   kind: AbuseKind;
   body?: string;
 }): Promise<void> {
-  const { data: u } = await supabase.auth.getUser();
   const { error } = await supabase.from('abuse_reports').insert({
     household_id: input.householdId,
     thread_id: input.threadId,
-    reporter_user_id: u.user?.id ?? null,
     kind: input.kind,
     body: input.body ?? null,
   });
-  if (error) console.error('[QurTag] reportAbuse', error);
+  if (error) console.error('[QuR Tag] reportAbuse', error);
 }
 
 export async function markThreadReadByOwner(threadId: string): Promise<void> {
-  const { error } = await supabase
-    .from('messages')
-    .update({ read_by_owner_at: new Date().toISOString() })
-    .eq('thread_id', threadId)
-    .eq('sender_kind', 'finder')
-    .is('read_by_owner_at', null);
-  if (error) console.error('[QurTag] markThreadReadByOwner', error);
+  const { error } = await supabase.rpc('mark_thread_read', { p_thread_id: threadId });
+  if (error) console.error('[QuR Tag] markThreadReadByOwner', error);
 }
 
 /* ─────────────── items + tags ─────────────── */
 
+/** The two items the free plan covers; the database refuses a third (db/qurtag.sql). */
+export const FREE_ITEM_LIMIT = 2;
+
 export async function createItemWithPrintableTag(input: {
-  householdId: string;
   name: string;
   brand?: string;
-  declaredValueCents?: number;
+  color?: string;
   heroPhotoUrl?: string;
-}): Promise<{ item: Item; tag: Tag } | { error: string }> {
-  const { data: itemRow, error: itemErr } = await supabase
-    .from('items')
-    .insert({
-      household_id: input.householdId,
-      name: input.name,
-      brand: input.brand ?? null,
-      declared_value_cents: input.declaredValueCents ?? null,
-      hero_photo_url: input.heroPhotoUrl ?? null,
-    })
-    .select()
-    .single();
-
-  if (itemErr || !itemRow) {
-    return { error: itemErr?.message ?? 'Could not create item.' };
+  rewardText?: string;
+  notes?: string;
+}): Promise<{ itemId: string; tagId: string; publicId: string } | { error: string }> {
+  const { data, error } = await supabase.rpc('create_item', {
+    p_name: input.name,
+    p_brand: input.brand ?? null,
+    p_color: input.color ?? null,
+    p_photo: input.heroPhotoUrl ?? null,
+    p_reward_text: input.rewardText ?? null,
+    p_notes: input.notes ?? null,
+  });
+  if (error || !data) {
+    if (error?.message === 'item_limit') {
+      return { error: 'QuR Tag is free for up to two items, and you have two. Delete one to add another.' };
+    }
+    console.error('[QuR Tag] createItemWithPrintableTag', error);
+    return { error: 'Could not save the item. Check the details and try again.' };
   }
-  const item = itemRow as Item;
+  const r = data as { item_id: string; tag_id: string; public_id: string };
+  return { itemId: r.item_id, tagId: r.tag_id, publicId: r.public_id };
+}
 
-  const { data: tagRow, error: tagErr } = await supabase
+/** A fresh tag for an item; its old tags stop working. */
+export async function replaceTag(itemId: string): Promise<{ tagId: string; publicId: string } | null> {
+  const { data, error } = await supabase.rpc('replace_tag', { p_item_id: itemId });
+  if (error || !data) {
+    console.error('[QuR Tag] replaceTag', error);
+    return null;
+  }
+  const r = data as { tag_id: string; public_id: string };
+  return { tagId: r.tag_id, publicId: r.public_id };
+}
+
+export async function fetchActiveTagForItem(itemId: string): Promise<Tag | null> {
+  const { data, error } = await supabase
     .from('tags')
-    .insert({
-      household_id: input.householdId,
-      public_id: generateTagPublicId(),
-      hardware_tier: 'printable',
-      status: 'active',
-      current_item_id: item.id,
-    })
-    .select()
-    .single();
-
-  if (tagErr || !tagRow) {
-    // Roll back the orphan item.
-    await supabase.from('items').delete().eq('id', item.id);
-    return { error: tagErr?.message ?? 'Could not mint tag.' };
+    .select('*')
+    .eq('current_item_id', itemId)
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
+    .limit(1);
+  if (error) {
+    console.error('[QuR Tag] fetchActiveTagForItem', error);
+    return null;
   }
+  return ((data ?? [])[0] as Tag | undefined) ?? null;
+}
 
-  return { item, tag: tagRow as Tag };
+/** Everything QuR Tag holds for the signed-in owner, for "Download my data". */
+export async function exportMyData(): Promise<Record<string, unknown>> {
+  const read = async (table: string) => {
+    const { data } = await supabase.from(table).select('*');
+    return data ?? [];
+  };
+  return {
+    exported_at: new Date().toISOString(),
+    households: await read('households'),
+    items: await read('items'),
+    tags: await read('tags'),
+    scans: await read('scans'),
+    conversations: await read('threads'),
+    messages: await read('messages'),
+  };
 }

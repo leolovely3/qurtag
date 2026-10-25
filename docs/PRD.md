@@ -1,5 +1,7 @@
+> Historical: this document describes an earlier plan for QuR Tag on a Supabase project of its own, with features that are switched off. The running product and its backend are described in README.md.
+
 # Product Requirements Document
-## QurTag — Premium Recovery Network for Things That Matter
+## QurTag, Premium Recovery Network for Things That Matter
 
 ---
 
@@ -28,7 +30,7 @@ We are not a tracker. We are not a Shopify gimmick. We are the calm, expensive-f
 - Real-time GPS tracking as the headline product. (Optional hybrid hardware tier later.)
 - Social features, public lost-found feed, gamification of finders.
 - Generic asset-management software for warehouses/IT (until B2B v2).
-- Acting as a payment processor — we use Stripe Connect for escrow.
+- Acting as a payment processor, we use Stripe Connect for escrow.
 
 ---
 
@@ -36,7 +38,7 @@ We are not a tracker. We are not a Shopify gimmick. We are the calm, expensive-f
 
 1. **The Quiet Premium Traveler** ("Helena", 38, marketing exec, Away + Tumi, 25+ flights/yr). Wants peace of mind, hates clutter, will not put cheap plastic on a $900 carry-on. Values: design, privacy, no monthly fees on small things.
 2. **The Road Warrior** ("Marcus", 45, consultant, Rimowa, 80+ flights/yr). Has lost luggage twice. Wants insurance-grade documentation, fast reunion, trip mode that just works.
-3. **The Gift Buyer** ("Priya", 52, buying her son a graduation gift). Needs the product to feel like a Mark Cross or Bellroy purchase — packaging, materials, monogram.
+3. **The Gift Buyer** ("Priya", 52, buying her son a graduation gift). Needs the product to feel like a Mark Cross or Bellroy purchase, packaging, materials, monogram.
 4. **The Anxious Parent** ("Dana", 41, two kids in school sports). Iron-on labels, instrument cases, retainer cases. Needs simple language, family sharing, kid-safe finder messaging.
 5. **The Caregiver** ("James", 60, mother has early Alzheimer's). Needs tags on wallet, keys, jacket; alerts routed to him and her aide.
 6. **The Hotel GM (B2B)** ("Léa", 36, runs lost-and-found at a 240-room property). Needs a partner inbox to process found-item drops, scan-and-log workflow, owner notification handoff.
@@ -63,30 +65,30 @@ We are not a tracker. We are not a Shopify gimmick. We are the calm, expensive-f
 
 These are the features that should make first-time customers tell a friend.
 
-1. **Reward Escrow** — owner pre-authorizes via Stripe; finder enters payout email; funds release on confirmed reunion. Auto-refund if owner self-finds. *No competitor does this.*
-2. **Translation by default** — finder UI auto-detects language; both sides of every message are machine-translated (DeepL) inline with the original. Voice messages auto-translated.
-3. **Trip Mode** — paste a PNR/flight number, message auto-updates with live flight status ("On UA901 LHR→SFO, scheduled 14:20 PDT June 14"). Pulls AeroAPI. Updates in real time.
-4. **Chain-of-Custody Receipt** — every handoff is timestamped and signed (finder → drop-off partner → courier → owner). Generates an insurance-grade PDF packet on demand.
-5. **Smart Drop-Off Network** — partner hotels, airlines, coworking spaces, gyms. Finder picks "leave at any participating Marriott front desk"; we generate the courier pickup. Addresses never exchanged.
-6. **Okoban + airline registry sync** — when lost mode engages on a luggage tag, we push to the global Okoban registry so airport baggage systems can match independently.
-7. **Cross-tag Trip Timeline** — if your luggage tag, laptop tag, and passport sleeve are all on the same trip, scans appear on one timeline with map. Lets you reconstruct where things were.
-8. **Emergency Contact Cascade** — if owner doesn't respond to a scan within X hours, message escalates to a designated travel companion or family member.
-9. **Identity Challenge** — owner pre-sets a private detail ("lining color: emerald"). For high-value claims at airports/hotels, partner staff can verify the rightful owner without exposing the answer to anyone but the claimant.
-10. **One-Time Hand-off Code** — at in-person meetups, the app generates a one-time code shown on owner's phone; finder scans it to confirm they're handing it to the right person. Prevents impostor pickups.
-11. **AI Lost-Item Report** — "I left my black North Face backpack at SFO Terminal 2 around 4pm" → structured report auto-filed to airport L&F, airline systems, partner drop-offs, and Okoban.
-12. **Smart Lost Mode (geofenced)** — when your phone leaves a configured "home" radius, certain tags auto-arm with travel context. No manual toggling.
-13. **Found-By-Owner Auto-Cancel** — if the owner scans their own tag in lost mode, alert auto-cancels and escrow refunds.
-14. **iOS Live Activity / Dynamic Island** — in lost mode, a real-time activity shows scan count, last location, finder messages without unlocking the phone.
-15. **Apple Wallet / Google Wallet Item Pass** — every item gets a pass: hero photo, declared value, serial, scan code on the back. Useful at customs, insurance reviews, baggage claims.
-16. **Custody-Bonded Insurance Claim** — partnered with one or two insurers (v2) for in-app one-tap claim submission with our chain-of-custody packet attached.
-17. **Voice & Video Messages, Translated** — finders who are stressed or non-native speakers can voice-message; auto-transcribed and translated.
-18. **Carbon-Neutral Returns** — every prepaid label is carbon-offset by default, badged in the UI. Cohort that buys Rimowa cares.
-19. **Hand-engraved Monogram on Demand** — for Signature tier; ships in 5 days; gifting-grade.
-20. **Pay-It-Forward Rewards** — finder can donate the reward to a vetted charity; we match 10%. Quiet PR win.
-21. **Hardware "Ping"** for Pro/Track tier — BLE beacon in tag rings with haptic + light when nearby.
-22. **Public API + Zapier/Make** — power users automate; B2B integrates without bespoke work.
-23. **Architecture Transparency Report** — published quarterly, plus a security.txt and bug bounty. Privacy as evidence, not slogan.
-24. **Vision Pro / Spatial Map** (v3) — view your scan timeline as a 3D map on visionOS. Press-worthy.
+1. **Reward Escrow**, owner pre-authorizes via Stripe; finder enters payout email; funds release on confirmed reunion. Auto-refund if owner self-finds. *No competitor does this.*
+2. **Translation by default**, finder UI auto-detects language; both sides of every message are machine-translated (DeepL) inline with the original. Voice messages auto-translated.
+3. **Trip Mode**, paste a PNR/flight number, message auto-updates with live flight status ("On UA901 LHR→SFO, scheduled 14:20 PDT June 14"). Pulls AeroAPI. Updates in real time.
+4. **Chain-of-Custody Receipt**, every handoff is timestamped and signed (finder → drop-off partner → courier → owner). Generates an insurance-grade PDF packet on demand.
+5. **Smart Drop-Off Network**, partner hotels, airlines, coworking spaces, gyms. Finder picks "leave at any participating Marriott front desk"; we generate the courier pickup. Addresses never exchanged.
+6. **Okoban + airline registry sync**, when lost mode engages on a luggage tag, we push to the global Okoban registry so airport baggage systems can match independently.
+7. **Cross-tag Trip Timeline**, if your luggage tag, laptop tag, and passport sleeve are all on the same trip, scans appear on one timeline with map. Lets you reconstruct where things were.
+8. **Emergency Contact Cascade**, if owner doesn't respond to a scan within X hours, message escalates to a designated travel companion or family member.
+9. **Identity Challenge**, owner pre-sets a private detail ("lining color: emerald"). For high-value claims at airports/hotels, partner staff can verify the rightful owner without exposing the answer to anyone but the claimant.
+10. **One-Time Hand-off Code**, at in-person meetups, the app generates a one-time code shown on owner's phone; finder scans it to confirm they're handing it to the right person. Prevents impostor pickups.
+11. **AI Lost-Item Report**, "I left my black North Face backpack at SFO Terminal 2 around 4pm" → structured report auto-filed to airport L&F, airline systems, partner drop-offs, and Okoban.
+12. **Smart Lost Mode (geofenced)**, when your phone leaves a configured "home" radius, certain tags auto-arm with travel context. No manual toggling.
+13. **Found-By-Owner Auto-Cancel**, if the owner scans their own tag in lost mode, alert auto-cancels and escrow refunds.
+14. **iOS Live Activity / Dynamic Island**, in lost mode, a real-time activity shows scan count, last location, finder messages without unlocking the phone.
+15. **Apple Wallet / Google Wallet Item Pass**, every item gets a pass: hero photo, declared value, serial, scan code on the back. Useful at customs, insurance reviews, baggage claims.
+16. **Custody-Bonded Insurance Claim**, partnered with one or two insurers (v2) for in-app one-tap claim submission with our chain-of-custody packet attached.
+17. **Voice & Video Messages, Translated**, finders who are stressed or non-native speakers can voice-message; auto-transcribed and translated.
+18. **Carbon-Neutral Returns**, every prepaid label is carbon-offset by default, badged in the UI. Cohort that buys Rimowa cares.
+19. **Hand-engraved Monogram on Demand**, for Signature tier; ships in 5 days; gifting-grade.
+20. **Pay-It-Forward Rewards**, finder can donate the reward to a vetted charity; we match 10%. Quiet PR win.
+21. **Hardware "Ping"** for Pro/Track tier, BLE beacon in tag rings with haptic + light when nearby.
+22. **Public API + Zapier/Make**, power users automate; B2B integrates without bespoke work.
+23. **Architecture Transparency Report**, published quarterly, plus a security.txt and bug bounty. Privacy as evidence, not slogan.
+24. **Vision Pro / Spatial Map** (v3), view your scan timeline as a 3D map on visionOS. Press-worthy.
 
 ---
 
@@ -147,9 +149,9 @@ Partner portal (partners.qurtag.com)
 
 - **Scan to activate**: new owner scans any unactivated tag with phone camera or NFC. App opens (or web fallback) and walks through 30-second activation.
 - **Bulk activation**: scan a pack-barcode on packaging to register all tags in pack at once.
-- **Guided item profile**: optional — photo, brand, model, declared value, serial. Skippable; can fill later.
+- **Guided item profile**: optional, photo, brand, model, declared value, serial. Skippable; can fill later.
 - **Default-on Lost Mode geofence**: prompts to set "home" location; arms automatically away from it.
-- **Family invite**: optional — invite up to 5 members during onboarding with role (admin / viewer).
+- **Family invite**: optional, invite up to 5 members during onboarding with role (admin / viewer).
 - **Apple/Google sign-in**, passwordless email magic link as fallback. No password fields anywhere.
 
 ### 8.2 Item Profile
@@ -179,14 +181,14 @@ Partner portal (partners.qurtag.com)
 ### 8.5 Lost Mode & Finder Experience
 
 **Owner side:**
-- Big toggle, color-coded (calm slate when off, warm coral when on — never alarmist red).
+- Big toggle, color-coded (calm slate when off, warm coral when on, never alarmist red).
 - Reward picker ($0 / $20 / $50 / $100 / custom). Stripe pre-auth.
 - Drop-off preference: "Anywhere in network" / "Hotel only" / "Direct shipping" / "In-person meetup."
 - Identity challenge presented to high-trust partners only.
 - Snooze and schedule (e.g., auto-arm on flight day).
 
 **Finder page (no account, no app):**
-- Hero state communicates urgency without panic. Single primary CTA: "I have this — let the owner know."
+- Hero state communicates urgency without panic. Single primary CTA: "I have this, let the owner know."
 - Reward shown upfront when offered.
 - Tap CTA → choose mode: send a message, share location, drop off at partner, request courier pickup.
 - Auto-detected language. Toggle to switch.
@@ -249,7 +251,7 @@ Partner portal (partners.qurtag.com)
 - Up to 5 members (Plus) or 10 (Family).
 - Roles: Admin (full), Member (manage own items + view family), Child (limited, parent-approved).
 - Shared collections.
-- Kid Mode: finder message thread is mediated — finder never directly messages a child; everything routes to parent. Item profiles hide child's name from finder page by default.
+- Kid Mode: finder message thread is mediated, finder never directly messages a child; everything routes to parent. Item profiles hide child's name from finder page by default.
 
 ### 8.13 Caregiver Mode
 
@@ -278,8 +280,8 @@ Partner portal (partners.qurtag.com)
 ### 8.16 Help & Recovery Support
 
 - In-app live chat with humans during business hours, AI agent overnight.
-- "Help me recover this" concierge for paid tiers — a person actively works the case.
-- Recovery playbooks per scenario (airline, hotel, taxi, transit) — clear step-by-step.
+- "Help me recover this" concierge for paid tiers, a person actively works the case.
+- Recovery playbooks per scenario (airline, hotel, taxi, transit), clear step-by-step.
 
 ---
 
@@ -291,22 +293,22 @@ Premium, calm, confident. Closer to **Aesop, Bellroy, Rimowa, Linear, Arc, Roam 
 ### 9.2 Visual language
 - **Type**: GT America or Söhne (body), Editorial New or Tiempos Headline (display). Both pair well and feel distinctly premium without being trendy.
 - **Color**: a restrained two-tone system.
-  - **Ink** (`#0E1014`) — primary text and surfaces in dark mode.
-  - **Bone** (`#F5F1EA`) — primary surface in light mode.
-  - **Verdigris** (`#3F5A52`) — quiet accent, used sparingly.
-  - **Coral** (`#E2735B`) — reserved for lost-mode signal; used nowhere else.
-  - **Slate** (`#8C8F95`) — secondary text.
+  - **Ink** (`#0E1014`), primary text and surfaces in dark mode.
+  - **Bone** (`#F5F1EA`), primary surface in light mode.
+  - **Verdigris** (`#3F5A52`), quiet accent, used sparingly.
+  - **Coral** (`#E2735B`), reserved for lost-mode signal; used nowhere else.
+  - **Slate** (`#8C8F95`), secondary text.
 - **Spacing**: generous. 8/16/24/40/64 scale. Whitespace is the luxury.
 - **Corners**: 8px on cards, 12px on modal, fully-rounded on pill buttons.
-- **Motion**: slow, gentle. 220ms standard, easeInOutQuad. Page transitions cross-fade with subtle scale. Lost mode UI uses a slow pulse — never a frantic blink.
-- **Photography**: editorial. Lifestyle shots of objects at rest — a leather tag on a Rimowa handle on a hotel bed, a tag clipped to a pet collar at golden hour. Avoid floating-on-white product hero shots. Hire one good photographer.
+- **Motion**: slow, gentle. 220ms standard, easeInOutQuad. Page transitions cross-fade with subtle scale. Lost mode UI uses a slow pulse, never a frantic blink.
+- **Photography**: editorial. Lifestyle shots of objects at rest, a leather tag on a Rimowa handle on a hotel bed, a tag clipped to a pet collar at golden hour. Avoid floating-on-white product hero shots. Hire one good photographer.
 - **Illustration**: hand-drawn line art for empty states. No clip art, no 3D blobs, no isometric tech illustrations.
 - **Iconography**: Lucide React, 1.5px stroke. Consistent stroke width across the product.
 
 ### 9.3 Voice
 - Calm, declarative, grown-up. Never "Oops!" Never exclamation marks except in the finder page's confirmation states.
 - Use plain English. Reading age 9.
-- "Lost" not "lost!" — "Tell the owner you found it" not "Help reunite this item!"
+- "Lost" not "lost!", "Tell the owner you found it" not "Help reunite this item!"
 
 ### 9.4 Component library
 shadcn/ui as a starting base, restyled with the type system above. Build:
@@ -443,7 +445,7 @@ audit_log (actor, action, target, before_jsonb, after_jsonb, at)
 
 - **Product analytics**: PostHog. Track key funnels (activation, lost-mode toggle, finder scan → message, message → handoff → recovery).
 - **Recovery KPIs**: time-to-first-message, time-to-handoff, time-to-recovery, recovery rate by tier and country.
-- **No third-party trackers** on the finder page (it's a privacy product — don't undermine the promise).
+- **No third-party trackers** on the finder page (it's a privacy product, don't undermine the promise).
 - **Marketing site**: privacy-preserving analytics (Plausible or Fathom). No Google Analytics. No Meta pixel by default; rebuildable via Conversions API server-side if needed.
 
 ---
@@ -490,7 +492,7 @@ Free tier is a real product; no dark patterns. Annual gets two months free.
 
 ## 16. Phased Roadmap
 
-### Phase 0 — Foundations (0–2 months)
+### Phase 0, Foundations (0–2 months)
 - Brand identity, photography, marketing site live.
 - Auth, account, item profile, tag activation.
 - Finder page with messaging bridge.
@@ -498,7 +500,7 @@ Free tier is a real product; no dark patterns. Annual gets two months free.
 - Stripe + storefront (Shopify Hydrogen front-end).
 - Core hardware in production.
 
-### Phase 1 — Launch (2–5 months)
+### Phase 1, Launch (2–5 months)
 - iOS + Android apps.
 - Reward escrow.
 - Translation by default (finder + threads).
@@ -509,7 +511,7 @@ Free tier is a real product; no dark patterns. Annual gets two months free.
 - Recovery concierge.
 - Public launch.
 
-### Phase 2 — Network (5–10 months)
+### Phase 2, Network (5–10 months)
 - Drop-off network v1 (10 lighthouse partners).
 - Courier handoff with carbon-neutral default.
 - Chain-of-custody packets.
@@ -519,7 +521,7 @@ Free tier is a real product; no dark patterns. Annual gets two months free.
 - Signature monogrammed tier.
 - Public API + Zapier.
 
-### Phase 3 — B2B & Edge (10–18 months)
+### Phase 3, B2B & Edge (10–18 months)
 - Business workspace + SSO + API GA.
 - Partner portal for hotels / airlines.
 - Insurance claim partnerships.
@@ -556,10 +558,10 @@ Free tier is a real product; no dark patterns. Annual gets two months free.
 | Trolls / spam through finder bridge | Per-tag rate limits, CAPTCHA on suspicious sessions, reputation scoring |
 | Translation misfires (medical/legal contexts) | Always show original alongside translation; disclaim |
 | Privacy claim audit | Publish architecture transparency reports; bug bounty; SOC 2 |
-| Battery on Track tier | Use coin cell + Apple Find My / Google Find Hub network — no proprietary mesh |
+| Battery on Track tier | Use coin cell + Apple Find My / Google Find Hub network, no proprietary mesh |
 | B2B integrations slip | Don't gate consumer launch on partners; treat Phase 2 onward |
 | Stripe Connect KYC friction for international finders | Document supported countries clearly; offer manual gift-card payout fallback |
-| Legal — acting as a "lost & found service" in regulated jurisdictions | Local counsel review before launch in EU, UK, Japan |
+| Legal, acting as a "lost & found service" in regulated jurisdictions | Local counsel review before launch in EU, UK, Japan |
 
 ---
 
@@ -569,7 +571,7 @@ Free tier is a real product; no dark patterns. Annual gets two months free.
 2. Build proprietary courier rails or always aggregator? (Bet: aggregator forever.)
 3. Acquire a small leather goods studio for Signature production, or partner? (Decision by month 6.)
 4. Native iPad app or responsive web only? (Bet: responsive web v1, native iPad if signal.)
-5. Public profile pages for items (à la lost-pet posters) — privacy concerns or marketing wins? (Bet: opt-in only, never default.)
+5. Public profile pages for items (à la lost-pet posters), privacy concerns or marketing wins? (Bet: opt-in only, never default.)
 6. Should reward escrow allow crypto payouts? (Bet: not until clear demand and regulatory clarity.)
 7. Position Track tier as "Find My-compatible tracker" or hide it under recovery story? (Bet: hide under recovery, lead with reunion not surveillance.)
 

@@ -31,7 +31,7 @@ function timestamp(iso: string): string {
 }
 
 function senderLabel(sender: SenderKind, viewer: SenderKind): string {
-  if (sender === 'system') return 'QurTag';
+  if (sender === 'system') return 'QuR Tag';
   if (sender === viewer) return 'You';
   return sender === 'owner' ? 'The owner' : 'The finder';
 }
@@ -152,7 +152,7 @@ export function ThreadView({ messages, viewerKind, autoScroll = true, className 
             <div key={m.id} className="flex flex-col gap-1 items-center self-center max-w-full">
               <SystemCard payload={structured} />
               <span className="text-caption text-muted px-2">
-                QurTag · {timestamp(m.created_at)}
+                QuR Tag · {timestamp(m.created_at)}
               </span>
             </div>
           );

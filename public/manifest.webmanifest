@@ -1,0 +1,14 @@
+{
+  "name": "QuR Tag",
+  "short_name": "QuR Tag",
+  "description": "A free QR tag, so a kind stranger can message you about something you lost.",
+  "start_url": "/app",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#0A0B0F",
+  "icons": [
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

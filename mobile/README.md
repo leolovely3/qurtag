@@ -1,4 +1,4 @@
-# QurTag — mobile (Expo)
+# QurTag, mobile (Expo)
 
 A thin WebView wrapper around `https://app.qurtag.com` with native modules for
 push, Wallet, NFC, and (eventually) Live Activities.

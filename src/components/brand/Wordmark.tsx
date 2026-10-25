@@ -6,9 +6,8 @@ interface WordmarkProps {
 }
 
 /**
- * QurTag wordmark. Inter Display semibold, very tight tracking.
- * Two visual words: QUR (with the U in signal-coral — the QR-with-U-at-the-center hook)
- * and Tag (in verdigris) — so the reader parses them as two distinct units like AirTag.
+ * The QuR Tag wordmark: a QR tag with U (you) in the middle. Inter Display semibold,
+ * tight tracking. Two words: QuR (the u in signal coral) and Tag (in verdigris).
  */
 export function Wordmark({ className, variant = 'full' }: WordmarkProps) {
   if (variant === 'mark') {
@@ -18,9 +17,9 @@ export function Wordmark({ className, variant = 'full' }: WordmarkProps) {
           'font-display font-semibold text-h5 tracking-[-0.035em] text-ink-900 dark:text-ink-50',
           className,
         )}
-        aria-label="QurTag"
+        aria-label="QuR Tag"
       >
-        Q<span className="text-signal-500">U</span>R
+        Q<span className="text-signal-500">u</span>R
       </span>
     );
   }
@@ -30,9 +29,10 @@ export function Wordmark({ className, variant = 'full' }: WordmarkProps) {
         'font-display font-semibold text-h6 tracking-[-0.035em] text-ink-900 dark:text-ink-50',
         className,
       )}
-      aria-label="QurTag"
+      aria-label="QuR Tag"
     >
-      Q<span className="text-signal-500">U</span>R<span className="text-verdigris-700 dark:text-verdigris-500">Tag</span>
+      Q<span className="text-signal-500">u</span>R{' '}
+      <span className="text-verdigris-700 dark:text-verdigris-500">Tag</span>
     </span>
   );
 }

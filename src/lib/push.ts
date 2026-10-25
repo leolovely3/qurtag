@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { supabase } from './supabase';
+import { db } from './db';
 import { fetchPrimaryHouseholdId } from './queries';
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined;
@@ -28,7 +28,7 @@ async function ensureRegistration(): Promise<ServiceWorkerRegistration | null> {
   try {
     return await navigator.serviceWorker.register('/sw.js');
   } catch (err) {
-    console.error('[QurTag] sw register', err);
+    console.error('[QuR Tag] sw register', err);
     return null;
   }
 }
@@ -77,7 +77,7 @@ export function usePushSubscription(userId: string | null) {
       const json = sub.toJSON();
       const householdId = await fetchPrimaryHouseholdId();
 
-      const { error } = await supabase.from('push_subscriptions').upsert(
+      const { error } = await db.from('push_subscriptions').upsert(
         {
           user_id: userId,
           household_id: householdId,
@@ -89,7 +89,7 @@ export function usePushSubscription(userId: string | null) {
         },
         { onConflict: 'endpoint' },
       );
-      if (error) console.error('[QurTag] push subscribe persist', error);
+      if (error) console.error('[QuR Tag] push subscribe persist', error);
       setSubscribed(true);
     } finally {
       setPending(false);
@@ -103,7 +103,7 @@ export function usePushSubscription(userId: string | null) {
       const reg = await navigator.serviceWorker.getRegistration('/sw.js');
       const sub = await reg?.pushManager.getSubscription();
       if (sub) {
-        await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+        await db.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
         await sub.unsubscribe();
       }
       setSubscribed(false);

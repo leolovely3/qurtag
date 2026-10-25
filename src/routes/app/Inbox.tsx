@@ -5,8 +5,8 @@ import { Eyebrow } from '@/components/brand/Typography';
 import { ThreadRowSkeleton } from '@/components/ui/Skeleton';
 import { useAuth } from '@/lib/auth';
 import { fetchPrimaryHouseholdId, fetchThreadsForHousehold, type ThreadWithItem } from '@/lib/queries';
-import { isSupabaseConfigured } from '@/lib/supabase';
 import { cn } from '@/lib/cn';
+import { usePoll } from '@/lib/realtime';
 
 function relativeTime(iso: string): string {
   const then = new Date(iso).getTime();
@@ -30,7 +30,7 @@ export function Inbox() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (authLoading || !user || !isSupabaseConfigured) {
+    if (authLoading || !user) {
       setLoading(false);
       return;
     }
@@ -51,6 +51,12 @@ export function Inbox() {
     };
   }, [authLoading, user]);
 
+  // New notes from finders: ask again every few seconds while the inbox is open.
+  usePoll(async () => {
+    const hh = await fetchPrimaryHouseholdId();
+    if (hh) setThreads(await fetchThreadsForHousehold(hh));
+  }, !!user && !loading);
+
   const unreadTotal = useMemo(
     () => threads.reduce((sum, t) => sum + t.unread_count, 0),
     [threads],
@@ -63,7 +69,7 @@ export function Inbox() {
         <h1 className="font-display font-semibold text-ink-900 text-h3 sm:text-h2 tracking-[-0.028em] leading-[1.04] text-balance">
           {unreadTotal > 0
             ? `${unreadTotal} new note${unreadTotal === 1 ? '' : 's'} to read.`
-            : 'Quiet inbox.'}
+            : 'No new notes.'}
         </h1>
       </div>
 
@@ -84,8 +90,8 @@ export function Inbox() {
             No conversations yet.
           </h2>
           <p className="text-body text-muted text-pretty max-w-md">
-            When someone scans one of your tags and sends a note, it shows up here. We'll also
-            email and push to you if you have those turned on.
+            When someone scans one of your tags and sends a note, it shows up here. Keep this page
+            in mind: email alerts are not switched on yet.
           </p>
         </div>
       )}
@@ -136,12 +142,12 @@ export function Inbox() {
                       : 'No messages yet.'}
                   </p>
                   <div className="flex items-center gap-3 mt-1 text-caption text-muted">
-                    {thread.item?.brand && (
-                      <span className="inline-flex items-center gap-1">{thread.item.brand}</span>
+                    {thread.status !== 'open' && (
+                      <span className="inline-flex items-center gap-1">{thread.status === 'reunited' ? 'Back with you' : 'Closed'}</span>
                     )}
                     {thread.item?.lost_mode && (
                       <span className="inline-flex items-center gap-1 text-signal-700">
-                        <MapPin size={11} strokeWidth={1.75} /> Armed
+                        <MapPin size={11} strokeWidth={1.75} /> Marked lost
                       </span>
                     )}
                     {thread.unread_count > 0 && (

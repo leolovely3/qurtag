@@ -53,7 +53,7 @@ export async function reverseGeocode(lat: number, lng: number): Promise<MapboxPl
       city,
     };
   } catch (e) {
-    console.warn('[QurTag] reverseGeocode', e);
+    console.warn('[QuR Tag] reverseGeocode', e);
     return null;
   }
 }
@@ -92,7 +92,7 @@ export async function searchAddresses(query: string): Promise<MapboxAddressSugge
       lng: f.center?.[0] ?? 0,
     }));
   } catch (e) {
-    console.warn('[QurTag] searchAddresses', e);
+    console.warn('[QuR Tag] searchAddresses', e);
     return [];
   }
 }

@@ -1,10 +1,12 @@
-# QurTag — Launch Checklist
+> Historical: this document describes an earlier plan for QuR Tag on a Supabase project of its own, with features that are switched off. The running product and its backend are described in README.md.
+
+# QurTag, Launch Checklist
 
 Tick the boxes as you ship them. Priorities:
 
-- 🔴 **MUST** — you cannot launch without this.
-- 🟡 **SHOULD** — you can launch but it'll feel half-baked.
-- 🟢 **LATER** — fine for v1.1.
+- 🔴 **MUST**, you cannot launch without this.
+- 🟡 **SHOULD**, you can launch but it'll feel half-baked.
+- 🟢 **LATER**, fine for v1.1.
 
 The suggested 30-day sequence is at the bottom if you want a calendar.
 
@@ -17,7 +19,7 @@ The suggested 30-day sequence is at the bottom if you want a calendar.
 - [ ] 🔴 Get an EIN.
 - [ ] 🔴 Open a business bank account.
 - [ ] 🔴 Open a business credit card (for hosting + tooling).
-- [ ] 🔴 Lawyer-drafted **Privacy Policy** — covers Supabase, Stripe, Resend, Mapbox, AeroAPI; GDPR/CCPA compliant. Replace placeholder at `/privacy`.
+- [ ] 🔴 Lawyer-drafted **Privacy Policy**, covers Supabase, Stripe, Resend, Mapbox, AeroAPI; GDPR/CCPA compliant. Replace placeholder at `/privacy`.
 - [ ] 🔴 Lawyer-drafted **Terms of Service**, including refund policy and reward-escrow handling. Replace placeholder at `/terms`.
 - [ ] 🟡 **DPA template** for any business customers in the EU.
 - [ ] 🟡 Bookkeeping (QuickBooks or Xero) + an accountant who knows SaaS.
@@ -28,8 +30,8 @@ The suggested 30-day sequence is at the bottom if you want a calendar.
 
 - [ ] 🔴 Buy the domain. (Confirm `qurtag.com` or pick the final name.)
 - [ ] 🔴 Set up DNS (Cloudflare recommended).
-- [ ] 🔴 Deploy the web app to **Vercel** (QurTag is a Vite SPA — Vercel auto-detects).
-- [ ] 🔴 Configure subdomains: `qurtag.com` (marketing), `app.qurtag.com` (web app — current default), `partners.qurtag.com` (partner portal — optional, route-based works too).
+- [ ] 🔴 Deploy the web app to **Vercel** (QurTag is a Vite SPA, Vercel auto-detects).
+- [ ] 🔴 Configure subdomains: `qurtag.com` (marketing), `app.qurtag.com` (web app, current default), `partners.qurtag.com` (partner portal, optional, route-based works too).
 - [ ] 🔴 SSL on all subdomains (auto with Vercel).
 - [ ] 🔴 Set production env vars on Vercel:
   - `VITE_SUPABASE_URL`
@@ -75,7 +77,7 @@ The suggested 30-day sequence is at the bottom if you want a calendar.
   - URL: `https://<project>.supabase.co/functions/v1/stripe-webhook`
   - Events: `payment_intent.requires_capture`, `payment_intent.succeeded`, `account.updated` (for Connect onboarding).
 - [ ] 🔴 ⚠️ **Fix webhook signature verification** in [supabase/functions/stripe-webhook/index.ts](../supabase/functions/stripe-webhook/index.ts). Replace the raw JSON parse with `stripe.webhooks.constructEvent(rawBody, signature, secret)` using `https://esm.sh/stripe@14?target=deno`. This is a security gap, not a launch convenience.
-- [ ] 🔴 Stripe Connect terms acceptance (Dashboard → Connect → Settings) — you become a platform when wiring finder payouts.
+- [ ] 🔴 Stripe Connect terms acceptance (Dashboard → Connect → Settings), you become a platform when wiring finder payouts.
 - [ ] 🟡 Set up `account.updated` handler in stripe-webhook to mark `finder_sessions.payouts_enabled_at` when a finder completes Connect onboarding.
 - [ ] 🟡 Stripe Tax registration (Dashboard → Tax).
 - [ ] 🟡 Real $1 payment through reward escrow on your own card before flipping to live, then again after.
@@ -114,24 +116,24 @@ The suggested 30-day sequence is at the bottom if you want a calendar.
 
 The marketing site uses real layout but placeholder copy on most pages. All of these route to `<Placeholder>` components in [src/router.tsx](../src/router.tsx). Write real content for each:
 
-- [ ] 🔴 `/how-it-works` — storyboarded walkthrough of activation → loss → finder UI → handoff → return.
-- [ ] 🔴 `/security` — the actual architecture transparency. Talk about bridge architecture, encryption, GDPR, your data retention windows.
-- [ ] 🔴 `/help` — FAQ + contact email + recovery playbooks (airline, hotel, taxi, transit).
-- [ ] 🔴 `/business` — partner pitch for hotels/airlines/coworking spaces. Pricing model, what they get, how to talk to you.
-- [ ] 🔴 `/pricing` — feature comparison table, FAQ, B2B contact CTA.
-- [ ] 🔴 `/stories` — replace the three composite stories on the marketing home with at least one or two real, consented recovery stories.
-- [ ] 🟡 `/tags` — 3D configurator or at minimum a beautiful four-tier lineup.
+- [ ] 🔴 `/how-it-works`, storyboarded walkthrough of activation → loss → finder UI → handoff → return.
+- [ ] 🔴 `/security`, the actual architecture transparency. Talk about bridge architecture, encryption, GDPR, your data retention windows.
+- [ ] 🔴 `/help`, FAQ + contact email + recovery playbooks (airline, hotel, taxi, transit).
+- [ ] 🔴 `/business`, partner pitch for hotels/airlines/coworking spaces. Pricing model, what they get, how to talk to you.
+- [ ] 🔴 `/pricing`, feature comparison table, FAQ, B2B contact CTA.
+- [ ] 🔴 `/stories`, replace the three composite stories on the marketing home with at least one or two real, consented recovery stories.
+- [ ] 🟡 `/tags`, 3D configurator or at minimum a beautiful four-tier lineup.
 - [ ] 🟡 Add a `/press` route with logos, founder bio, hero image, one-pager.
 
 ## 9. Photography + visual
 
 Per [docs/PHOTOGRAPHY.md](PHOTOGRAPHY.md):
 
-- [ ] 🔴 **Hero photograph** for the marketing home — at minimum, even if you don't do the full shoot. The CSS phone mockup currently in the hero is the single biggest "this looks templated" tell.
+- [ ] 🔴 **Hero photograph** for the marketing home, at minimum, even if you don't do the full shoot. The CSS phone mockup currently in the hero is the single biggest "this looks templated" tell.
 - [ ] 🔴 **OG image** at `/public/og.png` (1200×630). [index.html](../index.html) already references it.
 - [ ] 🔴 **Apple touch icon** at `/public/apple-touch-icon.png` (180×180). Already referenced in [index.html](../index.html).
 - [ ] 🔴 Generate the full **favicon set** at [realfavicongenerator.net](https://realfavicongenerator.net).
-- [ ] 🟡 Full photo shoot — 2 days, ~$4–8k, brief at [docs/PHOTOGRAPHY.md](PHOTOGRAPHY.md). Eight shots, every hero asset for marketing + press + gifting.
+- [ ] 🟡 Full photo shoot, 2 days, ~$4–8k, brief at [docs/PHOTOGRAPHY.md](PHOTOGRAPHY.md). Eight shots, every hero asset for marketing + press + gifting.
 - [ ] 🟡 Replace the CSS [PhoneMockup](../src/components/brand/PhoneMockup.tsx) on the marketing hero with a real phone photo.
 - [ ] 🟢 Logo files: SVG, PNG @1x/2x/3x, dark/light, square + horizontal.
 - [ ] 🟢 Press kit zip: logos, screenshots, founder bio, hero image, one-pager.
@@ -141,9 +143,9 @@ Per [docs/PHOTOGRAPHY.md](PHOTOGRAPHY.md):
 - [ ] 🔴 Real support email (`hello@qurtag.com` or similar).
 - [ ] 🔴 Decide **who** answers when the first finder writes confused. Ideally you, for the first 100 conversations.
 - [ ] 🔴 Write at least 8 FAQ entries for `/help`.
-- [ ] 🟡 Ticketing system — Linear, Plain, or Front. QurTag is calm; pick the one whose UI feels calm.
+- [ ] 🟡 Ticketing system, Linear, Plain, or Front. QurTag is calm; pick the one whose UI feels calm.
 - [ ] 🟡 Set a personal SLA: every inbound from a stressed finder gets a reply within 1 hour during business hours.
-- [ ] 🟢 Live chat (Crisp / Intercom) — not for v1.
+- [ ] 🟢 Live chat (Crisp / Intercom), not for v1.
 
 ## 11. Security
 
@@ -151,8 +153,8 @@ Per [docs/PHOTOGRAPHY.md](PHOTOGRAPHY.md):
 - [ ] 🔴 Publish `/.well-known/security.txt` with `Contact: mailto:security@qurtag.com`.
 - [ ] 🔴 Sentry account + add Sentry SDK to the app for client errors.
 - [ ] 🟡 Set up Sentry source map upload in the Vercel build step.
-- [ ] 🟡 Backup verification — restore a Supabase backup to a staging project, confirm it works.
-- [ ] 🟡 Audit RLS — current `using (true)` on threads/messages anon reads is acceptable v1 (Stripe UUID-as-secret model) but tighten to per-thread tokens before scale.
+- [ ] 🟡 Backup verification, restore a Supabase backup to a staging project, confirm it works.
+- [ ] 🟡 Audit RLS, current `using (true)` on threads/messages anon reads is acceptable v1 (Stripe UUID-as-secret model) but tighten to per-thread tokens before scale.
 - [ ] 🟢 Bug bounty (HackerOne or Intigriti).
 - [ ] 🟢 Penetration test before B2B push.
 - [ ] 🟢 SOC 2 Type II (target month 18 per PRD).
@@ -162,7 +164,7 @@ Per [docs/PHOTOGRAPHY.md](PHOTOGRAPHY.md):
 
 - [ ] 🔴 PostHog account, privacy-respecting config (no third-party cookies, no session replay on finder pages).
 - [ ] 🔴 Track the recovery funnel: activation → lost-mode toggle → finder scan → finder message → handoff → confirmed reunion.
-- [ ] 🟡 Plausible or Fathom for the marketing site (no Google Analytics — undermines the privacy promise).
+- [ ] 🟡 Plausible or Fathom for the marketing site (no Google Analytics, undermines the privacy promise).
 - [ ] 🟡 Grafana Cloud or similar for Edge Function logs.
 - [ ] 🟡 Dashboards for the metrics in [docs/PRD.md §17](PRD.md): activated tags, recovery rate, time-to-recovery, finder-to-message conversion.
 
@@ -171,11 +173,11 @@ Per [docs/PHOTOGRAPHY.md](PHOTOGRAPHY.md):
 Skip this entire section if you're launching software-only.
 
 - [ ] 🔴 Source manufacturer for printable tag stock (or stick with "print at home" only for v1).
-- [ ] 🔴 Decide which tiers launch in v1 — Core silicone is the cheapest entry; Signature leather is the gifting story.
-- [ ] 🟡 First batch order — Core silicone (typically 500–1000 unit minimum).
-- [ ] 🟡 First batch order — Pro aluminum (laser etching adds 2–4 weeks lead time).
+- [ ] 🔴 Decide which tiers launch in v1, Core silicone is the cheapest entry; Signature leather is the gifting story.
+- [ ] 🟡 First batch order, Core silicone (typically 500–1000 unit minimum).
+- [ ] 🟡 First batch order, Pro aluminum (laser etching adds 2–4 weeks lead time).
 - [ ] 🟡 Source leather studio for Signature tier (small batch first).
-- [ ] 🟢 Track tier — BLE chips, Apple Find My / Google Find Hub certification (significant lead time).
+- [ ] 🟢 Track tier, BLE chips, Apple Find My / Google Find Hub certification (significant lead time).
 - [ ] 🟡 Packaging design + manufacturer. Tumi-tier means Tumi-tier packaging.
 - [ ] 🟡 Fulfillment partner (ShipBob, ShipMonk, or your own warehouse for v1 only).
 - [ ] 🟡 Customs/duties for international shipping.
@@ -183,8 +185,8 @@ Skip this entire section if you're launching software-only.
 
 ## 14. Wallets (Phase 2)
 
-- [ ] 🟢 **Google Wallet** — actually works once you set the three `GOOGLE_WALLET_*` secrets and create a generic class in the [Pay & Wallet Console](https://pay.google.com/business/console). Deploy `supabase functions deploy issue-google-pass`.
-- [ ] 🟢 **Apple Wallet** — Apple Developer Program enrollment, Pass Type ID, certs (5 secrets). Then integrate a Deno pkpass library into [issue-apple-pass](../supabase/functions/issue-apple-pass/index.ts) to sign + zip. The pass.json content is correct; only signing is missing.
+- [ ] 🟢 **Google Wallet**, actually works once you set the three `GOOGLE_WALLET_*` secrets and create a generic class in the [Pay & Wallet Console](https://pay.google.com/business/console). Deploy `supabase functions deploy issue-google-pass`.
+- [ ] 🟢 **Apple Wallet**, Apple Developer Program enrollment, Pass Type ID, certs (5 secrets). Then integrate a Deno pkpass library into [issue-apple-pass](../supabase/functions/issue-apple-pass/index.ts) to sign + zip. The pass.json content is correct; only signing is missing.
 
 ## 15. Shippo courier labels (Phase 2)
 
@@ -235,7 +237,7 @@ Specific gaps in the codebase that block a smooth v1 experience:
 - [ ] 🔴 End-to-end run on production from a brand new browser:
   - [ ] Sign in via magic link (email lands within 30s).
   - [ ] Add first item with photo.
-  - [ ] Print tag — PDF saves cleanly.
+  - [ ] Print tag, PDF saves cleanly.
   - [ ] Open the tag URL in a second device (private window).
   - [ ] Send a finder message.
   - [ ] Confirm: realtime update on owner side, push notification, email.
@@ -243,13 +245,13 @@ Specific gaps in the codebase that block a smooth v1 experience:
   - [ ] Finder shares location → map preview renders.
   - [ ] Owner marks reunited.
   - [ ] Confirm reward released (in test mode) or in-account capture (live).
-- [ ] 🔴 iOS Safari test — including home-screen install + push.
+- [ ] 🔴 iOS Safari test, including home-screen install + push.
 - [ ] 🔴 Android Chrome test.
 - [ ] 🔴 Mobile responsive sweep on a real phone (not DevTools).
-- [ ] 🟡 Accessibility audit — VoiceOver pass on the hero, finder, inbox.
+- [ ] 🟡 Accessibility audit, VoiceOver pass on the hero, finder, inbox.
 - [ ] 🟡 Lighthouse score ≥ 95 on all major routes.
-- [ ] 🟡 Run with `prefers-reduced-motion` enabled — confirm calm.
-- [ ] 🟢 Load test — Supabase free tier maxes around 60 concurrent connections; if launch traffic looks heavy, upgrade pre-emptively.
+- [ ] 🟡 Run with `prefers-reduced-motion` enabled, confirm calm.
+- [ ] 🟢 Load test, Supabase free tier maxes around 60 concurrent connections; if launch traffic looks heavy, upgrade pre-emptively.
 
 ---
 
@@ -263,10 +265,10 @@ Specific gaps in the codebase that block a smooth v1 experience:
 | 11–14 | Photography shoot, edit, place into marketing site; replace composite stories |
 | 15–18 | Flip Stripe to live; run real $1 payment through reward escrow; Resend domain verified; email previews |
 | 19–22 | Deploy to Vercel; end-to-end smoke test; iOS Safari; mobile responsive sweep |
-| 23–26 | Closed beta — 10–20 real people get tags, use them on a real trip; watch the inbox |
+| 23–26 | Closed beta, 10–20 real people get tags, use them on a real trip; watch the inbox |
 | 27–30 | Fix what beta surfaced; open signup |
 
-Hardware procurement runs in parallel from Day 1 — manufacturing lead times mean premium tags need to start now if you want them at launch.
+Hardware procurement runs in parallel from Day 1, manufacturing lead times mean premium tags need to start now if you want them at launch.
 
 ---
 

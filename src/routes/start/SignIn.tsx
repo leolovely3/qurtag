@@ -1,169 +1,174 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Mail } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
 import { Input } from '@/components/ui/Input';
 import { Eyebrow } from '@/components/brand/Typography';
 import { useAuth } from '@/lib/auth';
-import { isSupabaseConfigured } from '@/lib/supabase';
-import { setPendingItem } from '@/lib/pendingItem';
+import { cn } from '@/lib/cn';
 
+type Mode = 'create' | 'signin';
+
+/**
+ * /start: create an account or sign in, with email and password. A new account goes on
+ * to add its first item (/start/setup); someone signing in goes to /app.
+ */
 export function StartSignIn() {
-  const { user, loading, signInWithEmail } = useAuth();
+  const { user, loading, signUp, signIn } = useAuth();
   const navigate = useNavigate();
-
+  const [params] = useSearchParams();
+  const [mode, setMode] = useState<Mode>(params.get('mode') === 'signin' ? 'signin' : 'create');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [itemName, setItemName] = useState('');
-  const [itemBrand, setItemBrand] = useState('');
-
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [checkEmail, setCheckEmail] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) navigate('/start/setup', { replace: true });
-  }, [loading, user, navigate]);
+    if (!loading && user && !submitting) navigate('/app', { replace: true });
+  }, [loading, user, submitting, navigate]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
-
-    // Persist the first-item details so the magic-link round-trip lands the
-    // user on /start/setup with the form pre-filled.
-    if (itemName.trim() || itemBrand.trim()) {
-      setPendingItem({ name: itemName.trim() || undefined, brand: itemBrand.trim() || undefined });
-    }
-
-    const result = await signInWithEmail(email);
-    setSubmitting(false);
-    if (result.ok) {
-      setSent(true);
+    if (mode === 'create') {
+      // On success `submitting` stays on, so the signed-in redirect above does not race this one.
+      const r = await signUp({ email, password, name });
+      if (!r.ok) {
+        setSubmitting(false);
+        return setError(r.error);
+      }
+      if (r.needsConfirmation) {
+        setSubmitting(false);
+        return setCheckEmail(true);
+      }
+      navigate('/start/setup', { replace: true });
     } else {
-      setError(result.error ?? 'Could not send the link. Try again.');
+      const r = await signIn(email, password);
+      if (!r.ok) {
+        setSubmitting(false);
+        return setError(r.error);
+      }
+      navigate('/app', { replace: true });
     }
   }
 
   return (
     <Container size="md">
-      <div className="min-h-[70vh] py-qurtag-12 grid lg:grid-cols-12 gap-qurtag-12 items-center">
+      <div className="min-h-[70vh] py-qurtag-8 sm:py-qurtag-12 grid lg:grid-cols-12 gap-qurtag-8 lg:gap-qurtag-12 items-center">
         <div className="lg:col-span-6 flex flex-col gap-5">
-          <Eyebrow>Start free</Eyebrow>
+          <Eyebrow>{mode === 'create' ? 'Make a free tag' : 'Welcome back'}</Eyebrow>
           <h1 className="font-display font-semibold text-ink-900 text-h3 sm:text-h2 lg:text-h1 tracking-[-0.032em] leading-[1.02] text-balance">
-            Thirty seconds between you and never losing a bag again.
+            {mode === 'create' ? 'A tag for your things, in about a minute.' : 'Sign in to your QuR Tag.'}
           </h1>
           <p className="text-lede text-muted text-pretty max-w-lg">
-            Tell us your email. We'll send a single link to sign in. No password, no app store,
-            no payment. Two items are on us, forever.
+            {mode === 'create'
+              ? 'Make an account, name a thing, print its tag. Free for up to two items. If someone finds it, they scan the tag and send you a note. No app for them, and your email stays private.'
+              : 'Read notes from finders, reply, and print your tags.'}
           </p>
-          <ul className="flex flex-col gap-2 mt-4 text-caption text-muted">
-            <li className="flex items-center gap-2">
-              <span className="size-1 rounded-full bg-ink-900" /> Free forever for two items
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="size-1 rounded-full bg-ink-900" /> Printable tag included
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="size-1 rounded-full bg-ink-900" /> Cancel any plan, anytime
-            </li>
-          </ul>
         </div>
 
         <div className="lg:col-span-6">
           <div className="rounded-modal border border-hairline bg-canvas p-qurtag-5 shadow-card flex flex-col gap-5 max-w-md">
-            {sent ? (
+            {checkEmail ? (
               <>
                 <div className="size-10 rounded-pill bg-ink-900 grid place-items-center">
-                  <Mail size={18} strokeWidth={1.75} className="text-canvas" />
+                  <Mail size={18} strokeWidth={1.75} className="text-canvas" aria-hidden />
                 </div>
-                <h2 className="font-display font-semibold text-h4 text-ink-900 tracking-[-0.018em]">
-                  Check your inbox.
-                </h2>
+                <h2 className="font-display font-semibold text-h4 text-ink-900 tracking-[-0.018em]">Check your email.</h2>
                 <p className="text-body text-muted">
-                  We sent a sign-in link to <strong className="text-ink-900">{email}</strong>. Click
-                  it to come back here. We'll have your first item ready to print.
+                  We sent a link to <strong className="text-ink-900">{email}</strong>. Open it to confirm your account.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSent(false);
-                    setEmail('');
-                  }}
-                  className="text-caption text-muted hover:text-ink-900 transition-colors text-left self-start"
-                >
-                  Use a different email →
-                </button>
               </>
             ) : (
-              <form onSubmit={onSubmit} className="flex flex-col gap-5">
-                <h2 className="font-display font-semibold text-h4 text-ink-900 tracking-[-0.018em]">
-                  Sign in with a single link.
-                </h2>
-                <Input
-                  type="email"
-                  name="email"
-                  label="Email"
-                  placeholder="you@home.com"
-                  autoComplete="email"
-                  autoFocus
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  error={error ?? undefined}
-                />
-
-                <details className="group">
-                  <summary className="cursor-pointer list-none flex items-center justify-between text-caption font-medium text-ink-900 hover:opacity-70 transition-opacity">
-                    <span>Add your first item now (optional)</span>
-                    <span className="text-muted transition-transform duration-qurtag group-open:rotate-45">+</span>
-                  </summary>
-                  <div className="flex flex-col gap-3 mt-3">
+              <>
+                <div role="tablist" aria-label="Create an account or sign in" className="grid grid-cols-2 rounded-pill border border-hairline-strong p-1">
+                  {(['create', 'signin'] as const).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      role="tab"
+                      aria-selected={mode === m}
+                      onClick={() => {
+                        setMode(m);
+                        setError(null);
+                      }}
+                      className={cn(
+                        'h-11 rounded-pill text-caption font-medium transition-colors duration-qurtag',
+                        mode === m ? 'bg-ink-900 text-canvas' : 'text-ink-700 hover:text-ink-900',
+                      )}
+                    >
+                      {m === 'create' ? 'Create account' : 'Sign in'}
+                    </button>
+                  ))}
+                </div>
+                <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
+                  {mode === 'create' && (
                     <Input
-                      name="itemName"
-                      label="What is it?"
-                      placeholder="Rimowa Original Cabin"
-                      value={itemName}
-                      onChange={(e) => setItemName(e.target.value)}
+                      name="name"
+                      label="Your first name"
+                      autoComplete="given-name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      hint="Only you see this. Finders never do."
                     />
+                  )}
+                  <Input
+                    type="email"
+                    name="email"
+                    label="Email"
+                    placeholder="you@example.com"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                  <div className="flex flex-col gap-1.5">
                     <Input
-                      name="itemBrand"
-                      label="Brand"
-                      placeholder="Rimowa, Tumi, Away…"
-                      value={itemBrand}
-                      onChange={(e) => setItemBrand(e.target.value)}
+                      type={showPassword ? 'text' : 'password'}
+                      name="password"
+                      label="Password"
+                      autoComplete={mode === 'create' ? 'new-password' : 'current-password'}
+                      required
+                      minLength={8}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      hint={mode === 'create' ? 'At least 8 characters.' : undefined}
                     />
-                    <p className="text-caption text-muted">
-                      We'll save these so they're waiting when you click your link.
-                    </p>
+                    <label className="inline-flex items-center gap-2 text-caption text-ink-700 min-h-11">
+                      <input type="checkbox" checked={showPassword} onChange={(e) => setShowPassword(e.target.checked)} className="size-4" />
+                      Show password
+                    </label>
                   </div>
-                </details>
-
-                <button
-                  type="submit"
-                  disabled={submitting || !email}
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-pill bg-ink-900 text-canvas text-body font-medium hover:bg-ink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-qurtag"
-                >
-                  {submitting ? 'Sending…' : 'Send my link'}
-                  <ArrowRight size={16} strokeWidth={1.75} />
-                </button>
-                <p className="text-caption text-muted">
-                  By continuing you agree to our{' '}
-                  <Link to="/terms" className="underline-offset-4 hover:underline">
-                    Terms
-                  </Link>{' '}
-                  and{' '}
-                  <Link to="/privacy" className="underline-offset-4 hover:underline">
-                    Privacy
-                  </Link>
-                  .
-                </p>
-              </form>
-            )}
-            {!isSupabaseConfigured && (
-              <p className="rounded-card bg-signal-50 px-3 py-2 text-caption text-signal-700">
-                Supabase isn't configured yet. See docs/SETUP.md before this will actually send a
-                link.
-              </p>
+                  {error && (
+                    <p role="alert" className="rounded-card bg-signal-50 px-3 py-2 text-caption text-signal-700">
+                      {error}
+                    </p>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={submitting || !email || !password}
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-pill bg-ink-900 text-canvas text-body font-medium hover:bg-ink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-qurtag"
+                  >
+                    {submitting ? 'One moment…' : mode === 'create' ? 'Create my account' : 'Sign in'}
+                    <ArrowRight size={16} strokeWidth={1.75} aria-hidden />
+                  </button>
+                  {mode === 'create' ? (
+                    <p className="text-caption text-muted">
+                      By creating an account you agree to our{' '}
+                      <Link to="/terms" className="underline underline-offset-4">Terms</Link> and{' '}
+                      <Link to="/privacy" className="underline underline-offset-4">Privacy notice</Link>. You must be 18 or over.
+                    </p>
+                  ) : (
+                    <p className="text-caption text-muted">
+                      Forgot your password? Email info@impactconsulting.ai from the address you signed up with and we will help.
+                    </p>
+                  )}
+                </form>
+              </>
             )}
           </div>
         </div>

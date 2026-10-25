@@ -1,105 +1,77 @@
-# QurTag
+# QuR Tag
 
-> Your things find their way home.
+A free QR tag, so a kind stranger can message you. Live at https://www.qurtag.com.
 
-A premium recovery network — physical tags + a beautifully designed app — that turns the
-moment of loss into the shortest, calmest path to reunion. Privacy is the quiet substrate.
-Recovery is the headline.
+An owner makes an account, adds up to two things (a water bottle, a violin case, keys) and
+prints a QR tag for each. Someone who finds the thing scans the tag with their phone camera:
+a page opens with no app and no account, shows a finder-safe card for the item, and lets
+them send a note. The owner reads it in the inbox at /app and replies; the finder reads the
+reply on the same tag page. Neither side sees the other's email or phone number.
 
-The full product spec lives in [`docs/PRD.md`](docs/PRD.md). Read it before touching the code.
+The landing page is at `/`, the app at `/app`, a tag's page at `/find/<tag code>`.
 
----
+Run by Impact Consulting AI LLC, a Florida limited liability company. Contact:
+info@impactconsulting.ai.
 
-## Stack
+## Backend
 
-- **React 18.3** + **TypeScript 5.5**
-- **Vite 5.4** for build and dev
-- **React Router 7** (data router)
-- **Tailwind 3.4** + `tailwindcss-animate` + `tailwind-merge` + `clsx`
-- **Lucide React** for iconography
-- **Supabase** for database, auth, storage, realtime
+QuR Tag lives in its own schema, `qurtag`, inside the company's shared Supabase project
+(ImpactConsulting, ref nqpumwrtiukrwmhvarst), the same way Apero lives in `tentables`. It
+never uses Supabase Auth (`auth.users`), Supabase Storage, the `public` schema or the
+project's own data API.
 
-Component primitives are hand-rolled shadcn-style — every component lives in
-`src/components` and is owned by this repo.
+| Part | Where | Database login |
+| --- | --- | --- |
+| Schema, rules, functions | `db/qurtag.sql` | applied once as `postgres` |
+| Logins and their passwords | `db/logins.sql` | applied once as `postgres` |
+| Sign-in (Better Auth, email and password) | `api/auth`, `server/auth/qurtagAuth.ts` | `qurtag_auth`: the `auth_*` tables only |
+| Data API for signed-in owners (PostgREST-style) | `api/data`, `server/data/` | `qurtag_authenticator`, which can only become `qurtag_user` or `qurtag_anon` |
+| Finder routes | `api/fn` (`finder-view`, `finder-send`), `server/routes/finder.ts` | `qurtag_server`: no table rights, only the `server_*` functions |
+| Outbox and daily job | `api/jobs`, `server/routes/outbox.ts`, Vercel cron 05:00 UTC | `qurtag_server` |
 
-## Getting started
+Privacy by structure: a finder never reaches a table. The finder routes call
+`qurtag.server_finder_view`, `server_finder_open` and `server_finder_post`, which return only
+the item's name, photo, the owner's note for the finder and the lost flag, plus the finder's
+own conversation when the browser holds its secret token. The database keeps only the
+token's SHA-256. No policy in the schema is open to a visitor without a pass.
+
+Email is not set up. Until `RESEND_API_KEY` is set, new accounts are confirmed at once,
+"forgot password" sends nothing, and owners read notes in the inbox (the outbox finishes its
+rows unsent).
+
+### Settings (Vercel, project `qurtag`)
+
+`QURTAG_DATABASE_URL`, `QURTAG_DATABASE_URL_DATA`, `QURTAG_DATABASE_URL_SERVER` (the three
+logins on the transaction pooler), `QURTAG_DATABASE_CA_CERT`, `QURTAG_AUTH_SECRET`,
+`QURTAG_AUTH_URL` (production: https://www.qurtag.com), `CRON_SECRET`. Values are kept in
+`~/Claude/Backups/QurTag/secrets.env` on the founder's Mac. Optional: `RESEND_API_KEY`.
+
+The rollout that creates the schema and logins in production is
+`~/Claude/Rollouts/QurTag-rollout-schema` (its README lists the steps).
+
+## Features that are switched off
+
+`src/lib/features.ts` hides code built for a bigger plan that cannot work yet: cash rewards,
+courier labels, trips, partner drop-off points, insurance packets, wallet passes, location
+sharing, web push, household sharing, and block or report tools. Their tables are not in
+schema `qurtag`. `VITE_QURTAG_LABS=1` shows them for local work only. The old Supabase
+migrations and Edge Functions for them are kept in `supabase/` for reference; they are not
+deployed.
+
+## Working on it
 
 ```bash
 npm install
-cp .env.local.example .env.local   # fill in your Supabase credentials
-npm run dev                         # http://localhost:5173
+npm run typecheck     # app, Vite config and server code
+npm run test:unit     # the finder routes, with a stand-in database
+npm run test:e2e      # the whole loop on a throwaway local Postgres (needs Docker)
+npm run build
 ```
 
-Other scripts:
+To try the app by hand: `npm run dev:local` (a local database with the schema, plus the
+server functions on 127.0.0.1:56861), then in another Terminal
+`QURTAG_API_PROXY=http://127.0.0.1:56861 npm run dev` and open http://localhost:5173.
 
-```bash
-npm run build       # tsc -b && vite build (writes to dist/)
-npm run preview     # serve the production build locally
-npm run typecheck   # tsc -b
-npm run lint        # eslint
-```
-
-## Project structure
-
-```
-docs/
-  PRD.md                 # source of truth for what we're building
-src/
-  components/
-    brand/               # Wordmark, Typography primitives (Display, Lede, Body, Eyebrow, Caption)
-    ui/                  # Button, Container — shadcn-style headless primitives
-    layout/              # MarketingLayout, AppLayout, FinderLayout
-  lib/
-    supabase.ts          # typed Supabase client
-    database.types.ts    # stub — regenerate with `supabase gen types typescript`
-    cn.ts                # the Tailwind class merger
-  routes/
-    marketing/           # public-facing pages
-    app/                 # owner dashboard
-    finder/              # the post-scan page — the most important screen
-  router.tsx             # all route definitions
-  main.tsx               # entrypoint
-  index.css              # Tailwind layers + base styles
-```
-
-## Routes
-
-| Path | Purpose |
-|---|---|
-| `/` | Marketing home. Editorial, slow, premium. |
-| `/how-it-works`, `/tags`, `/security`, `/stories`, `/business`, `/help` | Marketing placeholders, ready for content. |
-| `/app` | Owner dashboard. Items, trip mode, recent scans. |
-| `/find/:tagId` | Finder page. The single most important screen in the product. |
-
-## Design system
-
-Tokenized in [`tailwind.config.ts`](tailwind.config.ts). The brand-essential pieces:
-
-- **Type families**: `font-display` (editorial serif, e.g. Editorial New) and `font-sans`
-  (e.g. GT America). The fallbacks ship by default; license the real faces before launch.
-- **Palette**: `ink` (primary text + dark surface), `bone` (light surface), `verdigris`
-  (quiet accent), `coral` (reserved exclusively for lost-mode signal), `slate` (secondary text).
-- **Motion**: `duration-qurtag` (220 ms), `ease-qurtag`. The `qurtag-pulse` animation is the
-  only animation used on lost-mode UI — it is slow and intentional, never frantic.
-- **Spacing scale**: `qurtag`, `qurtag-2`, `qurtag-3`, `qurtag-5`, `qurtag-8`, `qurtag-12`, `qurtag-16`
-  (8 / 16 / 24 / 40 / 64 / 96 / 128 px). Whitespace is the luxury.
-- **Corners**: `rounded-card` (8 px), `rounded-modal` (12 px), `rounded-pill`.
-- **Shadows**: `shadow-card`, `shadow-elevated`, `shadow-modal` — quiet and layered, not floaty.
-
-## Conventions
-
-- **No exclamation marks** in product copy except finder-page confirmation states.
-- **Iconography** is Lucide, 1.5 px stroke.
-- **Accessibility** is first-class. WCAG 2.2 AA. `prefers-reduced-motion` is respected globally
-  in `index.css`. Tap targets ≥ 44 pt. Focus rings are visible and quiet.
-- **Privacy by structure**: the finder routes must never reach any owner PII. The
-  `/find/*` surface is the single most important attack surface — treat it accordingly.
-
-## Roadmap
-
-See [`docs/PRD.md`](docs/PRD.md) §16 for the phased plan. The short version:
-
-1. **Phase 0** — auth, item profile, tag activation, finder messaging bridge, notifications.
-2. **Phase 1** — mobile apps, reward escrow, translation, trip mode, wallet passes.
-3. **Phase 2** — drop-off network, courier handoff, chain of custody, family + caregiver modes.
-4. **Phase 3** — business workspace, partner portal, insurance partnerships, Track tier hardware.
+Stack: React 18, TypeScript, Vite, Tailwind, React Router 7, Better Auth 1.7.7, pg,
+postgrest-js. QR codes are drawn in the browser (`qrcode.react`); the tag page prints from
+the browser, or saves as PDF from the print dialog.

@@ -26,10 +26,11 @@ export function TagPrint() {
     }
     if (!tagId) return;
     let cancelled = false;
+    // A switched-off or replaced tag is not printed: its page says "not registered".
     (async () => {
       const t = await fetchTagById(tagId);
       if (cancelled) return;
-      setTag(t);
+      setTag(t && t.status === 'active' ? t : null);
       if (t?.current_item_id) {
         const i = await fetchItemById(t.current_item_id);
         if (cancelled) return;
@@ -63,7 +64,7 @@ export function TagPrint() {
         <div className="min-h-[60vh] flex flex-col items-start gap-3 py-qurtag-12">
           <Eyebrow>Tag not found</Eyebrow>
           <h1 className="font-display font-semibold text-h3 text-ink-900 tracking-[-0.022em]">
-            That tag isn't in your account.
+            That tag isn't in your account, or it is switched off.
           </h1>
           <Link to="/app" className="link-arrow text-body">
             Back to your items →
@@ -104,8 +105,9 @@ export function TagPrint() {
         <article className="w-full max-w-2xl bg-canvas border border-hairline rounded-modal p-qurtag-8 print:border-0 print:rounded-none print:shadow-none shadow-card">
           <div className="flex items-start justify-between mb-qurtag-5">
             <Wordmark />
-            <span className="text-eyebrow uppercase tracking-[0.14em] text-muted">
-              Tag · {tag.public_id}
+            {/* Tag codes are case-sensitive, so this is never shown in capitals. */}
+            <span className="text-caption text-muted font-mono">
+              Tag {tag.public_id}
             </span>
           </div>
 
@@ -116,8 +118,8 @@ export function TagPrint() {
                 Please scan.
               </h2>
               <p className="text-body text-ink-700 max-w-sm text-pretty">
-                The owner will be notified instantly. You'll never see their phone, email, or
-                address, and they'll never see yours.
+                Scan with your phone camera to send the owner a note. No app needed. Neither of
+                you sees the other's phone number or email.
               </p>
               {item && (
                 <p className="text-caption text-muted mt-2">
@@ -145,15 +147,15 @@ export function TagPrint() {
           {/* Fold + cut guide */}
           <div className="mt-qurtag-8 flex items-center gap-3 text-caption text-muted">
             <Scissors size={14} strokeWidth={1.75} />
-            <span>Cut along the inside edge. Fold around a luggage tag sleeve or laminate.</span>
+            <span>Cut it out. Tape it on, slip it into a tag holder, or stick it inside a lid.</span>
           </div>
         </article>
       </div>
 
       <div className="no-print pb-qurtag-8 max-w-2xl mx-auto flex flex-col gap-2">
         <p className="text-caption text-muted">
-          Tip: print on heavier paper (110gsm) or stick the cut-out onto an existing luggage tag.
-          Laminating it doubles the lifetime.
+          Tip: print on sticker paper or thick paper, and cover it with clear tape so rain and
+          washing do not wear it out. You can print this page again at any time.
         </p>
         <Link to="/app" className="link-arrow text-caption text-ink-900">
           Done. Take me to my items →

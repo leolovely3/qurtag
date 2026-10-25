@@ -1,11 +1,8 @@
 /**
- * QurTag database types.
- *
- * Hand-maintained until we wire `supabase gen types`. Mirrors
- * supabase/migrations/20260614000000_initial_schema.sql exactly.
- *
- * Shape intentionally matches what `supabase gen types typescript` emits so
- * the file is drop-in replaceable later.
+ * QuR Tag database types, hand-maintained. The live tables are in db/qurtag.sql (schema
+ * `qurtag`). Types for the hidden features (rewards, trips, courier, partners, safety
+ * tools; src/lib/features.ts) describe the old Supabase migrations in
+ * supabase/migrations/, kept for when those features are built.
  */
 export type Json =
   | string
@@ -164,16 +161,21 @@ export interface Item {
   household_id: string;
   name: string;
   brand: string | null;
-  model: string | null;
   color: string | null;
-  declared_value_cents: number | null;
+  /** A small photo as a data: address (src/lib/photo.ts). */
   hero_photo_url: string | null;
   lost_mode: boolean;
-  reward_amount_cents: number | null;
-  drop_off_preference: string | null;
+  /** Shown to the finder: the owner's thank-you or reward, in their own words. */
+  reward_text: string | null;
+  /** Private to the owner. */
   notes: string | null;
   created_at: string;
   updated_at: string;
+  // Hidden features only (not in schema qurtag yet).
+  model?: string | null;
+  declared_value_cents?: number | null;
+  reward_amount_cents?: number | null;
+  drop_off_preference?: string | null;
 }
 
 export interface Tag {
@@ -195,7 +197,6 @@ export interface Thread {
   item_id: string;
   household_id: string;
   tag_id: string | null;
-  finder_session_id: string | null;
   status: ThreadStatus;
   last_message_at: string;
   created_at: string;
@@ -223,9 +224,7 @@ export interface Scan {
   tag_id: string;
   item_id: string | null;
   scanned_at: string;
-  ip_country: string | null;
   user_agent_class: string | null;
-  finder_session_id: string | null;
 }
 
 export type Database = {

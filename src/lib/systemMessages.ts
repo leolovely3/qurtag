@@ -1,5 +1,5 @@
 /**
- * QurTag structured system messages.
+ * QuR Tag structured system messages.
  *
  * System messages (sender_kind='system') store JSON payloads in the body
  * field so the thread view can render specialized cards (maps, courier
