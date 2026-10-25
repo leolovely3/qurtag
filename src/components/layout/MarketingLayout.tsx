@@ -9,7 +9,7 @@ import { isNative } from '@/lib/platform';
 const nav = [
   { to: '/how-it-works', label: 'How it works' },
   { to: '/tags', label: 'Your tag' },
-  { to: '/pricing', label: 'Free' },
+  { to: '/pricing', label: 'Pricing' },
   { to: '/help', label: 'Help' },
 ];
 
@@ -224,7 +224,7 @@ function MarketingSite() {
               <span className="text-eyebrow uppercase tracking-[0.14em] text-muted mb-1">Product</span>
               <Link to="/how-it-works" className="min-h-11 flex items-center text-ink-700 hover:opacity-70 transition-opacity">How it works</Link>
               <Link to="/tags" className="min-h-11 flex items-center text-ink-700 hover:opacity-70 transition-opacity">Your tag</Link>
-              <Link to="/pricing" className="min-h-11 flex items-center text-ink-700 hover:opacity-70 transition-opacity">Free</Link>
+              <Link to="/pricing" className="min-h-11 flex items-center text-ink-700 hover:opacity-70 transition-opacity">Pricing</Link>
               <Link to="/help" className="min-h-11 flex items-center text-ink-700 hover:opacity-70 transition-opacity">Help</Link>
             </div>
             <div className="flex flex-col text-caption">

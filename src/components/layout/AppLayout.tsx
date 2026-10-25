@@ -8,6 +8,7 @@ import {
   Tag,
   Inbox,
   Plane,
+  CreditCard,
   Settings,
   LogOut,
   Menu,
@@ -18,6 +19,8 @@ import { Wordmark } from '@/components/brand/Wordmark';
 import { useAuth } from '@/lib/auth';
 import { useIsSuperAdmin } from '@/lib/admin';
 import { countUnreadForHousehold, fetchPrimaryHouseholdId } from '@/lib/queries';
+import { fetchMembership, type Membership } from '@/lib/membership';
+import { PLAN_INFO } from '../../../server/billing/catalog';
 import { cn } from '@/lib/cn';
 
 const nav = [
@@ -26,6 +29,7 @@ const nav = [
   { to: '/app/items', label: 'Items', icon: Package, end: false, key: 'items' },
   { to: '/app/tags', label: 'Tags', icon: Tag, end: false, key: 'tags' },
   ...(FEATURES.trips ? [{ to: '/app/trips', label: 'Trips', icon: Plane, end: false, key: 'trips' }] : []),
+  { to: '/app/membership', label: 'Membership', icon: CreditCard, end: false, key: 'membership' },
   { to: '/app/settings', label: 'Settings', icon: Settings, end: false, key: 'settings' },
 ];
 
@@ -37,15 +41,23 @@ export function AppLayout() {
   const [unread, setUnread] = useState(0);
   const [householdId, setHouseholdId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [membership, setMembership] = useState<Membership | null>(null);
 
   useEffect(() => {
-    if (!loading && !user) navigate('/start', { replace: true });
-  }, [loading, user, navigate]);
+    // Signed out: sign in, and come back to this page (an invite link, the Membership page).
+    if (!loading && !user) navigate(`/start?next=${encodeURIComponent(location.pathname + location.search)}`, { replace: true });
+  }, [loading, user, navigate, location.pathname, location.search]);
 
   useEffect(() => {
     if (!user) return;
     void fetchPrimaryHouseholdId().then(setHouseholdId);
   }, [user]);
+
+  // The plan, for the card at the foot of the menu; read again when the person moves between pages.
+  useEffect(() => {
+    if (!user) return;
+    void fetchMembership().then(setMembership);
+  }, [user, location.pathname]);
 
   const refreshUnread = useCallback(async () => {
     if (!householdId) return;
@@ -112,10 +124,20 @@ export function AppLayout() {
   const railFooter = (
     <div className="px-qurtag-3 py-qurtag-3 border-t border-hairline flex flex-col gap-2">
       <div className="rounded-card bg-paper px-3 py-3 flex flex-col gap-1.5">
-        <span className="text-eyebrow uppercase tracking-[0.14em] text-muted">Free</span>
+        <span className="text-eyebrow uppercase tracking-[0.14em] text-muted">{membership ? PLAN_INFO[membership.items_plan].name : 'Plan'}</span>
         <p className="text-caption text-ink-700 text-pretty">
-          QuR Tag is free for up to two items.
+          {membership
+            ? membership.item_limit === null
+              ? 'No limit on items.'
+              : `${membership.items_used} of ${membership.item_limit} items.`
+            : 'QuR Tag is free for up to two items.'}
         </p>
+        <Link
+          to="/app/membership"
+          className="text-caption font-medium text-ink-900 hover:opacity-70 transition-opacity self-start min-h-11 inline-flex items-center"
+        >
+          {membership && membership.items_plan !== 'free' ? 'Membership →' : 'See plans →'}
+        </Link>
         <Link
           to="/help"
           className="text-caption font-medium text-ink-900 hover:opacity-70 transition-opacity self-start min-h-11 inline-flex items-center"

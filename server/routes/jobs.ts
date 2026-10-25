@@ -5,9 +5,10 @@
  *   /api/jobs/outbox   send what the database queued (server/routes/outbox.ts). Asked
  *                      by the finder route after each note.
  *   /api/jobs/daily    every day at 05:00 UTC: the outbox again, for anything a nudge
- *                      missed or that is due for another try
+ *                      missed or that is due for another try, and memberships past their
+ *                      end are marked expired
  */
-import { isScheduler, json } from './core.js';
+import { isScheduler, json, serverPool } from './core.js';
 import { drainOutbox } from './outbox.js';
 
 export async function jobs(request: Request, env: NodeJS.ProcessEnv = process.env): Promise<Response> {
@@ -16,8 +17,13 @@ export async function jobs(request: Request, env: NodeJS.ProcessEnv = process.en
   if (!isScheduler(request, env)) return json(401, { error: 'unauthorized' });
   switch (name) {
     case 'outbox':
-    case 'daily':
       return json(200, { outbox: await drainOutbox(env) });
+    case 'daily': {
+      const outbox = await drainOutbox(env);
+      // Memberships past their end stop counting (the plan is read from the clock anyway).
+      const { rows } = await serverPool(env).query<{ n: number }>('select qurtag.server_membership_sweep() as n');
+      return json(200, { outbox, memberships_expired: rows[0]?.n ?? 0 });
+    }
     default:
       return json(404, { error: 'not_found' });
   }

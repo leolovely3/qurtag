@@ -18,6 +18,9 @@ export function StartSignIn() {
   const { user, loading, signUp, signIn } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();
+  // Where to go after signing in: only a path on this site (for example an invite link).
+  const rawNext = params.get('next');
+  const next = rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') && !rawNext.includes('\\') ? rawNext : null;
   const [mode, setMode] = useState<Mode>(params.get('mode') === 'signin' || (isNative() && params.get('mode') !== 'create') ? 'signin' : 'create');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -28,8 +31,8 @@ export function StartSignIn() {
   const [checkEmail, setCheckEmail] = useState(false);
 
   useEffect(() => {
-    if (!loading && user && !submitting) navigate('/app', { replace: true });
-  }, [loading, user, submitting, navigate]);
+    if (!loading && user && !submitting) navigate(next ?? '/app', { replace: true });
+  }, [loading, user, submitting, navigate, next]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -46,14 +49,14 @@ export function StartSignIn() {
         setSubmitting(false);
         return setCheckEmail(true);
       }
-      navigate('/start/setup', { replace: true });
+      navigate(next ?? '/start/setup', { replace: true });
     } else {
       const r = await signIn(email, password);
       if (!r.ok) {
         setSubmitting(false);
         return setError(r.error);
       }
-      navigate('/app', { replace: true });
+      navigate(next ?? '/app', { replace: true });
     }
   }
 

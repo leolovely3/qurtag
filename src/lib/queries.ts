@@ -42,11 +42,16 @@ export async function fetchPrimaryHouseholdId(): Promise<string | null> {
   return (data?.household_id as string | undefined) ?? null;
 }
 
-export async function fetchItems(householdId: string): Promise<Item[]> {
+/**
+ * Items, tags and conversations come from EVERY household the person can reach: their own
+ * and the Family household they joined. Row security decides which those are (nobody else's
+ * ever), so these queries do not name a household; the argument is kept so callers read the
+ * same as before.
+ */
+export async function fetchItems(_householdId?: string): Promise<Item[]> {
   const { data, error } = await supabase
     .from('items')
     .select('*')
-    .eq('household_id', householdId)
     .order('created_at', { ascending: false });
   if (error) {
     console.error('[QuR Tag] fetchItems', error);
@@ -55,11 +60,10 @@ export async function fetchItems(householdId: string): Promise<Item[]> {
   return (data ?? []) as Item[];
 }
 
-export async function fetchTags(householdId: string): Promise<Tag[]> {
+export async function fetchTags(_householdId?: string): Promise<Tag[]> {
   const { data, error } = await supabase
     .from('tags')
     .select('*')
-    .eq('household_id', householdId)
     .order('created_at', { ascending: false });
   if (error) {
     console.error('[QuR Tag] fetchTags', error);
@@ -86,7 +90,7 @@ export async function fetchItemById(id: string): Promise<Item | null> {
   return (data as Item | null) ?? null;
 }
 
-export async function fetchScansForItem(itemId: string, limit = 50): Promise<Scan[]> {
+export async function fetchScansForItem(itemId: string, limit = 500): Promise<Scan[]> {
   const { data, error } = await supabase
     .from('scans')
     .select('*')
@@ -190,11 +194,10 @@ export async function fetchMessagesForThread(threadId: string): Promise<Message[
   return (data ?? []) as Message[];
 }
 
-export async function fetchThreadsForHousehold(householdId: string): Promise<ThreadWithItem[]> {
+export async function fetchThreadsForHousehold(_householdId?: string): Promise<ThreadWithItem[]> {
   const { data: threads, error } = await supabase
     .from('threads')
     .select('*')
-    .eq('household_id', householdId)
     .order('last_message_at', { ascending: false });
   if (error) {
     console.error('[QuR Tag] fetchThreadsForHousehold', error);
@@ -246,11 +249,10 @@ export async function fetchThreadsForHousehold(householdId: string): Promise<Thr
   }));
 }
 
-export async function countUnreadForHousehold(householdId: string): Promise<number> {
+export async function countUnreadForHousehold(_householdId?: string): Promise<number> {
   const { data: threads } = await supabase
     .from('threads')
-    .select('id')
-    .eq('household_id', householdId);
+    .select('id');
   const ids = (threads ?? []).map((t) => (t as { id: string }).id);
   if (ids.length === 0) return 0;
   const { count, error } = await supabase
@@ -585,8 +587,6 @@ export async function markThreadReadByOwner(threadId: string): Promise<void> {
 
 /* ─────────────── items + tags ─────────────── */
 
-/** The two items the free plan covers; the database refuses a third (db/qurtag.sql). */
-export const FREE_ITEM_LIMIT = 2;
 
 export async function createItemWithPrintableTag(input: {
   name: string;
@@ -606,7 +606,7 @@ export async function createItemWithPrintableTag(input: {
   });
   if (error || !data) {
     if (error?.message === 'item_limit') {
-      return { error: 'QuR Tag is free for up to two items, and you have two. Delete one to add another.' };
+      return { error: 'You have reached the limit of your plan (2 items on Free). Delete an item, or upgrade on the Membership page, to add another.' };
     }
     console.error('[QuR Tag] createItemWithPrintableTag', error);
     return { error: 'Could not save the item. Check the details and try again.' };

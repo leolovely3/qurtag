@@ -112,7 +112,7 @@ export function finderThread(raw: unknown): FinderThread | null {
 
 // ------------------------------------------------------------------ limits
 
-class Window {
+export class Window {
   private counts = new Map<string, { start: number; n: number }>();
   constructor(private limit: number) {}
   over(key: string, now = Date.now()): boolean {
@@ -129,7 +129,7 @@ class Window {
 const viewLimit = new Window(60);
 const sendLimit = new Window(12);
 
-function clientIp(request: Request): string {
+export function clientIp(request: Request): string {
   return request.headers.get('x-real-ip')?.trim() || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
 }
 
@@ -152,7 +152,7 @@ async function readJson(request: Request): Promise<Record<string, unknown> | nul
 }
 
 /** A page on another site may not drive these routes from a visitor's browser. */
-function originAllowed(request: Request, env: NodeJS.ProcessEnv): boolean {
+export function originAllowed(request: Request, env: NodeJS.ProcessEnv): boolean {
   const origin = request.headers.get('origin');
   if (origin === null) return true;
   if (origin === new URL(request.url).origin) return true;

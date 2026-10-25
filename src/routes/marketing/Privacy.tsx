@@ -38,9 +38,11 @@ export function Privacy() {
             items={[
               'Account: your email address, the first name you give us, and your password, which is stored only as a secure hash.',
               'Sign-in records: when you sign in, the network (IP) address and browser type of that sign-in, kept with the session so we can keep accounts safe.',
-              'Items you add, up to two: the name, an optional description, an optional photo (we shrink it on your device before it is saved), an optional note for the finder, an optional private note, and whether you marked it lost.',
+              'Items you add (up to two on the Free plan): the name, an optional description, an optional photo (we shrink it on your device before it is saved), an optional note for the finder, an optional private note, and whether you marked it lost.',
               'Tags: the code of each tag you make and whether it is switched on.',
               'Conversations: the notes you and a finder write to each other, and when they were read.',
+              'Membership, if you buy one: which plan you have, whether it is monthly or yearly, whether it renews, when it ends, and the reference numbers Stripe or Apple give the subscription. We do not receive or keep your card number.',
+              'Family, if you use it: the email address you invite, until the invite is used, canceled or has expired (and for 30 days after), and the names and email addresses of the people in the family, which they can all see.',
             ]}
           />
         </Section>
@@ -57,9 +59,10 @@ export function Privacy() {
 
         <Section title="4. What we do not collect">
           <P>
-            We do not collect payment card or bank details, government ID, health or medical information,
-            or precise location. There is no field for any of these, and we ask you not to put them in an
-            item name, a note or a message. Please do not put a child's full name on a tag.
+            We do not collect or store payment card or bank details: payments are taken by Stripe (on the
+            web) or Apple (in the app), and we never see the card number. We do not collect government ID,
+            health or medical information, or precise location. There is no field for any of these, and we
+            ask you not to put them in an item name, a note or a message. Please do not put a child's full name on a tag.
           </P>
         </Section>
 
@@ -80,6 +83,7 @@ export function Privacy() {
             items={[
               "A finder who scans your tag sees the item's name, its photo, your note for the finder, and whether it is marked lost. Nothing else about you.",
               'You see the notes a finder writes about your items. The finder sees your replies.',
+              'Other people in your family, if you are in one, see the family\'s items, tags, scans and inbox, and the names and email addresses of the people in the family. They do not see anything you made on your own account before you joined.',
               'We can see stored data when we need to run or repair QuR Tag, stop abuse, or meet a legal duty.',
               'We may share information if the law requires it, to protect someone from harm, or as part of a sale or merger of our business, in which case this policy keeps applying to it.',
             ]}
@@ -92,7 +96,10 @@ export function Privacy() {
             items={[
               'Vercel Inc. hosts the website and runs our server code. Like any web host it keeps short-lived request logs, which include network addresses.',
               'Supabase Inc. runs the database where your account, items, tags and conversations are stored, in the United States.',
-              'Resend (Resend, Inc.) sends our email: the link to reset your password, and the emails that confirm your address or tell you a finder wrote. It receives your email address and the text of that email.',
+              'Stripe, Inc. takes card payments on the web and runs the payment and membership pages you are sent to. It receives your email address, your card details (which it keeps, not us) and your payment history, under its own privacy policy.',
+              'Apple Inc. takes payment for memberships bought in the iPhone app, under Apple\'s own terms and privacy policy. We receive only whether a subscription is active, which plan it is and when it ends.',
+              'RevenueCat, Inc. records iPhone app subscriptions for us and tells our server when one starts, renews or ends. It receives your QuR Tag account number (a random identifier, not your email address), your purchase records from Apple, and technical details of your device and network address.',
+              'Resend (Resend, Inc.) sends our email: the link to reset your password, and the emails that confirm your address, tell you a finder wrote, or carry a family invite. It receives your email address and the text of that email.',
             ]}
           />
         </Section>
@@ -101,7 +108,8 @@ export function Privacy() {
           <P>
             Owners get one sign-in cookie, which keeps you signed in. A finder's browser stores the private
             conversation key described above, so they can come back to their conversation. We use no
-            advertising or tracking cookies and no third-party analytics.
+            advertising or tracking cookies and no third-party analytics. If you pay on the web, the payment page is
+            Stripe's and uses Stripe's own cookies.
           </P>
         </Section>
 
@@ -112,6 +120,7 @@ export function Privacy() {
               'Deleting an item deletes its tags, scans and conversations at once, and its tag stops working.',
               'Deleting your account deletes everything above at once. Copies in our providers\' backups are replaced on their normal schedule.',
               'Sign-in records end when the session ends or expires.',
+              'Membership records: while your account exists. Deleting your account deletes them here; Stripe, Apple and RevenueCat keep their own records under their own rules. Cancel a membership that is still renewing before you delete your account, so you are not charged.',
             ]}
           />
         </Section>
@@ -121,7 +130,8 @@ export function Privacy() {
             items={[
               'See and change your items at any time in the app.',
               'Download your data: Settings, then Download my data.',
-              'Delete your account: Settings, then Delete my account. It takes effect at once.',
+              'Delete your account: Settings, then Delete my account. It takes effect at once. A membership that is still renewing must be canceled first.',
+              'Cancel a membership: on the web, Membership, then Manage membership. On iPhone, Settings, your name, Subscriptions. You keep your plan until the end of the period you paid for.',
               'A finder who wants their notes removed can email us with the tag code and roughly when they wrote.',
               <>
                 For anything else, including a question about the law where you live, email <ContactLink />. We

@@ -130,3 +130,21 @@ export function finderMessageMail(to: string, itemName: string, inboxUrl: string
       `<p style="color:#555">${escapeHtml(after)}</p>`,
   };
 }
+
+/** Invites someone to share a Family plan. Says who invited them and how to accept. */
+export function familyInviteMail(to: string, inviter: string, joinUrl: string): Mail {
+  const lead = `${inviter} invited you to share their QuR Tag family plan. You will see the same items and the same inbox.`;
+  const after = 'The link works once, for this email address, and expires in 7 days. If you do not know them, ignore this email.';
+  return {
+    kind: 'family-invite',
+    to,
+    subject: `${inviter} invited you to QuR Tag`,
+    text: `${lead}\n\nAccept the invite: ${joinUrl}\n\n${after}\n\n${OPERATOR}\n${CONTACT_EMAIL}\n`,
+    html:
+      `<p>${escapeHtml(lead)}</p>` +
+      `<p><a href="${escapeHtml(joinUrl)}" style="display:inline-block;padding:10px 18px;background:#0A0B0F;color:#fff;border-radius:8px;text-decoration:none">Accept the invite</a></p>` +
+      `<p style="color:#555">Or open this link: ${escapeHtml(joinUrl)}</p>` +
+      `<p style="color:#555">${escapeHtml(after)}</p>` +
+      `<p style="color:#777;font-size:12px;margin-top:24px">${OPERATOR}<br>${CONTACT_EMAIL}</p>`,
+  };
+}

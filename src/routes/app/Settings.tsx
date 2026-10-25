@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import type { LucideIcon } from 'lucide-react';
-import { Bell, BellOff, Download, Home, LogOut, Mail, Monitor, Moon, Sun, Trash2 } from 'lucide-react';
+import { Bell, BellOff, CreditCard, Download, Home, LogOut, Mail, Monitor, Moon, Sun, Trash2 } from 'lucide-react';
 import { useTheme } from '@/lib/theme';
 import { Eyebrow } from '@/components/brand/Typography';
 import { Input } from '@/components/ui/Input';
@@ -322,7 +322,15 @@ export function Settings() {
       <section className="rounded-modal border border-hairline bg-canvas p-qurtag-5 flex flex-col gap-qurtag-3">
         <Eyebrow>Account</Eyebrow>
         <Row icon={Mail} title={user?.email ?? 'Signed in'} body="The email you sign in with. Finders never see it." />
-        <Row icon={Download} title="Download my data" body="Your items, tags, scans and conversations, as a file.">
+        <Row icon={CreditCard} title="Membership" body="Your plan, billing and your family.">
+          <Link
+            to="/app/membership"
+            className="inline-flex h-11 items-center rounded-pill border border-hairline-strong px-4 text-caption font-medium text-ink-900"
+          >
+            Open
+          </Link>
+        </Row>
+        <Row icon={Download} title="Download my data" body="Your items, tags, scans and conversations, as a file. On the Free plan the file holds the last 30 days of scans.">
           <button
             type="button"
             onClick={handleExport}
@@ -357,7 +365,7 @@ export function Settings() {
         onClose={() => setDeleteOpen(false)}
         eyebrow="Delete account"
         title="Delete your QuR Tag account?"
-        description="Your account, items, tags, scans and conversations are deleted at once and cannot be brought back. Any tag you printed stops working."
+        description="Your account, items, tags, scans and conversations are deleted at once and cannot be brought back. Any tag you printed stops working. If you have a family, its members lose access to the family's items. A membership that is still renewing must be canceled first."
         primaryAction={{ label: 'Delete everything', tone: 'destructive', onClick: handleDelete, pending: deleting }}
         secondaryAction={{ label: 'Cancel', onClick: () => setDeleteOpen(false) }}
       />

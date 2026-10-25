@@ -51,6 +51,12 @@ FACTORY_TOKEN="$(openssl rand -hex 24)"
 
 psql "$PLATFORM" -X -q -v ON_ERROR_STOP=1 -f scripts/qurtag/decoys.sql
 psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/qurtag.sql
+# Rollout steps 5 and 6 (memberships and the Family household), as the rollout applies them.
+psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/membership.sql
+psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/family.sql
+# Optional: more SQL applied after them (QURTAG_E2E_EXTRA_SQL=db/admin.sql checks that the Super Admin role and
+# memberships work together).
+[[ -n "${QURTAG_E2E_EXTRA_SQL:-}" ]] && psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f "$QURTAG_E2E_EXTRA_SQL"
 AUTH_PW="$AUTH_PW" DATA_PW="$DATA_PW" SERVER_PW="$SERVER_PW" FACTORY_TOKEN="$FACTORY_TOKEN" ADMIN="$ADMIN" \
   node scripts/qurtag/apply-logins.mjs
 psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/admin.sql
@@ -63,6 +69,18 @@ export QURTAG_DATABASE_URL_SERVER="postgres://qurtag_server:$SERVER_PW@127.0.0.1
 export QURTAG_AUTH_SECRET="$(openssl rand -hex 32)"
 export CRON_SECRET="$(openssl rand -hex 16)"
 export QURTAG_LOCAL_PORT=$API_PORT
+# Payment settings for the tests: made-up values, so signed webhook fixtures can be checked.
+# (Nothing here is a real key and nothing reaches Stripe or RevenueCat.)
+export STRIPE_SECRET_KEY="sk_test_local_fixture"
+export STRIPE_WEBHOOK_SECRET="whsec_local_fixture_$(openssl rand -hex 8)"
+export STRIPE_PRICE_PLUS_MONTHLY="price_test_plus_month"
+export STRIPE_PRICE_PLUS_YEARLY="price_test_plus_year"
+export STRIPE_PRICE_FAMILY_MONTHLY="price_test_family_month"
+export STRIPE_PRICE_FAMILY_YEARLY="price_test_family_year"
+# The test makes more requests a minute than a person would.
+export QURTAG_BILLING_RATE_PER_ACCOUNT=1000
+export QURTAG_BILLING_RATE_PER_IP=1000
+export REVENUECAT_WEBHOOK_AUTH="rc_local_fixture_$(openssl rand -hex 8)"
 
 if [[ "${QURTAG_LOCAL_SERVE:-}" == 1 ]]; then
   # Try the app by hand: the server stays up until Ctrl-C, then everything is removed.
@@ -106,3 +124,10 @@ QURTAG_TEST_MAIL_FILE="$WORK/mail.jsonl" \
 QURTAG_TEST_BASE="http://127.0.0.1:$API_PORT" \
 QURTAG_TEST_ADMIN_DB="$ADMIN" \
   npx tsx scripts/qurtag/reset.test.mjs || { echo "--- server logs"; tail -40 "$WORK/server.log" "$WORK/mail-server.log"; exit 1; }
+QURTAG_TEST_BASE="http://127.0.0.1:$API_PORT" \
+QURTAG_TEST_MAIL_BASE="http://127.0.0.1:$MAIL_PORT" \
+QURTAG_TEST_MAIL_FILE="$WORK/mail.jsonl" \
+QURTAG_TEST_ADMIN_DB="$ADMIN" \
+QURTAG_TEST_LOGIN_DB_SERVER="$QURTAG_DATABASE_URL_SERVER" \
+QURTAG_TEST_LOGIN_DB_DATA="$QURTAG_DATABASE_URL_DATA" \
+  npx tsx scripts/qurtag/membership.test.mjs || { echo "--- server log"; tail -40 "$WORK/server.log"; exit 1; }

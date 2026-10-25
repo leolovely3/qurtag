@@ -31,8 +31,6 @@ export const FEATURES = {
   shareLocation: labs,
   /** Web push to the owner's devices (needs push keys). */
   push: labs,
-  /** Household members, family sharing. */
-  household: labs,
   /** Owner blocks a finder or reports abuse (tables not built yet). */
   safetyTools: labs,
 } as const;

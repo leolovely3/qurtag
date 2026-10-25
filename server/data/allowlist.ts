@@ -135,6 +135,14 @@ export const RPCS: Readonly<Record<string, RpcRule>> = {
   admin_set_tag: { args: { p_tag: 'uuid', p_active: 'boolean' }, returns: 'value', callers: ['user'] },
   admin_set_message_hidden: { args: { p_message: 'uuid', p_hidden: 'boolean' }, returns: 'value', callers: ['user'] },
   admin_delete_account: { args: { p_user: 'uuid', p_confirm_email: 'text' }, returns: 'value', callers: ['user'] },
+  // Membership (db/membership.sql) and the Family household (db/family.sql).
+  my_membership: { args: {}, returns: 'value', callers: ['user'] },
+  my_family: { args: {}, returns: 'value', callers: ['user'] },
+  invite_preview: { args: { p_token: 'text' }, returns: 'value', callers: ['user'] },
+  accept_invite: { args: { p_token: 'text' }, returns: 'value', callers: ['user'] },
+  leave_household: { args: {}, returns: 'void', callers: ['user'] },
+  remove_member: { args: { p_user: 'uuid' }, returns: 'void', callers: ['user'] },
+  revoke_invite: { args: { p_invite: 'uuid' }, returns: 'void', callers: ['user'] },
   // With no pass: the Factory's counts (which check a token of their own).
   factory_metrics: { args: { p_token: 'text' }, returns: 'value', callers: ['anon'] },
 };
