@@ -1,5 +1,6 @@
 import { db as supabase } from './db';
 import { shrinkPhoto } from './photo';
+import { membershipsAvailableInApp } from './iap';
 import type {
   CourierOrder,
   Household,
@@ -673,7 +674,11 @@ export async function createItemWithPrintableTag(input: {
   });
   if (error || !data) {
     if (error?.message === 'item_limit') {
-      return { error: 'You have reached the limit of your plan (2 items on Free). Delete an item, or upgrade on the Membership page, to add another.' };
+      return {
+        error: membershipsAvailableInApp()
+          ? 'You have reached the limit of your plan (2 items on Free). Delete an item, or upgrade on the Membership page, to add another.'
+          : 'Free accounts can tag up to two items.',
+      };
     }
     console.error('[QuR Tag] createItemWithPrintableTag', error);
     return { error: 'Could not save the item. Check the details and try again.' };

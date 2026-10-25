@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Input } from '@/components/ui/Input';
 import { useAuth } from '@/lib/auth';
+import { useMembershipsAvailable } from '@/lib/useMembershipsAvailable';
 import { sendSupport, TOPICS, type SupportTopic } from '@/lib/support';
 import { cn } from '@/lib/cn';
 
@@ -11,6 +12,7 @@ import { cn } from '@/lib/cn';
  */
 export function ContactForm({ initialTopic = 'other', onDone }: { initialTopic?: SupportTopic; onDone?: () => void }) {
   const { user } = useAuth();
+  const memberships = useMembershipsAvailable();
   const [topic, setTopic] = useState<SupportTopic>(initialTopic);
   const [message, setMessage] = useState('');
   const [email, setEmail] = useState('');
@@ -49,7 +51,7 @@ export function ContactForm({ initialTopic = 'other', onDone }: { initialTopic?:
           onChange={(e) => setTopic(e.target.value as SupportTopic)}
           className="h-12 rounded-card border border-hairline-strong bg-canvas px-4 text-body text-ink-900"
         >
-          {TOPICS.map((t) => (
+          {TOPICS.filter((t) => memberships || t.id !== 'billing').map((t) => (
             <option key={t.id} value={t.id}>
               {t.label}
             </option>

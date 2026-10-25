@@ -23,6 +23,7 @@ import {
 } from '@/lib/queries';
 import { FEATURES } from '@/lib/features';
 import { fetchMembership } from '@/lib/membership';
+import { useMembershipsAvailable } from '@/lib/useMembershipsAvailable';
 import { Modal } from '@/components/ui/Modal';
 import { issueGoogleWalletPass, startStripeCheckout } from '@/lib/stripe';
 import { useToast } from '@/components/ui/Toast';
@@ -82,6 +83,7 @@ function relativeTime(iso: string): string {
 }
 
 export function ItemDetail() {
+  const memberships = useMembershipsAvailable();
   const { itemId } = useParams();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -339,8 +341,13 @@ export function ItemDetail() {
         {readOnly && (
           <p role="status" className="rounded-card bg-ink-100 px-4 py-3 text-sm text-ink-700 text-pretty">
             This item is over your plan's limit, so it is read-only: you can see it, print its tag and delete it,
-            but not change it. Finders can still scan its tag and write to you, and you can still reply.{' '}
-            <Link to="/app/membership" className="font-medium text-ink-900 underline underline-offset-4">See plans</Link>
+            but not change it. Finders can still scan its tag and write to you, and you can still reply.
+            {memberships && (
+              <>
+                {' '}
+                <Link to="/app/membership" className="font-medium text-ink-900 underline underline-offset-4">See plans</Link>
+              </>
+            )}
           </p>
         )}
         {/* A read-only item (over the plan's limit) cannot be changed. */}
@@ -496,8 +503,14 @@ export function ItemDetail() {
           description={
             limitedHistory ? (
               <>
-                The Free plan keeps the last 30 days of scans in view.{' '}
-                <Link to="/app/membership" className="font-medium text-ink-900 underline underline-offset-4">Plus shows them all.</Link>
+                {memberships ? (
+                  <>
+                    The Free plan keeps the last 30 days of scans in view.{' '}
+                    <Link to="/app/membership" className="font-medium text-ink-900 underline underline-offset-4">Plus shows them all.</Link>
+                  </>
+                ) : (
+                  'Scans from the last 30 days are shown.'
+                )}
               </>
             ) : undefined
           }

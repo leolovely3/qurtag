@@ -11,6 +11,7 @@
 import { db } from './db';
 import { getDataPass } from './authClient';
 import { serverUrl } from './platform';
+import { membershipsAvailableInApp } from './iap';
 import type { Interval, PaidPlan, Plan } from '../../server/billing/catalog';
 
 export interface Membership {
@@ -70,6 +71,10 @@ const REASON_TEXT: Record<string, string> = {
 };
 
 export function reasonText(message: string | undefined, fallback = 'Something went wrong. Please try again.'): string {
+  if (!membershipsAvailableInApp()) {
+    if (message === 'item_limit') return 'Free accounts can tag up to two items.';
+    if (message === 'read_only_item') return 'This item is over the free limit, so it cannot be changed. Delete an item to edit it again.';
+  }
   return (message && REASON_TEXT[message]) || fallback;
 }
 

@@ -12,6 +12,7 @@ import { exportMyData, fetchHousehold, fetchPrimaryHouseholdId, updateHousehold 
 import { FEATURES } from '@/lib/features';
 import { saveFile } from '@/lib/saveFile';
 import { fetchEmailAvailable } from '@/lib/membership';
+import { useMembershipsAvailable } from '@/lib/useMembershipsAvailable';
 import { Modal } from '@/components/ui/Modal';
 import { NotificationSettings } from '@/components/push/NotificationSettings';
 import { BlockedFinders } from '@/components/moderation/BlockedFinders';
@@ -23,6 +24,7 @@ type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
 export function Settings() {
   const { user, signOut, deleteAccount } = useAuth();
+  const memberships = useMembershipsAvailable();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -325,11 +327,15 @@ export function Settings() {
       {/* Account */}
       <AppSection title="Account">
         <Row icon={Mail} title={user?.email ?? 'Signed in'} body="The email you sign in with. Finders never see it." />
-        <ActionRow icon={CreditCard} title="Membership" body="Your plan, billing and your family." to="/app/membership" />
+        {memberships && <ActionRow icon={CreditCard} title="Membership" body="Your plan, billing and your family." to="/app/membership" />}
         <ActionRow
           icon={Download}
           title={exporting ? 'Preparing your file…' : 'Download my data'}
-          body="Your items, tags, scans and conversations, as a file. On the Free plan the file holds the last 30 days of scans."
+          body={
+            memberships
+              ? 'Your items, tags, scans and conversations, as a file. On the Free plan the file holds the last 30 days of scans.'
+              : 'Your items, tags, scans and conversations, as a file.'
+          }
           onClick={handleExport}
           disabled={exporting}
         />
@@ -367,7 +373,11 @@ export function Settings() {
         onClose={() => setDeleteOpen(false)}
         eyebrow="Delete account"
         title="Delete your QuR Tag account?"
-        description="Your account, items, tags, scans and conversations are deleted at once and cannot be brought back. Any tag you printed stops working. If you have a family, its members lose access to the family's items. A membership that is still renewing must be canceled first."
+        description={
+          memberships
+            ? "Your account, items, tags, scans and conversations are deleted at once and cannot be brought back. Any tag you printed stops working. If you have a family, its members lose access to the family's items. A membership that is still renewing must be canceled first."
+            : 'Your account, items, tags, scans and conversations are deleted at once and cannot be brought back. Any tag you printed stops working.'
+        }
         primaryAction={{ label: 'Delete everything', tone: 'destructive', onClick: handleDelete, pending: deleting }}
         secondaryAction={{ label: 'Cancel', onClick: () => setDeleteOpen(false) }}
       />

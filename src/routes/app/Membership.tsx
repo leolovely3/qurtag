@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { AppPage } from '@/components/layout/AppPage';
 import { PlanCard } from '@/components/membership/PlanCard';
 import { Input } from '@/components/ui/Input';
@@ -7,6 +7,7 @@ import { Modal } from '@/components/ui/Modal';
 import { ContactForm } from '@/components/support/ContactForm';
 import { useToast } from '@/components/ui/Toast';
 import { useAuth } from '@/lib/auth';
+import { useMembershipsAvailable } from '@/lib/useMembershipsAvailable';
 import { iapAvailable, iapBuy, iapPrices, iapRestore, type StorePrice } from '@/lib/iap';
 import {
   fetchBillingConfig,
@@ -46,6 +47,12 @@ const secondary = `${button} border border-hairline-strong text-ink-900 hover:bo
  * works everywhere, because the plan is recorded by the server (src/lib/membership.ts).
  */
 export function MembershipPage() {
+  const memberships = useMembershipsAvailable();
+  if (!memberships) return <Navigate to="/app/settings" replace />;
+  return <MembershipScreen />;
+}
+
+function MembershipScreen() {
   const { user } = useAuth();
   const toast = useToast();
   const [params, setParams] = useSearchParams();
