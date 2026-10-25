@@ -61,7 +61,9 @@ psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/admin.sql
 psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/support.sql
 # Rollout step 8 (iPhone push notifications; needs steps 5 and 6).
 psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/push.sql
-echo "schema, logins, the admin role and push applied"
+# Rollout step 10 (short codes).
+psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/shortcodes.sql
+echo "schema, logins, the admin role, push and short codes applied"
 
 export QURTAG_AUTH_URL="http://127.0.0.1:$API_PORT"
 export QURTAG_DATABASE_URL="postgres://qurtag_auth:$AUTH_PW@127.0.0.1:$PG_PORT/postgres"
@@ -163,3 +165,6 @@ QURTAG_TEST_ADMIN_DB="$ADMIN" \
 QURTAG_TEST_LOGIN_DB_SERVER="$QURTAG_DATABASE_URL_SERVER" \
 QURTAG_TEST_LOGIN_DB_DATA="$QURTAG_DATABASE_URL_DATA" \
   npx tsx scripts/qurtag/push.test.mjs || { echo "--- server logs"; tail -40 "$WORK/server.log" "$WORK/push-server.log"; exit 1; }
+QURTAG_TEST_BASE="http://127.0.0.1:$API_PORT" \
+QURTAG_TEST_ADMIN_DB="$ADMIN" \
+  npx tsx scripts/qurtag/shortcode.test.mjs || { echo "--- server log"; tail -40 "$WORK/server.log"; exit 1; }

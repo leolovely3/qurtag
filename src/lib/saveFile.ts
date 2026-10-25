@@ -4,15 +4,18 @@
  * On the web the browser downloads it. In the iPhone app a download is silently dropped by the
  * web view, so the file is written to the app's cache with @capacitor/filesystem and handed to
  * the iOS share sheet (Save to Files, AirDrop, Mail), the same way the tag PDF is
- * (src/lib/tagPdf.ts). Any failure is thrown for the caller to show; closing the share sheet
+ * (src/lib/tagExport.ts). Any failure is thrown for the caller to show; closing the share sheet
  * without choosing anything is not a failure.
  */
 import { isNative } from './platform';
+import { toBase64 } from './tagPdf';
 
 export interface SaveFileInput {
   filename: string;
   mime: string;
-  text: string;
+  /** Text content, or `bytes` for a binary file such as a PDF or PNG. One of the two. */
+  text?: string;
+  bytes?: Uint8Array;
   /** Title of the iOS share sheet. */
   dialogTitle?: string;
 }
@@ -26,7 +29,7 @@ export interface SaveFileDeps {
 const realDeps: SaveFileDeps = {
   native: isNative,
   webDownload: (f) => {
-    const url = URL.createObjectURL(new Blob([f.text], { type: f.mime }));
+    const url = URL.createObjectURL(new Blob([f.bytes ?? f.text ?? ''], { type: f.mime }));
     const a = document.createElement('a');
     a.href = url;
     a.download = f.filename;
@@ -40,12 +43,11 @@ const realDeps: SaveFileDeps = {
       import('@capacitor/filesystem'),
       import('@capacitor/share'),
     ]);
-    const file = await Filesystem.writeFile({
-      path: f.filename,
-      data: f.text,
-      directory: Directory.Cache,
-      encoding: Encoding.UTF8,
-    });
+    const file = await Filesystem.writeFile(
+      f.bytes
+        ? { path: f.filename, data: toBase64(f.bytes), directory: Directory.Cache }
+        : { path: f.filename, data: f.text ?? '', directory: Directory.Cache, encoding: Encoding.UTF8 },
+    );
     try {
       await Share.share({ title: 'QuR Tag', dialogTitle: f.dialogTitle ?? 'Save your file', url: file.uri });
     } catch (err) {

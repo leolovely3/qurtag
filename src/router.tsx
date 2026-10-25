@@ -19,6 +19,7 @@ import { Privacy } from '@/routes/marketing/Privacy';
 import { SecurityPage } from '@/routes/marketing/Security';
 import { Terms } from '@/routes/marketing/Terms';
 import { Tags } from '@/routes/marketing/Tags';
+import { MakeItLast } from '@/routes/marketing/MakeItLast';
 import { Admin, AdminAccountPage } from '@/routes/app/Admin';
 import { AppHome } from '@/routes/app/Home';
 import { Inbox } from '@/routes/app/Inbox';
@@ -49,6 +50,7 @@ export const router = createBrowserRouter([
       { path: '/security', element: <SecurityPage /> },
       { path: '/help', element: <Help /> },
       { path: '/tags', element: <Tags /> },
+      { path: '/make-it-last', element: <MakeItLast /> },
       { path: '/privacy', element: <Privacy /> },
       { path: '/terms', element: <Terms /> },
     ],

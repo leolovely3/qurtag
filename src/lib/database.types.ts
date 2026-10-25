@@ -181,6 +181,8 @@ export interface Item {
 export interface Tag {
   id: string;
   public_id: string;
+  /** Missing until db/shortcodes.sql is applied. */
+  short_code?: string;
   household_id: string;
   current_item_id: string | null;
   hardware_tier: HardwareTier;
