@@ -6,7 +6,8 @@ import { Container } from '@/components/ui/Container';
 import { Wordmark } from '@/components/brand/Wordmark';
 import { Eyebrow } from '@/components/brand/Typography';
 import { useAuth } from '@/lib/auth';
-import { isNative, openOutside, publicUrl } from '@/lib/platform';
+import { isNative, publicUrl } from '@/lib/platform';
+import { shareTagPdf } from '@/lib/tagPdf';
 import { fetchItemById, fetchTagById } from '@/lib/queries';
 import type { Item, Tag } from '@/lib/database.types';
 
@@ -18,6 +19,8 @@ export function TagPrint() {
   const [tag, setTag] = useState<Tag | null>(null);
   const [item, setItem] = useState<Item | null>(null);
   const [fetching, setFetching] = useState(true);
+  const [preparing, setPreparing] = useState(false);
+  const [shareError, setShareError] = useState('');
 
   useEffect(() => {
     if (loading) return;
@@ -48,6 +51,21 @@ export function TagPrint() {
     if (!tag) return '';
     return publicUrl(`/find/${tag.public_id}`);
   }, [tag]);
+
+  async function printInApp() {
+    if (!tag) return;
+    setShareError('');
+    setPreparing(true);
+    try {
+      await shareTagPdf({ publicId: tag.public_id, finderUrl, itemName: item?.name });
+    } catch (err) {
+      // Closing the share sheet without choosing anything is not a failure.
+      const message = err instanceof Error ? err.message : '';
+      if (!/cancel/i.test(message)) setShareError('The tag could not be prepared. Please try again.');
+    } finally {
+      setPreparing(false);
+    }
+  }
 
   if (loading || fetching) {
     return (
@@ -88,19 +106,25 @@ export function TagPrint() {
         </Link>
         <div className="flex items-center gap-3">
           <span className="text-caption text-muted hidden sm:inline">
-            {isNative() ? 'Printing opens in Safari, where you sign in again.' : 'Press print, then "Save as PDF" to keep a copy.'}
+            {isNative() ? 'Opens the share sheet: Print, Save to Files or AirDrop.' : 'Press print, then "Save as PDF" to keep a copy.'}
           </span>
           <button
             type="button"
-            // The app's own page cannot print; Safari prints the same page from the site.
-            onClick={() => (isNative() ? void openOutside(publicUrl(`/app/tags/${tag.id}/print`)) : window.print())}
-            className="inline-flex h-10 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-4 hover:bg-ink-700 transition-colors duration-qurtag"
+            disabled={preparing}
+            onClick={() => (isNative() ? void printInApp() : window.print())}
+            className="inline-flex h-10 items-center gap-2 rounded-pill bg-ink-900 text-canvas text-caption font-medium px-4 hover:bg-ink-700 transition-colors duration-qurtag disabled:opacity-60"
           >
             <Printer size={14} strokeWidth={1.75} />
-            {isNative() ? 'Print in Safari' : 'Print tag'}
+            {preparing ? 'Preparing...' : 'Print tag'}
           </button>
         </div>
       </div>
+
+      {shareError && (
+        <p role="alert" className="no-print pt-qurtag-2 text-caption text-signal-700">
+          {shareError}
+        </p>
+      )}
 
       {/* The printable area */}
       <div className="py-qurtag-8 flex justify-center">
@@ -130,7 +154,8 @@ export function TagPrint() {
               )}
             </div>
             <div className="flex flex-col items-center gap-3">
-              <div className="rounded-modal bg-canvas border border-hairline-strong p-4">
+              {/* White in every theme: a QR code needs a light quiet zone around it to scan. */}
+              <div className="rounded-modal bg-white border border-hairline-strong p-4">
                 <QRCodeSVG
                   value={finderUrl}
                   size={208}
