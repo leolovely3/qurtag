@@ -26,6 +26,7 @@ const ROUTES: Record<string, (request: Request) => Promise<Response>> = {
   'billing-checkout': billing.checkout,
   'billing-portal': billing.portal,
   'family-invite': billing.invite,
+  'support': billing.support,
   'stripe-webhook': billing.stripeWebhook,
   'revenuecat-webhook': billing.revenueCatWebhook,
 };

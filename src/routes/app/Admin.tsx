@@ -13,11 +13,14 @@ import {
   adminOverview,
   adminSetMessageHidden,
   adminSetTag,
+  adminSupportClose,
+  adminSupportList,
   useIsSuperAdmin,
   type AdminAccountDetail,
   type AdminAccountRow,
   type AdminOverview,
   type AdminTag,
+  type SupportRequestRow,
 } from '@/lib/admin';
 
 /**
@@ -105,6 +108,58 @@ function Count({ label, value }: { label: string; value: number | string }) {
   );
 }
 
+function SupportQueue() {
+  const [rows, setRows] = useState<SupportRequestRow[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [closing, setClosing] = useState<string | null>(null);
+  const load = useCallback(async () => {
+    const r = await adminSupportList('open');
+    if (r.ok) {
+      setRows(r.data.requests);
+      setError(null);
+    } else setError(r.error);
+  }, []);
+  useEffect(() => {
+    void load();
+  }, [load]);
+  async function close(id: string) {
+    setClosing(id);
+    const r = await adminSupportClose(id);
+    setClosing(null);
+    if (!r.ok) setError(r.error);
+    await load();
+  }
+  return (
+    <Box title="Contact requests">
+      {error && <p className="text-caption text-signal-600 mb-2">{error}</p>}
+      <p className="text-caption text-muted mb-2">{rows === null ? 'Loading...' : `${rows.length} open`}</p>
+      <ul className="rounded-modal border border-hairline bg-canvas overflow-hidden divide-y divide-hairline">
+        {(rows ?? []).map((q) => (
+          <li key={q.id} className="p-3 flex flex-col gap-1">
+            <div className="text-caption text-muted">
+              {day(q.created_at)} · {q.topic}
+              {q.plan ? ` · ${q.plan} plan` : ''} · reply to {q.reply_email ?? q.account_email ?? 'unknown'}
+              {q.user_id && (
+                <>
+                  {' · '}
+                  <Link to={`/app/admin/accounts/${q.user_id}`} className="underline underline-offset-4 text-ink-900">account</Link>
+                </>
+              )}
+            </div>
+            <p className="text-body text-ink-900 whitespace-pre-wrap break-words">{q.message}</p>
+            <div>
+              <Button variant="secondary" disabled={closing === q.id} onClick={() => void close(q.id)}>
+                {closing === q.id ? 'Closing...' : 'Close'}
+              </Button>
+            </div>
+          </li>
+        ))}
+        {rows !== null && rows.length === 0 && <li className="p-3 text-caption text-muted">Nothing open.</li>}
+      </ul>
+    </Box>
+  );
+}
+
 function AdminHome() {
   const [overview, setOverview] = useState<AdminOverview | null>(null);
   const [overviewError, setOverviewError] = useState<string | null>(null);
@@ -162,6 +217,8 @@ function AdminHome() {
           </div>
         )}
       </Box>
+
+      <SupportQueue />
 
       <Box title="Accounts">
         <form onSubmit={onSearch} className="flex flex-col sm:flex-row gap-2 mb-3">

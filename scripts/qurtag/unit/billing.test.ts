@@ -367,3 +367,16 @@ test('invite: when email is set up it is sent to the invited address, and a fail
   assert.equal(b.emailed, false);
   assert.ok(b.link.includes('/join/'));
 });
+
+test('support form: refused without a message, a honeypot stores nothing, a good message is stored', async () => {
+  const h = harness(EMPTY, () => [{ r: { id: 'r1', reply_email: 'a@b.co', plan: null, user_id: null } }]);
+  const post = (body: unknown) => h.routes.support(call('support', body));
+  assert.equal((await post({ topic: 'billing', message: '  ', email: 'a@b.co' })).status, 400);
+  assert.equal((await post({ topic: 'nope', message: 'hi', email: 'a@b.co' })).status, 400);
+  assert.equal((await post({ topic: 'billing', message: 'hi' })).status, 400);
+  assert.equal((await post({ topic: 'billing', message: 'hi', email: 'a@b.co', website: 'http://spam' })).status, 200);
+  assert.equal(h.calls.length, 0, 'nothing reached the database');
+  assert.equal((await post({ topic: 'billing', message: 'hi', email: 'a@b.co' })).status, 200);
+  assert.match(h.calls[0].text, /server_support_create/);
+  assert.deepEqual(h.calls[0].values, [null, null, 'a@b.co', 'billing', 'hi']);
+});

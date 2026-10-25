@@ -1,5 +1,6 @@
 import { PageHero, PageBody, Section, P, CtaBand, ContactLink } from './parts';
 import { Link } from 'react-router-dom';
+import { ContactForm } from '@/components/support/ContactForm';
 import type { ReactNode } from 'react';
 
 const faqs: { q: string; a: ReactNode }[] = [
@@ -73,9 +74,13 @@ export function Help() {
             </Section>
           ))}
         </div>
+        <Section title="Contact us">
+          <P>Write to us here and we will reply by email. If you are signed in we see your account and plan with your message.</P>
+          <ContactForm />
+        </Section>
         <Section title="Still stuck?">
           <P>
-            Email <ContactLink />. For how we handle your data, see{' '}
+            If you cannot sign in, email <ContactLink />. For how we handle your data, see{' '}
             <Link to="/privacy" className="text-ink-900 underline underline-offset-4">Privacy</Link>.
           </P>
         </Section>

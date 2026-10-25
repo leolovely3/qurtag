@@ -147,6 +147,24 @@ Database changes are the rollout files 5 (memberships) and 6 (family) in
 `~/Claude/Rollouts/QurTag-rollout-schema` (copies of `db/membership.sql` and `db/family.sql`, each with an
 undo). The schema comments in those two files explain every rule.
 
+## Contact us (support)
+
+A Contact us form in Help, and "Question about a charge?" on the Membership screen. It posts to
+`/api/fn/support` (`server/routes/billing.ts`), which stores the message in `qurtag.support_requests`
+(topic billing, account, finder or other; open or closed; `db/support.sql`, rollout step 7). Signed in, the
+account, household and plan are attached by the database and the reply email is the account's; signed out, a
+reply email is required. The form has no place for card details and says not to send them. Limits: 5
+messages an hour per network address (`QURTAG_SUPPORT_RATE_PER_IP`), 5 an hour per account or email address
+and 100 an hour in all (in the database), and a hidden honeypot field a robot fills. No table is reachable
+by any request; only `server_support_create` writes and only the Super Admin functions read.
+
+- Super Admin area (`/app/admin`): "Contact requests" lists open ones, oldest first, with Close; both are
+  written to the admin log.
+- `qurtag.factory_metrics` also returns `support_open`, `support_30d` and `support_oldest_open_days`, the
+  names the Company OS support queue reads.
+- With `RESEND_API_KEY` set, a notice goes to info@impactconsulting.ai with reply-to set to the sender.
+  Without it the message is only stored.
+
 ## Features that are switched off
 
 `src/lib/features.ts` hides code built for a bigger plan that cannot work yet: cash rewards,

@@ -12,6 +12,9 @@
  *   POST /api/fn/family-invite        { email }  signed in, the owner of a Family plan.
  *                                     Makes an invite link, emails it when email is set up,
  *                                     and answers the link either way (to copy).
+ *   POST /api/fn/support              { topic, message, email?, website? }  the Contact us form (signed in
+ *                                     or not). Stored in qurtag.support_requests; emailed to the company
+ *                                     inbox when email is set up.
  *   POST /api/fn/stripe-webhook       Stripe's events. Needs a valid Stripe signature.
  *   POST /api/fn/revenuecat-webhook   RevenueCat's events (the App Store). Needs the shared
  *                                     secret in REVENUECAT_WEBHOOK_AUTH.
@@ -27,7 +30,7 @@
  * written (so the sender retries). Delivery is idempotent in the database.
  */
 import { siteUrl } from '../auth/origins.js';
-import { familyInviteMail, mailConfigured, senderFromEnv, type MailSender } from '../auth/mailer.js';
+import { familyInviteMail, mailConfigured, senderFromEnv, supportNoticeMail, type MailSender } from '../auth/mailer.js';
 import { createPassCheck, type PassResult } from '../data/passCheck.js';
 import { actionForRevenueCatEvent, sentSecret } from '../billing/revenuecat.js';
 import { actionForStripeEvent, createCheckoutSession, createPortalSession, stripeSettings, verifyStripeSignature, type Action, type Fetch } from '../billing/stripe.js';
@@ -39,6 +42,19 @@ const MAX_BODY_BYTES = 8 * 1024;
 const MAX_WEBHOOK_BYTES = 512 * 1024;
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 /** Requests a minute per account and per network address (per function instance). */
+/** The Contact us form: messages an hour per network address (the database also limits per account and per email). */
+const supportLimit = { map: new Map<string, { start: number; n: number }>(), limit: Number(process.env.QURTAG_SUPPORT_RATE_PER_IP ?? 5) };
+function supportOver(key: string, now = Date.now()): boolean {
+  const m = supportLimit.map;
+  if (m.size > 20_000) m.clear();
+  const c = m.get(key);
+  if (!c || now - c.start >= 3_600_000) {
+    m.set(key, { start: now, n: 1 });
+    return false;
+  }
+  c.n += 1;
+  return c.n > supportLimit.limit;
+}
 const accountLimit = new Window(Number(process.env.QURTAG_BILLING_RATE_PER_ACCOUNT ?? 12));
 const ipLimit = new Window(Number(process.env.QURTAG_BILLING_RATE_PER_IP ?? 60));
 
@@ -77,6 +93,10 @@ const REASONS: Record<string, [number, string, string]> = {
   already_member: [409, 'already_member', 'That person is already in your family.'],
   family_full: [409, 'family_full', 'Your family has all 5 places taken (people and invites waiting).'],
   bad_token: [400, 'bad_request', 'That request is not valid.'],
+  bad_topic: [400, 'bad_topic', 'Pick what your question is about.'],
+  empty_message: [400, 'empty_message', 'Write your message first.'],
+  too_long: [400, 'too_long', 'Keep your message under 4000 characters.'],
+  too_many: [429, 'too_many', 'You have sent several messages already. Please wait an hour, or write to info@impactconsulting.ai.'],
 };
 
 function fromDatabase(e: unknown): Response {
@@ -216,6 +236,58 @@ export function createBillingRoutes(opts: BillingOptions = {}) {
     return json(200, { link, emailed, invite_id: created?.invite_id, expires_at: created?.expires_at, email });
   }
 
+  /**
+   * POST /api/fn/support { topic, message, email?, website? }. Signed in (a pass in
+   * Authorization): the account, its plan and its email come from the database. Signed out:
+   * a reply email is required. `website` is a hidden field a person never fills; a robot
+   * that does gets a normal-looking answer and nothing is stored.
+   */
+  async function support(request: Request): Promise<Response> {
+    if (request.method !== 'POST') return json(405, { error: 'method_not_allowed' });
+    if (!originAllowed(request, env)) return json(403, { error: 'forbidden' });
+    const ip = clientIp(request);
+    if (supportOver(ip)) return json(429, { error: 'too_many', message: REASONS.too_many[2] });
+    const body = await readJson(request);
+    if (!body) return json(400, { error: 'bad_request' });
+    if (typeof body.website === 'string' && body.website.trim() !== '') return json(200, { ok: true });
+    const topic = str(body.topic);
+    const message = (str(body.message) ?? '').trim();
+    if (!topic || !['billing', 'account', 'finder', 'other'].includes(topic)) return json(400, { error: 'bad_topic', message: REASONS.bad_topic[2] });
+    if (!message) return json(400, { error: 'empty_message', message: REASONS.empty_message[2] });
+    if (message.length > 4000) return json(400, { error: 'too_long', message: REASONS.too_long[2] });
+    let user: string | null = null;
+    let session: string | null = null;
+    const m = /^Bearer\s+(\S+)$/i.exec(request.headers.get('authorization') ?? '');
+    if (m) {
+      const checked = await checkPass(m[1]);
+      if (checked.ok) {
+        user = checked.claims.sub;
+        session = checked.claims.sid;
+      }
+    }
+    const email = (str(body.email) ?? '').trim().toLowerCase();
+    if (!user && (!email || email.length > 254 || !EMAIL.test(email))) {
+      return json(400, { error: 'bad_email', message: 'Enter the email address we should reply to.' });
+    }
+    let saved: { id: string; reply_email: string | null; plan: string | null; user_id: string | null };
+    try {
+      const { rows } = await query('select qurtag.server_support_create($1, $2, $3, $4, $5) as r', [user, session, user ? null : email, topic, message]);
+      saved = rows[0]?.r as typeof saved;
+    } catch (e) {
+      return fromDatabase(e);
+    }
+    // The message is stored either way. With email set up, the company inbox is told too.
+    if (mailConfigured(env)) {
+      try {
+        const send = opts.sendMail ?? senderFromEnv(env);
+        await send(supportNoticeMail({ id: saved.id, topic, message, replyEmail: saved.reply_email, plan: saved.plan, userId: saved.user_id }));
+      } catch (e) {
+        console.error(`qurtag billing: support notice failed (${(e as Error)?.message ?? 'unknown'})`);
+      }
+    }
+    return json(200, { ok: true });
+  }
+
   async function run(action: Action): Promise<{ result: string }> {
     if (action.kind === 'ignore') return { result: `ignored: ${action.why}` };
     if (action.kind === 'link') {
@@ -284,5 +356,5 @@ export function createBillingRoutes(opts: BillingOptions = {}) {
     }
   }
 
-  return { config, checkout, portal, invite, stripeWebhook, revenueCatWebhook };
+  return { config, checkout, portal, invite, support, stripeWebhook, revenueCatWebhook };
 }

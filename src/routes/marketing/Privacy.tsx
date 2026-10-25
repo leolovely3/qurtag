@@ -42,6 +42,7 @@ export function Privacy() {
               'Tags: the code of each tag you make and whether it is switched on.',
               'Conversations: the notes you and a finder write to each other, and when they were read.',
               'Membership, if you buy one: which plan you have, whether it is monthly or yearly, whether it renews, when it ends, and the reference numbers Stripe or Apple give the subscription. We do not receive or keep your card number.',
+              'Messages you send through the Contact us form: the text, the topic, the email address to reply to, and, if you were signed in, your account and plan. We keep them until the question is dealt with and as long after as we need to answer follow-ups.',
               'Family, if you use it: the email address you invite, until the invite is used, canceled or has expired (and for 30 days after), and the names and email addresses of the people in the family, which they can all see.',
             ]}
           />

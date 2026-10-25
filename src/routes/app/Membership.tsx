@@ -4,6 +4,7 @@ import { Eyebrow } from '@/components/brand/Typography';
 import { PlanCard } from '@/components/membership/PlanCard';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
+import { ContactForm } from '@/components/support/ContactForm';
 import { useToast } from '@/components/ui/Toast';
 import { useAuth } from '@/lib/auth';
 import { iapAvailable, iapBuy, iapPrices, iapRestore, type StorePrice } from '@/lib/iap';
@@ -57,6 +58,7 @@ export function MembershipPage() {
   const [busy, setBusy] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [asking, setAsking] = useState(false);
 
   const reload = useCallback(async () => {
     const [m, f] = await Promise.all([fetchMembership(), fetchFamily()]);
@@ -310,6 +312,16 @@ export function MembershipPage() {
         />
       )}
 
+      <section aria-label="Question about a charge" className="flex flex-col gap-3">
+        {asking ? (
+          <ContactForm initialTopic="billing" />
+        ) : (
+          <button type="button" className={`${secondary} self-start`} onClick={() => setAsking(true)}>
+            Question about a charge?
+          </button>
+        )}
+      </section>
+
       <section aria-label="Billing terms" className="border-t border-hairline pt-qurtag-5 flex flex-col gap-2 text-caption text-muted text-pretty">
         <p>
           Plus and Family are subscriptions that renew automatically, every month or every year depending on what you choose, until you
@@ -323,8 +335,9 @@ export function MembershipPage() {
           app are handled by Apple, at reportaproblem.apple.com.
         </p>
         <p>
-          On the web, payment is taken by Stripe. Cancel in Manage membership above. If you think you were charged by mistake, write to{' '}
-          info@impactconsulting.ai.
+          On the web, payment is taken by Stripe. Cancel in Manage membership above. If you think you were charged by mistake, use{' '}
+          <button type="button" onClick={() => setAsking(true)} className="underline underline-offset-4 text-ink-900">Question about a charge?</button>
+          {' '}below, or email info@impactconsulting.ai if you cannot sign in.
         </p>
         <p>
           If you go back to a lower plan, nothing is deleted: items over the limit stay and become read-only until you upgrade or delete

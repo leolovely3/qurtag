@@ -638,6 +638,83 @@ const tokenOf = (link) => link.split('/join/')[1];
   check('the daily sweep forgets invites that ended over 30 days ago and keeps newer ones', left.length === 1 && left[0] === recent, JSON.stringify(left));
 }
 
+// ------------------------------------------------------------------ 3b. the Contact us form
+
+{
+  const supportRows = async () => (await sql('select * from qurtag.support_requests order by created_at')).rows;
+  const send = (p, body) => p.post('/api/fn/support', body);
+  const visitor = new Person('visitor', '10.7.8.1');
+  const noMsg = await send(visitor, { topic: 'billing', message: '   ', email: 'v@example.com' });
+  check('the form is refused without a message', noMsg.status === 400 && noMsg.json?.error === 'empty_message', JSON.stringify(noMsg.json));
+  check('the form is refused with an unknown topic', (await send(visitor, { topic: 'sales', message: 'hi', email: 'v@example.com' })).status === 400);
+  check('signed out, the form needs an email to reply to', (await send(visitor, { topic: 'billing', message: 'hi' })).status === 400);
+  check('signed out, a bad email is refused', (await send(visitor, { topic: 'billing', message: 'hi', email: 'nope' })).status === 400);
+  check('a message over 4000 characters is refused', (await send(visitor, { topic: 'other', message: 'x'.repeat(4001), email: 'v@example.com' })).status === 400);
+  check('nothing was stored by the refused attempts', (await supportRows()).length === 0);
+
+  const visitor2 = new Person('visitor', '10.7.8.7');
+  const ok = await send(visitor2, { topic: 'billing', message: 'I was charged twice on 3 November.', email: 'Visitor@Example.com' });
+  const row = (await supportRows())[0];
+  check('signed out: the message is stored with the reply email', ok.status === 200 && row?.reply_email === 'visitor@example.com' && row.user_id === null && row.plan === null && row.status === 'open' && row.topic === 'billing');
+
+  const bot = await send(new Person('bot', '10.7.8.2'), { topic: 'other', message: 'buy pills', email: 'bot@example.com', website: 'http://spam.example' });
+  check('a filled honeypot looks like success and stores nothing', bot.status === 200 && (await supportRows()).length === 1);
+
+  const asFay = await send(fay, { topic: 'billing', message: 'Question about my last charge.', email: 'someoneelse@example.com' });
+  const mine = (await supportRows()).find((r) => r.user_id === fay.id);
+  check('signed in: the account, household and plan are attached, and the email is the account\'s, not the form\'s', asFay.status === 200 && mine?.household_id === fay.household && mine.plan === 'family' && mine.reply_email === 'fay@example.com', JSON.stringify(mine));
+
+  const mailed = new Person('fay', '10.7.8.3', MAIL_BASE);
+  mailed.cookie = fay.cookie;
+  mailed.pass = fay.pass;
+  const m1 = await mailed.post('/api/fn/support', { topic: 'account', message: 'Please check my account.' });
+  const mails = fs.readFileSync(MAIL_FILE, 'utf8').trim().split('\n').map((l) => JSON.parse(l)).filter((m) => m.kind === 'support-request');
+  const last = mails.pop();
+  check('with email set up, the company inbox is told, replying goes to the sender', m1.status === 200 && last?.to === 'info@impactconsulting.ai' && last.replyTo === 'fay@example.com' && last.text.includes('Please check my account.') && last.text.includes(fay.id));
+
+  // Limits: per network address (5 an hour), and per email address across addresses (5 an hour).
+  const flood = new Person('flood', '10.7.8.4');
+  const codes = [];
+  for (let i = 0; i < 6; i++) codes.push((await send(flood, { topic: 'other', message: `m${i}`, email: `flood${i}@example.com` })).status);
+  check('more than 5 messages an hour from one address are refused', JSON.stringify(codes) === JSON.stringify([200, 200, 200, 200, 200, 429]), JSON.stringify(codes));
+  const byEmail = [];
+  for (let i = 0; i < 6; i++) byEmail.push((await send(new Person('e', `10.7.9.${20 + i}`), { topic: 'other', message: `e${i}`, email: 'same@example.com' })).status);
+  check('more than 5 messages an hour for one email address are refused', JSON.stringify(byEmail) === JSON.stringify([200, 200, 200, 200, 200, 429]), JSON.stringify(byEmail));
+
+  // No table access, and the admin list is for admins only.
+  for (const path of ['/api/data/support_requests']) check('the data API does not serve the support table', (await fay.req(path)).status >= 400);
+  check('no QuR Tag login can read the support table', (await sql(`select count(*)::int as n from information_schema.role_table_grants where table_schema = 'qurtag' and table_name = 'support_requests' and grantee like 'qurtag\\_%'`)).rows[0].n === 0);
+  check('the server login cannot read it either', (await serverDb.query('select 1 from qurtag.support_requests limit 1').then(() => 'allowed', () => 'denied')) === 'denied');
+  const notAdmin = await fay.db.rpc('admin_support_list', { p_status: 'open' });
+  check('an ordinary account cannot list support requests', !!notAdmin.error && notAdmin.error.message === 'not_authorized', JSON.stringify(notAdmin.error));
+  check('an ordinary account cannot close one', !!(await fay.db.rpc('admin_support_close', { p_id: row.id })).error);
+  check('a signed-out visitor cannot list them', (await visitor2.req('/api/data/rpc/admin_support_list', { method: 'POST', body: { p_status: 'open' } })).status >= 400);
+
+  const boss = new Person('boss', '10.7.8.5');
+  await signUp(boss, 'supportboss@example.com', 'Boss Admin');
+  await sql('insert into qurtag.super_admins (user_id) values ($1)', [boss.id]);
+  const list = await boss.db.rpc('admin_support_list', { p_status: 'open' });
+  const reqs = list.data?.requests ?? [];
+  check('a super admin lists the open requests, oldest first', !list.error && reqs.length === (await supportRows()).length && reqs[0].id === row.id && new Date(reqs[0].created_at) <= new Date(reqs[reqs.length - 1].created_at), JSON.stringify(list.error));
+  check('the list shows the sender\'s account email and plan', reqs.some((r) => r.account_email === 'fay@example.com' && r.plan === 'family'));
+
+  const metrics = async () => (await new Person('metrics', '10.7.8.6').req('/api/data/rpc/factory_metrics', { method: 'POST', body: { p_token: process.env.QURTAG_TEST_FACTORY_TOKEN } })).json;
+  const before = await metrics();
+  check('the Factory counts carry support_open, support_30d and support_oldest_open_days', typeof before?.support_open === 'number' && before.support_open === reqs.length && before.support_30d === reqs.length && before.support_oldest_open_days === 0, JSON.stringify(before));
+  await sql(`update qurtag.support_requests set created_at = now() - interval '9 days' where id = $1`, [row.id]);
+  check('the oldest open request is aged in days', (await metrics()).support_oldest_open_days === 9);
+
+  const closed = await boss.db.rpc('admin_support_close', { p_id: row.id });
+  check('a super admin closes a request', !closed.error && (await supportRows()).find((r) => r.id === row.id).status === 'closed' && !!(await supportRows()).find((r) => r.id === row.id).closed_at);
+  const after = await metrics();
+  check('closing lowers support_open and keeps support_30d', after.support_open === before.support_open - 1 && after.support_30d === before.support_30d);
+  check('closing twice is refused', reason(await boss.db.rpc('admin_support_close', { p_id: row.id })) === 'not_found');
+  const closedList = await boss.db.rpc('admin_support_list', { p_status: 'closed' });
+  check('closed requests are listed under closed', (closedList.data?.requests ?? []).some((r) => r.id === row.id));
+  const audit = (await sql(`select action from qurtag.admin_audit where action in ('list_support_requests', 'close_support_request')`)).rows.map((r) => r.action);
+  check('listing and closing are written to the admin log', audit.includes('list_support_requests') && audit.includes('close_support_request'));
+}
+
 // ------------------------------------------------------------------ 4. the config route
 
 {

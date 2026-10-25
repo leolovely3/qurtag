@@ -50,9 +50,10 @@ export function Terms() {
           </P>
           <P>
             Refunds for purchases made in the iPhone app are handled by Apple, under Apple's rules, at
-            reportaproblem.apple.com. If you think you were charged by mistake on the web, write to us at <ContactLink />{' '}
-            and we will look into it. If we change a price, we will tell you before the new price applies to your next
-            renewal.
+            reportaproblem.apple.com. If you think you were charged by mistake on the web, use the Contact us form (in{' '}
+            <Link to="/help" className="text-ink-900 underline underline-offset-4">Help</Link>, or "Question about a charge?" on the Membership page),
+            or email <ContactLink /> if you cannot sign in. If we change a price, we will tell you before the new price
+            applies to your next renewal.
           </P>
           <P>
             If your membership ends or you move to a lower plan, nothing is deleted. Items over the new limit stay,

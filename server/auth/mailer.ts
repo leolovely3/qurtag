@@ -148,3 +148,21 @@ export function familyInviteMail(to: string, inviter: string, joinUrl: string): 
       `<p style="color:#777;font-size:12px;margin-top:24px">${OPERATOR}<br>${CONTACT_EMAIL}</p>`,
   };
 }
+
+/**
+ * Tells the company inbox that someone wrote through the Contact us form. Reply-to is the
+ * sender's own address, so replying answers them. Carries the account id and plan when the
+ * sender was signed in. Never any card detail: the form has no place for one.
+ */
+export function supportNoticeMail(input: { id: string; topic: string; message: string; replyEmail: string | null; plan: string | null; userId: string | null }): Mail {
+  const who = input.userId ? `Signed in. Account ${input.userId}, plan ${input.plan ?? 'unknown'}.` : 'Not signed in.';
+  const head = `Contact us (${input.topic}). ${who} Request ${input.id}.`;
+  return {
+    kind: 'support-request',
+    to: CONTACT_EMAIL,
+    subject: `QuR Tag question about ${input.topic}`,
+    replyTo: input.replyEmail ?? undefined,
+    text: `${head}\nReply to: ${input.replyEmail ?? '(none)'}\n\n${input.message}\n`,
+    html: `<p>${escapeHtml(head)}</p><p>Reply to: ${escapeHtml(input.replyEmail ?? '(none)')}</p><p style="white-space:pre-wrap">${escapeHtml(input.message)}</p>`,
+  };
+}

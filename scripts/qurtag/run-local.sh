@@ -54,12 +54,11 @@ psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/qurtag.sql
 # Rollout steps 5 and 6 (memberships and the Family household), as the rollout applies them.
 psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/membership.sql
 psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/family.sql
-# Optional: more SQL applied after them (QURTAG_E2E_EXTRA_SQL=db/admin.sql checks that the Super Admin role and
-# memberships work together).
-[[ -n "${QURTAG_E2E_EXTRA_SQL:-}" ]] && psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f "$QURTAG_E2E_EXTRA_SQL"
 AUTH_PW="$AUTH_PW" DATA_PW="$DATA_PW" SERVER_PW="$SERVER_PW" FACTORY_TOKEN="$FACTORY_TOKEN" ADMIN="$ADMIN" \
   node scripts/qurtag/apply-logins.mjs
 psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/admin.sql
+# Rollout step 7 (the Contact us form and its queue; needs the admin role).
+psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/support.sql
 echo "schema, logins and the admin role applied"
 
 export QURTAG_AUTH_URL="http://127.0.0.1:$API_PORT"
@@ -130,4 +129,5 @@ QURTAG_TEST_MAIL_FILE="$WORK/mail.jsonl" \
 QURTAG_TEST_ADMIN_DB="$ADMIN" \
 QURTAG_TEST_LOGIN_DB_SERVER="$QURTAG_DATABASE_URL_SERVER" \
 QURTAG_TEST_LOGIN_DB_DATA="$QURTAG_DATABASE_URL_DATA" \
+QURTAG_TEST_FACTORY_TOKEN="$FACTORY_TOKEN" \
   npx tsx scripts/qurtag/membership.test.mjs || { echo "--- server log"; tail -40 "$WORK/server.log"; exit 1; }
