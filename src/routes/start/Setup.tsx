@@ -5,6 +5,10 @@ import { AppPage } from '@/components/layout/AppPage';
 import { buttonClasses } from '@/components/ui/Button';
 import { isNative } from '@/lib/platform';
 import { Input } from '@/components/ui/Input';
+import { LimitReached } from '@/components/membership/LimitReached';
+import { fetchMembership, type Membership } from '@/lib/membership';
+import { DetailWarning } from '@/components/ui/DetailWarning';
+import { NAME_HINT } from '@/lib/personalDetails';
 import { PhotoUploader } from '@/components/ui/PhotoUploader';
 import { useAuth } from '@/lib/auth';
 import { createItemWithPrintableTag, fetchPrimaryHouseholdId } from '@/lib/queries';
@@ -26,6 +30,7 @@ export function StartSetup() {
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [full, setFull] = useState<Membership | null>(null);
   const toast = useToast();
   // After the first item is saved, the iPhone app explains alerts before asking (components/push/PushPrimer.tsx).
   const [primerFor, setPrimerFor] = useState<{ item: string; next: string } | null>(null);
@@ -37,6 +42,8 @@ export function StartSetup() {
       return;
     }
     fetchPrimaryHouseholdId().then(setHouseholdId);
+    // The plan's limit is checked when the form opens, so nobody fills it in for nothing.
+    void fetchMembership().then((m) => setFull(m && !m.can_add_items ? m : null));
 
     // Pre-fill from what they typed at /start, then drop the pending record.
     const pending = getPendingItem();
@@ -68,7 +75,10 @@ export function StartSetup() {
     });
     setSubmitting(false);
     if ('error' in result) {
-      setError(result.error);
+      // Refused for the limit (another device may have added one): show the way on, not just an error.
+      const m = await fetchMembership();
+      if (m && !m.can_add_items) setFull(m);
+      else setError(result.error);
       return;
     }
     toast.show({
@@ -92,6 +102,9 @@ export function StartSetup() {
           if (next) navigate(next);
         }}
       />
+      {full ? (
+        <LimitReached membership={full} />
+      ) : (
       <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
         <p className="px-1 text-base text-muted text-pretty">
           Name the thing you would hate to lose. Its tag is ready to print on the next screen.
@@ -107,8 +120,9 @@ export function StartSetup() {
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            hint="The finder sees this. You can change it later."
+            hint={NAME_HINT}
           />
+          <DetailWarning text={name} />
           <PhotoUploader householdId={householdId} value={photoUrl} onChange={setPhotoUrl} />
           <Input
             name="rewardText"
@@ -117,19 +131,20 @@ export function StartSetup() {
             maxLength={140}
             value={rewardText}
             onChange={(e) => setRewardText(e.target.value)}
-            hint="The finder sees this too. Do not put your phone number or address here."
+            hint="The finder sees this too. Do not put names, your phone number or your address here."
           />
+          <DetailWarning text={rewardText} />
         </div>
 
         <div className="flex flex-col gap-5 rounded-modal border border-hairline bg-canvas p-4 sm:p-6">
           <Input
             name="brand"
-            label="Description (optional)"
+            label="Your own description (optional)"
             placeholder="Blue, with stickers on the side"
             maxLength={60}
             value={brand}
             onChange={(e) => setBrand(e.target.value)}
-            hint="Private to you."
+            hint="To tell your things apart. Private to you: the finder does not see it."
           />
           <Input
             name="notes"
@@ -169,6 +184,7 @@ export function StartSetup() {
           </button>
         </div>
       </form>
+      )}
     </AppPage>
   );
 }

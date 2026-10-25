@@ -79,6 +79,30 @@ export function senderFromEnv(env: NodeJS.ProcessEnv = process.env): MailSender 
   return offSender;
 }
 
+/** The address emails come from, without the display name (for example no-reply@qurtag.com). */
+export function fromAddress(env: NodeJS.ProcessEnv = process.env): string {
+  const from = env.QURTAG_EMAIL_FROM?.trim() || DEFAULT_FROM;
+  return /<([^>]+)>/.exec(from)?.[1]?.trim() ?? from;
+}
+
+/** The test an owner sends to themselves from Settings or the first-tag walkthrough. */
+export function testAlertMail(to: string, settingsUrl: string): Mail {
+  const lead = 'This is a test from QuR Tag. When someone finds one of your things and writes to you, an email like this one comes to this address.';
+  const after = 'If this email was in spam or junk, mark it Not spam and add this sender to your contacts, so the real one reaches your inbox.';
+  return {
+    kind: 'test-alert',
+    to,
+    subject: 'QuR Tag test: this is how you will hear from a finder',
+    text: `${lead}\n\n${after}\n\nTell QuR Tag it arrived: ${settingsUrl}\n\n${OPERATOR}\n${CONTACT_EMAIL}\n`,
+    html:
+      `<p style="font-size:20px;font-weight:600;margin:0 0 16px">QuR Tag</p>` +
+      `<p>${escapeHtml(lead)}</p>` +
+      `<p style="color:#555">${escapeHtml(after)}</p>` +
+      `<p><a href="${escapeHtml(settingsUrl)}" style="display:inline-block;padding:10px 18px;background:#0A0B0F;color:#fff;border-radius:8px;text-decoration:none">It arrived</a></p>` +
+      `<p style="color:#777;font-size:12px;margin-top:24px">${OPERATOR}<br>${CONTACT_EMAIL}</p>`,
+  };
+}
+
 export function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 }

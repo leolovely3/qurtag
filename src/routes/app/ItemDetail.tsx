@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Check, Clock, MapPin, Printer, RefreshCw, Tag as TagIcon, Trash2 } from 'lucide-react';
+import { Check, Clock, Printer, RefreshCw, ScanLine, Tag as TagIcon, Trash2 } from 'lucide-react';
 import { Eyebrow } from '@/components/brand/Typography';
 import { AppPage, AppSection } from '@/components/layout/AppPage';
 import { buttonClasses } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Input } from '@/components/ui/Input';
+import { DetailWarning } from '@/components/ui/DetailWarning';
+import { deviceStorage, itemStatus, recordTag, tagProgress, type TagProgress } from '@/lib/tagProgress';
+import { NAME_HINT } from '@/lib/personalDetails';
 import { PhotoUploader } from '@/components/ui/PhotoUploader';
 import { LostModeToggle } from '@/components/ui/LostModeToggle';
 import { RewardPicker } from '@/components/ui/RewardPicker';
@@ -90,6 +93,9 @@ export function ItemDetail() {
 
   const [item, setItem] = useState<Item | null>(null);
   const [tag, setTag] = useState<Tag | null>(null);
+  // Printed and stuck on, as this device knows it (src/lib/tagProgress.ts).
+  const [tagState, setTagState] = useState<TagProgress>({});
+  useEffect(() => setTagState(tag ? tagProgress(deviceStorage(), tag.id) : {}), [tag]);
   const [scans, setScans] = useState<Scan[]>([]);
   const [readOnly, setReadOnly] = useState(false);
   const [limitedHistory, setLimitedHistory] = useState(false);
@@ -367,10 +373,23 @@ export function ItemDetail() {
                   {tag ? tag.short_code ? <>Tag <span className="font-mono text-[0.9375rem]">{shortAddress(tag.short_code)}</span></> : 'Your tag' : 'No working tag'}
                 </span>
                 <span className="text-sm text-muted">
-                  {tag ? `Made ${relativeTime(tag.activated_at)}` : 'Make a new tag to print.'}
+                  {tag ? `${itemStatus({ locked: false, hasTag: true, progress: tagState })}. Made ${relativeTime(tag.activated_at)}.` : 'Make a new tag to print.'}
                 </span>
               </div>
             </div>
+            {tag && tagState.printed && !tagState.stuck && (
+              <button
+                type="button"
+                onClick={() => {
+                  recordTag(tag.id, 'stuck');
+                  setTagState(tagProgress(deviceStorage(), tag.id));
+                }}
+                className={buttonClasses({ variant: 'secondary', className: 'self-start' })}
+              >
+                <Check size={16} strokeWidth={1.75} aria-hidden />
+                I stuck it on
+              </button>
+            )}
             <div className="flex flex-wrap gap-2">
               {tag && (
                 <Link to={`/app/tags/${tag.id}/print`} className={buttonClasses({ variant: 'primary', className: 'flex-1 basis-[9rem]' })}>
@@ -393,7 +412,7 @@ export function ItemDetail() {
 
         {/* What a finder sees */}
         <fieldset disabled={readOnly} className="contents">
-        <AppSection title="What a finder sees" description="Do not put your phone number or address in these.">
+        <AppSection title="What a finder sees" description="Do not put names, your phone number or your address in these.">
           <div className="flex flex-col gap-5 p-4">
             <Input
               name="name"
@@ -401,7 +420,9 @@ export function ItemDetail() {
               maxLength={80}
               value={name}
               onChange={(e) => setName(e.target.value)}
+              hint={NAME_HINT}
             />
+            <DetailWarning text={name} />
             <PhotoUploader householdId={householdId} value={item.hero_photo_url} onChange={onChangePhoto} />
             <Input
               id="reward-text"
@@ -413,6 +434,7 @@ export function ItemDetail() {
               onChange={(e) => setRewardText(e.target.value)}
               hint='For example "Coffee on me as a thank-you" or "Please hand in at the school office".'
             />
+            <DetailWarning text={rewardText} />
           </div>
         </AppSection>
 
@@ -463,11 +485,11 @@ export function ItemDetail() {
           <div className="flex flex-col gap-5 p-4">
             <Input
               name="brand"
-              label="Description"
+              label="Your own description"
               placeholder="Blue, with stickers on the side"
               value={brand}
               onChange={(e) => setBrand(e.target.value)}
-              hint="To tell your things apart."
+              hint="To tell your things apart. The finder does not see it."
             />
             {FEATURES.insurancePacket && (
             <Input
@@ -526,7 +548,7 @@ export function ItemDetail() {
                 <li key={scan.id} className="flex items-center justify-between gap-3 px-4 py-3">
                   <div className="flex min-w-0 items-center gap-3">
                     <span className="grid size-[36px] shrink-0 place-items-center ax:hidden rounded-pill bg-ink-100">
-                      <MapPin size={16} strokeWidth={1.75} className="text-ink-900" aria-hidden />
+                      <ScanLine size={16} strokeWidth={1.75} className="text-ink-900" aria-hidden />
                     </span>
                     <div className="flex min-w-0 flex-col">
                       <span className="text-sm font-medium text-ink-900">Scanned</span>

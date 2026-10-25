@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from './auth';
 import {
-  OWNER_TEST_KEY,
   closeCard,
   isFinished,
   loadProgress,
@@ -38,15 +37,11 @@ export function useGettingStarted(itemCount: number) {
 
   const refresh = useCallback(() => {
     if (!userId) return;
-    let p = loadProgress(storage(), userId);
-    try {
-      if (storage()?.getItem(OWNER_TEST_KEY) && itemCount > 0) p = markDone(p, 'test');
-    } catch {
-      /* storage off */
-    }
-    setProgress(p);
+    // The test view of the finder page does not tick "Scan the printed tag": only the owner's own
+    // word that a scan of the paper tag opened the page does (it checks the paper, the view does not).
+    setProgress(loadProgress(storage(), userId));
     if (isNative()) void pushPermission().then((v) => setAlertsOn(v === 'granted'));
-  }, [userId, itemCount]);
+  }, [userId]);
 
   useEffect(() => {
     refresh();

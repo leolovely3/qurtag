@@ -10,13 +10,15 @@
  *   add     the account has an item (derived, never stored)
  *   print   the person printed or shared a tag (stored)
  *   stick   the person said they stuck it on (stored, self-confirmed)
- *   test    the person opened the test view of the finder page (stored)
+ *   test    the person said a camera scan of the printed tag opened the item's page (stored,
+ *           self-confirmed); opening the test view of the finder page does not count, because
+ *           it does not check the paper tag
  *   alerts  the iPhone's alerts are allowed (derived); iPhone app only
  */
 
 /**
  * Set by the finder page's test view (src/routes/finder/FinderView.tsx, /find/<code>#test=1) to
- * the code of the tag the owner opened, so the walkthrough and the checklist know the test was done.
+ * the code of the tag the owner opened, so the walkthrough can say what the view showed.
  */
 export const OWNER_TEST_KEY = 'qurtag.owner-test';
 

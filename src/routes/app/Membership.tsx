@@ -252,6 +252,17 @@ function MembershipScreen() {
         </section>
       )}
 
+      {/* The family comes first for the people in one: it is what they come here to manage. */}
+      {family && family.role !== 'none' && (
+        <FamilySection
+          family={family}
+          onChanged={async () => {
+            await reload();
+          }}
+          toast={(m) => toast.show({ kind: 'success', title: m })}
+        />
+      )}
+
       <section aria-label="Plans" className="grid md:grid-cols-3 gap-qurtag-3 items-stretch">
         <PlanCard plan="free" current={membership?.plan === 'free'} />
         {(['plus', 'family'] as const).map((plan) => {
@@ -307,16 +318,6 @@ function MembershipScreen() {
         </div>
       )}
 
-      {family && family.role !== 'none' && (
-        <FamilySection
-          family={family}
-          onChanged={async () => {
-            await reload();
-          }}
-          toast={(m) => toast.show({ kind: 'success', title: m })}
-        />
-      )}
-
       <section aria-label="Question about a charge" className="flex flex-col gap-3">
         {asking ? (
           <ContactForm initialTopic="billing" />
@@ -333,17 +334,25 @@ function MembershipScreen() {
           cancel. You can cancel at any time, and you keep your plan until the end of the period you already paid for. Canceling stops the
           next payment; it does not delete anything you made.
         </p>
+        {(native || membership?.provider === 'apple') && (
         <p>
           On iPhone, payment is charged to your Apple ID at confirmation of purchase. The subscription renews unless it is canceled at
           least 24 hours before the end of the current period, and your Apple ID is charged for the renewal within 24 hours before the
           period ends. Manage or cancel it in Settings on your iPhone: tap your name, then Subscriptions. Refunds for purchases made in the
           app are handled by Apple, at reportaproblem.apple.com.
         </p>
+        )}
+        {(!native || membership?.provider === 'stripe') && (
         <p>
-          On the web, payment is taken by Stripe. Cancel in Manage membership above. If you think you were charged by mistake, use{' '}
+          On the web, payment is taken by Stripe.{' '}
+          {membership?.provider === 'stripe'
+            ? 'Cancel with Manage membership, under Your membership above.'
+            : 'If you subscribe on the web, you can cancel on this page at any time.'}{' '}
+          If you think you were charged by mistake, use{' '}
           <button type="button" onClick={() => setAsking(true)} className="inline-flex min-h-[44px] items-center align-middle text-left underline underline-offset-4 text-ink-900">Question about a charge?</button>
-          {' '}below, or email info@impactconsulting.ai if you cannot sign in.
+          {' '}above, or email info@impactconsulting.ai if you cannot sign in.
         </p>
+        )}
         <p>
           If you go back to a lower plan, nothing is deleted: items over the limit stay and become read-only until you upgrade or delete
           some.
