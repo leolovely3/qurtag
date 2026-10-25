@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/cn';
 import { recordTagPrint } from '@/lib/measures';
+import { recordTag } from '@/lib/tagProgress';
 import { publicUrl } from '@/lib/platform';
 import { rememberLookAndPaper, rememberTagStyle, rememberedLook, rememberedPaper, styleForTag } from '@/lib/printPrefs';
 import { fetchItems, fetchTags } from '@/lib/queries';
@@ -221,7 +222,11 @@ export function TagSheet() {
             linkPath="/app/tags/sheet"
             onDone={(c) => {
               recordTagPrint({ style: styleId, look, paper: paperId, action: c });
-              for (const r of rows) if ((chosen[r.tag.id] ?? 0) > 0) rememberTagStyle(r.tag.id, styleId);
+              for (const r of rows) {
+                if ((chosen[r.tag.id] ?? 0) === 0) continue;
+                rememberTagStyle(r.tag.id, styleId);
+                recordTag(r.tag.id, 'printed');
+              }
               if (user) recordStep(user.id, 'print');
             }}
           />

@@ -11,6 +11,7 @@ import { isNative, publicUrl } from '@/lib/platform';
 import { cn } from '@/lib/cn';
 import { saveTagPdf, saveTagPng } from '@/lib/tagExport';
 import { recordTagPrint, type PrintAction } from '@/lib/measures';
+import { recordTag } from '@/lib/tagProgress';
 import { PrintArea, PrintChoices } from '@/components/print/PrintChoices';
 import { rememberLookAndPaper, rememberTagStyle, rememberedLook, rememberedPaper, styleForTag } from '@/lib/printPrefs';
 import {
@@ -129,6 +130,7 @@ export function TagPrint() {
   function counted(action: PrintAction) {
     recordTagPrint({ style: styleId, look, paper: paperId, action });
     if (tag) rememberTagStyle(tag.id, styleId);
+    if (tag && (action === 'print' || action === 'download_pdf')) recordTag(tag.id, 'printed');
   }
 
   async function run(kind: 'pdf' | 'png' | 'pdf2', work: () => Promise<void>, action: PrintAction) {

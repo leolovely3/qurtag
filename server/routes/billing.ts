@@ -17,6 +17,10 @@
  *   POST /api/fn/support              { topic, message, email?, website? }  the Contact us form (signed in
  *                                     or not). Stored in qurtag.support_requests; emailed to the company
  *                                     inbox when email is set up.
+ *   POST /api/fn/email-test           signed in. Sends a test email to the account's own address, so a
+ *                                     web owner can check that alerts reach them and are not in spam.
+ *                                     Only ever to the signed-in account's own address; 3 an hour per
+ *                                     account and 10 an hour per network address (per instance).
  *   POST /api/fn/stripe-webhook       Stripe's events. Needs a valid Stripe signature.
  *   POST /api/fn/revenuecat-webhook   RevenueCat's events (the App Store). Needs the shared
  *                                     secret in REVENUECAT_WEBHOOK_AUTH.
@@ -32,7 +36,7 @@
  * written (so the sender retries). Delivery is idempotent in the database.
  */
 import { siteUrl } from '../auth/origins.js';
-import { familyInviteMail, mailConfigured, senderFromEnv, supportNoticeMail, type MailSender } from '../auth/mailer.js';
+import { familyInviteMail, fromAddress, mailConfigured, senderFromEnv, supportNoticeMail, testAlertMail, type MailSender } from '../auth/mailer.js';
 import { createPassCheck, type PassResult } from '../data/passCheck.js';
 import { actionForRevenueCatEvent, sentSecret } from '../billing/revenuecat.js';
 import { actionForStripeEvent, createCheckoutSession, createPortalSession, stripeSettings, verifyStripeSignature, type Action, type Fetch } from '../billing/stripe.js';
@@ -56,6 +60,21 @@ function supportOver(key: string, now = Date.now()): boolean {
   }
   c.n += 1;
   return c.n > supportLimit.limit;
+}
+/** A counter per key over a rolling hour, for routes a person uses a few times at most. */
+export class HourWindow {
+  private counts = new Map<string, { start: number; n: number }>();
+  constructor(private limit: number) {}
+  over(key: string, now = Date.now()): boolean {
+    if (this.counts.size > 20_000) this.counts.clear();
+    const c = this.counts.get(key);
+    if (!c || now - c.start >= 3_600_000) {
+      this.counts.set(key, { start: now, n: 1 });
+      return false;
+    }
+    c.n += 1;
+    return c.n > this.limit;
+  }
 }
 const accountLimit = new Window(Number(process.env.QURTAG_BILLING_RATE_PER_ACCOUNT ?? 12));
 const ipLimit = new Window(Number(process.env.QURTAG_BILLING_RATE_PER_IP ?? 60));
@@ -115,6 +134,8 @@ export interface BillingOptions {
   fetch?: Fetch;
   /** Replaces the email sender (tests). */
   sendMail?: MailSender;
+  /** Replaces the test email limits (tests). */
+  testEmailLimits?: { account: HourWindow; ip: HourWindow };
   /** Replaces the pass check (tests that do not hold the signing keys). */
   checkPass?: (token: string) => Promise<PassResult>;
 }
@@ -156,7 +177,32 @@ export function createBillingRoutes(opts: BillingOptions = {}) {
     const s = stripeSettings(env);
     const available: Record<string, boolean> = {};
     for (const p of PRODUCTS) available[`${p.plan}_${p.interval}`] = s.canSell(p);
-    return json(200, { available, portal: !!s.secret, email: mailConfigured(env) });
+    return json(200, { available, portal: !!s.secret, email: mailConfigured(env), emailFrom: fromAddress(env) });
+  }
+
+  // Test emails: per account and per network address, an hour at a time (this function instance).
+  const testByAccount = opts.testEmailLimits?.account ?? new HourWindow(3);
+  const testByIp = opts.testEmailLimits?.ip ?? new HourWindow(10);
+
+  /**
+   * POST /api/fn/email-test. A test email to the signed-in account's own address (from the
+   * database, never from the request), so the owner can see that alerts arrive and where.
+   */
+  async function emailTest(request: Request): Promise<Response> {
+    const account = await signedIn(request);
+    if (account instanceof Response) return account;
+    if (!mailConfigured(env)) return json(503, { error: 'email_off', message: 'Email is not set up yet. Notes wait in your inbox.' });
+    if (testByIp.over(clientIp(request)) || testByAccount.over(account.user_id)) {
+      return json(429, { error: 'too_many', message: 'We sent a few test emails already. Please wait an hour and try again.' });
+    }
+    try {
+      const send = opts.sendMail ?? senderFromEnv(env);
+      await send(testAlertMail(account.email, `${siteUrl(env)}/app/settings#email-check`));
+    } catch (e) {
+      console.error(`qurtag billing: test email failed (${(e as Error)?.message ?? 'unknown'})`);
+      return json(502, { error: 'send_failed', message: 'The test email could not be sent. Please try again later.' });
+    }
+    return json(200, { ok: true, to: account.email, from: fromAddress(env) });
   }
 
   async function checkout(request: Request): Promise<Response> {
@@ -361,5 +407,5 @@ export function createBillingRoutes(opts: BillingOptions = {}) {
     }
   }
 
-  return { config, checkout, portal, invite, support, stripeWebhook, revenueCatWebhook };
+  return { config, checkout, portal, invite, support, emailTest, stripeWebhook, revenueCatWebhook };
 }

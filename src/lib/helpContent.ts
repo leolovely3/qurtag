@@ -43,7 +43,7 @@ export const HELP: HelpSection[] = [
       {
         id: 'test-tag',
         q: 'How do I test my tag?',
-        a: 'Open the test page from the Getting started card. It shows exactly what a finder sees, sends nothing to you and is not counted as a scan. You can also scan the printed tag with your phone camera, which counts as a scan like any other.',
+        a: 'Scan the printed tag with your phone camera once it is on. If your item\'s page opens, the tag works at the size it printed. A scan from a browser where you are signed in to QuR Tag is not counted as a finder\'s; from any other browser it shows in your scan history. With no tag yet, Test on the Tags screen shows the page a finder sees without counting anything, but it does not check the paper tag.',
         action: { label: 'Your tags', to: '/app/tags' },
       },
       {
@@ -108,7 +108,7 @@ export const HELP: HelpSection[] = [
       {
         id: 'finder-sees',
         q: 'What does the finder see?',
-        a: "The item's name, its photo if you added one, and your short word for the finder. They never see your email, name or phone number. They can write you a note from the page, with no app and no account.",
+        a: "The item's name, its photo if you added one, and your short word for the finder. They never see your email, name or phone number. So keep names out of what they do see: call it purple backpack, not Maya's backpack, most of all for a child's things. They can write you a note from the page, with no app and no account.",
         action: { label: 'Test what a finder sees', to: '/app/tags' },
       },
       {
@@ -120,7 +120,7 @@ export const HELP: HelpSection[] = [
       {
         id: 'alerts',
         q: 'How do I get an alert when a finder writes?',
-        a: 'In the iPhone app, turn on alerts in Settings, under Notifications. You choose which alerts you want, and you can reply from the alert itself. On the website, the Inbox shows new notes and you can choose email alerts.',
+        a: 'In the iPhone app, turn on alerts in Settings, under Notifications. You choose which alerts you want, and you can reply from the alert itself. On the website, we email you when a finder writes, from no-reply@qurtag.com. In Settings, send yourself a test email and check it is not in spam.',
         action: { label: 'Turn on alerts', to: '/app/settings#alerts' },
       },
       {

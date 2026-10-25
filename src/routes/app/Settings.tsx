@@ -12,7 +12,9 @@ import { useAuth } from '@/lib/auth';
 import { usePushSubscription, isPushSupported } from '@/lib/push';
 import { fetchHousehold, fetchPrimaryHouseholdId, updateHousehold } from '@/lib/queries';
 import { FEATURES } from '@/lib/features';
-import { fetchEmailAvailable } from '@/lib/membership';
+import { fetchEmailConfig } from '@/lib/membership';
+import { EmailCheck } from '@/components/alerts/EmailCheck';
+import { isNative } from '@/lib/platform';
 import { useMembershipsAvailable } from '@/lib/useMembershipsAvailable';
 import { NotificationSettings } from '@/components/push/NotificationSettings';
 import { BlockedFinders } from '@/components/moderation/BlockedFinders';
@@ -27,13 +29,17 @@ export function Settings() {
   useHashScroll();
   const memberships = useMembershipsAvailable();
   const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
+  const [emailFrom, setEmailFrom] = useState('no-reply@qurtag.com');
   const { permission, subscribed, pending, subscribe, unsubscribe } = usePushSubscription(
     user?.id ?? null,
   );
 
   useEffect(() => {
     // Null (could not be asked) is treated as not available, so no row promises email that may not come.
-    void fetchEmailAvailable().then((v) => setEmailAvailable(v === true));
+    void fetchEmailConfig().then((v) => {
+      setEmailAvailable(v?.email === true);
+      if (v) setEmailFrom(v.from);
+    });
   }, []);
 
   const [household, setHousehold] = useState<Household | null>(null);
@@ -248,6 +254,11 @@ export function Settings() {
         )}
 
         <NotificationSettings emailAvailable={emailAvailable} />
+        {emailAvailable && !isNative() && (
+          <div className="border-t border-hairline">
+            <EmailCheck from={emailFrom} />
+          </div>
+        )}
       </AppSection>
       <div className="px-1"><HelpLink section="alerts" label="How alerts work" /></div>
       </div>

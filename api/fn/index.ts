@@ -8,7 +8,7 @@
  *
  * Both are in server/routes/finder.ts. The iPhone app's push routes (push-register, push-unregister,
  * push-reply) are in server/routes/push.ts. The membership routes (billing-config, billing-checkout,
- * billing-portal, family-invite, stripe-webhook, revenuecat-webhook) are in server/routes/billing.ts. Errors become a plain 500; nothing internal
+ * billing-portal, family-invite, email-test, stripe-webhook, revenuecat-webhook) are in server/routes/billing.ts. Errors become a plain 500; nothing internal
  * reaches the caller.
  */
 import { withPhoneAppCors } from '../../server/auth/phoneCors.js';
@@ -33,6 +33,7 @@ const ROUTES: Record<string, (request: Request) => Promise<Response>> = {
   'billing-portal': billing.portal,
   'family-invite': billing.invite,
   'support': billing.support,
+  'email-test': billing.emailTest,
   'stripe-webhook': billing.stripeWebhook,
   'revenuecat-webhook': billing.revenueCatWebhook,
   'push-register': push.register,

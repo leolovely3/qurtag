@@ -4,6 +4,7 @@ import { Mail } from 'lucide-react';
 import { LogoMark } from '@/components/brand/Wordmark';
 import { buttonClasses } from '@/components/ui/Button';
 import { Input, ShowToggle } from '@/components/ui/Input';
+import { planFromNext, planIntentLine } from '@/lib/planIntent';
 import { useAuth } from '@/lib/auth';
 import { isNative } from '@/lib/platform';
 import { cn } from '@/lib/cn';
@@ -21,6 +22,8 @@ export function StartSignIn() {
   // Where to go after signing in: only a path on this site (for example an invite link).
   const rawNext = params.get('next');
   const next = rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') && !rawNext.includes('\\') ? rawNext : null;
+  // Pressed a paid plan on Pricing while signed out: say what comes after the account.
+  const intent = planFromNext(next);
   const [mode, setMode] = useState<Mode>(params.get('mode') === 'signin' || (isNative() && params.get('mode') !== 'create') ? 'signin' : 'create');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -65,14 +68,18 @@ export function StartSignIn() {
       <div className="mb-6 flex flex-col items-center gap-3 text-center">
         <LogoMark size={56} />
         <h1 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900 sm:text-3xl">
-          {mode === 'create' ? 'Make your free tag' : 'Welcome back'}
+          {mode === 'create' ? (intent ? 'Create your account' : 'Make your free tag') : 'Welcome back'}
         </h1>
         <p className="max-w-sm text-base text-muted text-pretty">
           {mode === 'create'
-            ? 'Make an account, name a thing, print its tag. If someone finds it, they scan the tag and send you a note.'
-            : 'Read notes from finders, reply, and print your tags.'}
+            ? intent
+              ? planIntentLine(intent)
+              : 'Make an account, name a thing, print its tag. If someone finds it, they scan the tag and send you a note.'
+            : intent
+              ? `Sign in, then you can pay for ${intent === 'plus' ? 'Plus' : 'Family'}.`
+              : 'Read notes from finders, reply, and print your tags.'}
         </p>
-        {mode === 'create' && (
+        {mode === 'create' && !intent && (
           <p className="max-w-sm text-sm text-muted text-pretty">
             You will need a printer and ordinary paper. Sticker paper or clear tape makes it last.
           </p>

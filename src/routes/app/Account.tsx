@@ -9,6 +9,8 @@ import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import { useAuth } from '@/lib/auth';
 import { exportMyData } from '@/lib/queries';
+import { DELETE_WORD, needsTypedConfirm, typedOk } from '@/lib/accountDelete';
+import { fetchFamily, fetchMembership } from '@/lib/membership';
 import { saveFile } from '@/lib/saveFile';
 import { useMembershipsAvailable } from '@/lib/useMembershipsAvailable';
 import { cn } from '@/lib/cn';
@@ -40,6 +42,17 @@ export function Account() {
   const [exporting, setExporting] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [typed, setTyped] = useState('');
+  const [mustType, setMustType] = useState(false);
+  // How much would go: asked when the dialog opens, so the typed word is asked for only when it matters.
+  useEffect(() => {
+    if (!deleteOpen) return;
+    setTyped('');
+    void Promise.all([fetchMembership(), fetchFamily()]).then(([m, f]) => {
+      const people = (f?.members ?? []).filter((p) => p.user_id !== user?.id).length + (f?.invites?.length ?? 0);
+      setMustType(needsTypedConfirm({ itemsUsed: m?.items_used ?? 0, familyRole: f?.role ?? 'none', otherPeople: people }));
+    });
+  }, [deleteOpen, user?.id]);
   const [signOutOpen, setSignOutOpen] = useState(false);
 
   async function saveName(e: FormEvent) {
@@ -212,9 +225,25 @@ export function Account() {
             ? "Your account, items, tags, scans and conversations are deleted at once and cannot be brought back. Any tag you printed stops working. If you have a family, its members lose access to the family's items. A membership that is still renewing must be canceled first."
             : 'Your account, items, tags, scans and conversations are deleted at once and cannot be brought back. Any tag you printed stops working.'
         }
-        primaryAction={{ label: 'Delete everything', tone: 'destructive', onClick: handleDelete, pending: deleting }}
+        primaryAction={{ label: 'Delete everything', tone: 'destructive', onClick: handleDelete, pending: deleting, disabled: mustType && !typedOk(typed) }}
         secondaryAction={{ label: 'Cancel', onClick: () => setDeleteOpen(false) }}
-      />
+      >
+        <button type="button" onClick={handleExport} disabled={exporting} className={buttonClasses({ variant: 'secondary', className: 'self-start' })}>
+          <Download size={16} strokeWidth={1.75} aria-hidden />
+          {exporting ? 'Preparing your file…' : 'Download my data first'}
+        </button>
+        {mustType && (
+          <Input
+            name="confirm-delete"
+            label={`Type ${DELETE_WORD} to confirm`}
+            autoComplete="off"
+            autoCapitalize="characters"
+            value={typed}
+            onChange={(e) => setTyped(e.target.value)}
+            hint="You have several items or a family, so we ask once more."
+          />
+        )}
+      </Modal>
     </AppPage>
   );
 }

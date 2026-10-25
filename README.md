@@ -39,7 +39,11 @@ the item's name, photo, the owner's note for the finder and the lost flag, plus 
 own conversation when the browser holds its secret token. The database keeps only the
 token's SHA-256. No policy in the schema is open to a visitor without a pass.
 
-Email goes through Resend, called from the server. Password reset ("Forgot password?" at
+Email goes through Resend, called from the server. On the web a finder's note reaches the owner by email, so Settings and the
+last step of the first-tag walkthrough say which address it goes to and from, and offer "Send me a test email"
+(`POST /api/fn/email-test`, `server/routes/billing.ts`: signed in, only to the account's own address, 3 an hour per account
+and 10 per network address); the owner's "It arrived" is kept in the browser (`src/lib/emailCheck.ts`) and Items reminds web
+owners who have not confirmed. Password reset ("Forgot password?" at
 `/forgot-password`, the link opens `/reset-password`) sends its email inside the request, not
 through the outbox. The link works once and expires in 1 hour; a reset ends every session of
 the account. Requests are limited to 3 per 5 minutes per IP address and 3 per hour per email
@@ -415,11 +419,19 @@ shell (`capacitor.config.ts`, `ios/`). The old Expo stub in `mobile/` is not use
   Help, Terms, Privacy and Make it last open inside that frame for signed-in people, at `/app/help`, `/app/terms`,
   `/app/privacy` and `/app/make-it-last` (`InAppDoc` in `src/routes/marketing/parts.tsx`); the public pages stay for visitors.
   A new account, and any account with no items, opens the first-tag walkthrough at `/app/first-tag`
-  (`src/routes/app/FirstTag.tsx`; skippable, resumes from Items; style chosen by `src/lib/tagRecommend.ts`). Its test step
-  opens the finder page in test mode (`/find/<code>#test=1`): no scan recorded, nothing sent. A scan with the phone camera is a
-  real scan, because the finder routes cannot tell an owner from a stranger. Items shows a Getting started card until its steps
-  are done or dismissed; progress is kept per account in the browser or phone (`src/lib/gettingStarted.ts`), as the database has
-  no preferences table. Help at `/app/help` is grouped by task with search (`src/lib/helpContent.ts`), and each main screen has a
+  (`src/routes/app/FirstTag.tsx`; skippable, resumes from Items; style chosen by `src/lib/tagRecommend.ts`). Print (or Save the
+  PDF) is the main action of the print step, with "I have printed it" after it. The test step asks the owner to scan the printed
+  tag with the phone camera and say whether the item's page opened; the finder page's test mode (`/find/<code>#test=1`: no scan
+  recorded, nothing sent) is the fallback for someone with no tag yet, worded as "the page a finder sees". The last step is the
+  iPhone's alerts in the app and, on the web when email is on, the email check below. Items shows a Getting started card (add,
+  print, stick on, scan the printed tag; alerts in the app) until its steps are done or skipped; "I stuck it on" and "It opened"
+  are buttons with a separate Skip, and opening the test view does not tick the scan step. The card is hidden for someone who
+  joined a family. Progress is kept per account in the browser or phone (`src/lib/gettingStarted.ts`), as the database has
+  no preferences table; so is each tag's printed and stuck-on state (`src/lib/tagProgress.ts`), which Items shows as the item's
+  status ("Tag ready to print", "Printed, not stuck on yet", "Tag is on"). The item name box says "Describe the thing, not the
+  person", and the name and the word for the finder warn, without blocking, when they look like they hold a name, a phone
+  number, an email or a street address (`src/lib/personalDetails.ts`). Add item checks the plan's limit when it opens
+  (`src/lib/itemLimit.ts`). Help at `/app/help` is grouped by task with search (`src/lib/helpContent.ts`), and each main screen has a
   "?" in its top bar that opens the matching group. Each top-level screen has a phone top bar (the QuR Tag brand at the left; Add item on Items, Help and the account
   avatar at the right) over a large title that collapses into it (`AppPage`); the account card in Settings opens `/app/account` (name, password, data, deleting, signing out).
   The How it works pictures are in `public/how` (tags drawn by `src/lib/tagStyles.ts`, written by `npx tsx scripts/qurtag/how-tags.mjs`; two real screenshots; light and dark).

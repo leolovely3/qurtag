@@ -127,6 +127,18 @@ export async function fetchBillingConfig(): Promise<Record<string, boolean> | nu
   return a.data?.available ?? null;
 }
 
+/** Whether the server can send email, and the address it sends from. Null when it could not be asked. */
+export async function fetchEmailConfig(): Promise<{ email: boolean; from: string } | null> {
+  const a = await post<{ email?: boolean; emailFrom?: string }>('billing-config', {}, false);
+  return a.data ? { email: a.data.email === true, from: a.data.emailFrom || 'no-reply@qurtag.com' } : null;
+}
+
+/** Sends a test email to the signed-in account's own address (server/routes/billing.ts, email-test). */
+export async function sendTestEmail(): Promise<{ to: string } | { error: string }> {
+  const a = await post<{ to: string }>('email-test', {}, true);
+  return a.data?.to ? { to: a.data.to } : { error: a.message ?? 'The test email could not be sent.' };
+}
+
 /** Whether the server can send email (RESEND_API_KEY is set). Null when it could not be asked. */
 export async function fetchEmailAvailable(): Promise<boolean | null> {
   const a = await post<{ email?: boolean }>('billing-config', {}, false);

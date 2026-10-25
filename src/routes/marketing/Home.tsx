@@ -4,12 +4,14 @@ import { Container } from '@/components/ui/Container';
 import { useTheme } from '@/lib/theme';
 import { Lede } from '@/components/brand/Typography';
 import { HowVisuals } from './HowVisuals';
+import { audienceFor, HERO } from '@/lib/audience';
+import { CHANNEL_KEY, channelFromSearch } from '@/lib/measures';
 import { PrimaryLink, SecondaryLink, CtaBand } from './parts';
 
 const audiences = [
   {
-    title: 'Students and parents',
-    body: 'Water bottles, instruments and instrument cases, school uniforms and sports gear, school bags and lunch boxes. A parent sets up the tags, so the note comes to you.',
+    title: 'Parents of students',
+    body: 'Water bottles, instruments and instrument cases, school uniforms and sports gear, school bags and lunch boxes. Accounts are for adults: parents tag their children’s things, and notes come to the parent.',
   },
   {
     title: 'Ages 18 to 30',
@@ -39,8 +41,17 @@ const points = [
   },
 ];
 
+function storedChannel(): string | null {
+  try {
+    return window.sessionStorage.getItem(CHANNEL_KEY) ?? channelFromSearch(window.location.search);
+  } catch {
+    return null;
+  }
+}
+
 export function MarketingHome() {
   const theme = useTheme();
+  const hero = HERO[audienceFor(storedChannel())];
   return (
     <>
       <section className="relative overflow-hidden">
@@ -52,13 +63,9 @@ export function MarketingHome() {
                 Free QR tags for everyday things
               </span>
               <h1 className="text-[2.5rem] font-semibold leading-[1.05] tracking-[-0.03em] text-ink-900 text-balance sm:text-5xl lg:text-[3.5rem]">
-                A free QR tag, so a kind stranger can message you.
+                {hero.headline}
               </h1>
-              <Lede>
-                Print a tag at home and stick it on a water bottle, a violin case or your keys. When
-                someone finds it, they scan it with their camera and write you a note. Free, private,
-                and no app for the finder.
-              </Lede>
+              <Lede>{hero.lede}</Lede>
               <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                 <PrimaryLink to="/start">Make a free tag</PrimaryLink>
                 <SecondaryLink to="/how-it-works">How it works</SecondaryLink>
@@ -68,12 +75,6 @@ export function MarketingHome() {
                 <span>
                   What you need: a printer and ordinary paper. Sticker paper or clear tape makes it last.
                 </span>
-              </p>
-              {/* Apple's "Download on the App Store" badge may only link to a live listing, so
-                  until the app is approved this is plain text; swap in the badge on launch day. */}
-              <p className="inline-flex items-center gap-2 rounded-pill border border-hairline bg-paper px-3 py-1.5 text-caption font-medium text-ink-700">
-                <Smartphone size={16} strokeWidth={1.75} aria-hidden />
-                The QuR Tag iPhone app is coming soon to the App Store.
               </p>
               <p className="text-caption text-muted text-pretty max-w-md">
                 QuR Tag is not a tracker. It does not find anything by itself. It works when someone
@@ -107,8 +108,15 @@ export function MarketingHome() {
               </h2>
             </div>
             <HowVisuals />
-            <div>
+            <div className="flex flex-col items-start gap-4">
               <SecondaryLink to="/how-it-works">See both sides in full</SecondaryLink>
+              {/* Below the first screen, so it does not pull attention to something a visitor cannot have yet.
+                  Apple's "Download on the App Store" badge may only link to a live listing, so until the
+                  app is approved this is plain text; swap in the badge on launch day. */}
+              <p className="inline-flex items-center gap-2 rounded-pill border border-hairline bg-paper px-3 py-1.5 text-caption font-medium text-ink-700">
+                <Smartphone size={16} strokeWidth={1.75} aria-hidden />
+                The QuR Tag iPhone app is coming soon to the App Store. The website works on any phone today.
+              </p>
             </div>
           </div>
         </Container>

@@ -44,7 +44,7 @@ export function Pricing() {
       );
     }
     return (
-      <Link to="/app/membership" className={`${button} bg-ink-900 text-canvas hover:bg-ink-700`}>
+      <Link to={`/app/membership?plan=${plan}`} className={`${button} bg-ink-900 text-canvas hover:bg-ink-700`}>
         {label}
       </Link>
     );
