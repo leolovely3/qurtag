@@ -367,6 +367,14 @@ npm run test:e2e      # the whole loop, memberships, webhooks, Family, push aler
 npm run build
 ```
 
+**Large text.** `scripts/qurtag/large-text.check.mjs` opens the signed-in screens, sign-in, Help, Terms and the finder's page in
+WebKit at 375, 402 and 430 px wide, at the root font sizes 17, 23, 28, 33 and 53 px (the iPhone's default, its largest standard
+text size and Accessibility 1, 2 and 5), and fails on sideways scrolling, a word broken in the middle, overlapping controls, a
+button smaller than 44 by 44 px, a cut-off heading, or an Inbox tab not named "Inbox, N unread". It needs a running app on a
+throwaway database (below) and any copy of Playwright with WebKit, which the app does not depend on:
+`QURTAG_TEST_BASE=http://localhost:5173 NODE_PATH=<folder holding playwright> node scripts/qurtag/large-text.check.mjs`
+(`QURTAG_SHOTS=<folder>` keeps a screenshot of each case).
+
 To try the app by hand: `npm run dev:local` (a local database with the schema, plus the
 server functions on 127.0.0.1:56861), then in another Terminal
 `QURTAG_API_PROXY=http://127.0.0.1:56861 npm run dev` and open http://localhost:5173.
@@ -416,6 +424,12 @@ shell (`capacitor.config.ts`, `ios/`). The old Expo stub in `mobile/` is not use
   avatar at the right) over a large title that collapses into it (`AppPage`); the account card in Settings opens `/app/account` (name, password, data, deleting, signing out).
   The How it works pictures are in `public/how` (tags drawn by `src/lib/tagStyles.ts`, written by `npx tsx scripts/qurtag/how-tags.mjs`; two real screenshots; light and dark).
 - The app follows the phone's light or dark setting, and Settings lets the owner pick Light, Auto or Dark.
+- The app follows the phone's text size at every size, the Accessibility sizes included (the root font size is the system body
+  size, `src/index.css`, and every text size is in rem). From the largest standard size up, `src/lib/textSize.ts` marks the page
+  `text-ax` (and `text-axx` from 40 px), and the `ax:` and `axx:` Tailwind variants change layouts rather than only sizes: rows with
+  a picture put the text under it, decorative icon chips are left out, switches drop under their text, grids become one column,
+  bars put the title on its own line, button labels may wrap, and side padding, gaps and corner radii keep their standard size in
+  px. Pictures, icons and switches are sized in px. Words wrap whole (`overflow-wrap: break-word`).
 - The app asks for notification permission once, right after the first item is saved, behind a short
   explanation (`src/components/push/PushPrimer.tsx`), never at launch. See "iPhone push notifications".
 - Version and build number are `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` in

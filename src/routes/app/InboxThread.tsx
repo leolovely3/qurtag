@@ -357,10 +357,10 @@ export function InboxThread() {
         {item ? (
           <Link
             to={`/app/items/${item.id}`}
-            className="flex items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-ink-50 focus-visible:outline-offset-[-2px] active:bg-ink-50"
+            className="flex items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-ink-50 focus-visible:outline-offset-[-2px] active:bg-ink-50 ax:flex-wrap"
           >
             <ItemThumb src={item.hero_photo_url} />
-            <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <div className="flex min-w-0 flex-1 flex-col gap-1 ax:order-last ax:basis-full">
               <span className="line-clamp-2 break-words text-base font-semibold leading-snug text-ink-900">{item.name}</span>
               <span className="flex flex-wrap items-center gap-2 text-sm text-muted">
                 {statusLabel && (
@@ -371,7 +371,7 @@ export function InboxThread() {
                 Started {relativeTime(thread.created_at)}
               </span>
             </div>
-            <ChevronRight size={20} strokeWidth={1.75} className="shrink-0 text-ink-300" aria-label="Open item" />
+            <ChevronRight size={20} strokeWidth={1.75} className="shrink-0 text-ink-300 ax:ml-auto" aria-label="Open item" />
           </Link>
         ) : (
           <p className="px-4 py-3 text-sm text-muted">Started {relativeTime(thread.created_at)}</p>

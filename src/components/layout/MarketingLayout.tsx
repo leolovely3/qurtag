@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { usePathTitle } from '@/lib/pageTitle';
 import { ChevronLeft, Menu, X } from 'lucide-react';
 import { Lockup, Wordmark } from '@/components/brand/Wordmark';
 import { buttonClasses } from '@/components/ui/Button';
@@ -46,18 +47,18 @@ function AppLegalShell() {
 
   return (
     <div className="min-h-screen flex flex-col bg-canvas text-ink-900 antialiased">
-      <header className="sticky top-0 z-40 border-b border-hairline bg-canvas/90 backdrop-blur-xl">
-        <div className="mx-auto max-w-3xl px-4 h-12 grid grid-cols-[1fr_auto_1fr] items-center">
+      <header className="sticky top-0 z-40 border-b border-hairline bg-canvas/90 backdrop-blur-xl ax:static">
+        <div className="mx-auto max-w-3xl px-4 h-12 grid grid-cols-[1fr_auto_1fr] items-center ax:flex ax:h-auto ax:flex-wrap ax:pb-2">
           <button
             type="button"
             onClick={goBack}
-            className="-ml-2 inline-flex h-11 items-center gap-0.5 justify-self-start rounded-pill pl-1 pr-3 text-base text-ink-900 hover:bg-ink-50"
+            className="-ml-2 inline-flex h-11 items-center gap-0.5 justify-self-start rounded-pill pl-1 pr-3 text-base text-ink-900 hover:bg-ink-50 ax:h-auto ax:min-h-[44px]"
           >
             <ChevronLeft size={22} strokeWidth={2} aria-hidden />
             Back
           </button>
-          <span className="text-base font-semibold">{title}</span>
-          <span />
+          <span className="text-base font-semibold ax:basis-full ax:text-[min(1.25rem,9vw)] ax:leading-tight">{title}</span>
+          <span className="ax:hidden" />
         </div>
       </header>
       <main id="main-content" className="flex-1">
@@ -69,6 +70,7 @@ function AppLegalShell() {
 
 export function MarketingLayout() {
   const { pathname } = useLocation();
+  usePathTitle();
   if (isNative() && APP_LEGAL_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
     return <AppLegalShell />;
   }
@@ -147,7 +149,7 @@ function MarketingSite() {
                 type="button"
                 onClick={() => setDrawerOpen(true)}
                 aria-label="Open menu"
-                className="md:hidden size-11 grid place-items-center rounded-pill text-ink-900 hover:bg-ink-50 transition-colors duration-qurtag"
+                className="md:hidden size-[44px] shrink-0 grid place-items-center rounded-pill text-ink-900 hover:bg-ink-50 transition-colors duration-qurtag"
               >
                 <Menu size={20} strokeWidth={1.75} />
               </button>
@@ -172,7 +174,7 @@ function MarketingSite() {
                 type="button"
                 onClick={() => setDrawerOpen(false)}
                 aria-label="Close menu"
-                className="size-11 grid place-items-center rounded-pill text-muted hover:bg-ink-50 transition-colors duration-qurtag"
+                className="size-[44px] grid place-items-center rounded-pill text-muted hover:bg-ink-50 transition-colors duration-qurtag"
               >
                 <X size={18} strokeWidth={1.75} />
               </button>

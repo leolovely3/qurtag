@@ -99,7 +99,7 @@ export function Tags() {
             return (
               <li key={tag.id} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center">
                 <div className="flex min-w-0 flex-1 items-center gap-3">
-                  <span className="grid size-11 shrink-0 place-items-center rounded-card bg-ink-100">
+                  <span className="grid size-[44px] shrink-0 place-items-center rounded-card bg-ink-100 ax:hidden">
                     <TagIcon size={20} strokeWidth={1.75} className="text-ink-900" aria-hidden />
                   </span>
                   <div className="min-w-0">
@@ -110,7 +110,7 @@ export function Tags() {
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {tag.status === 'active' && (
                     <Link to={`/app/tags/${tag.id}/print`} className={buttonClasses({ variant: 'primary', className: 'flex-1 sm:flex-none' })}>
                       <Printer size={16} strokeWidth={1.75} aria-hidden />

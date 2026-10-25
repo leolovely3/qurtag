@@ -72,7 +72,7 @@ export function GettingStarted({ itemCount, firstTag }: { itemCount: number; fir
             <>
               <span
                 className={cn(
-                  'grid size-8 shrink-0 place-items-center rounded-full border',
+                  'grid size-[32px] shrink-0 place-items-center rounded-full border axx:hidden',
                   s.done ? 'border-transparent bg-verdigris-700 text-canvas' : 'border-hairline-strong text-ink-700',
                   s.skipped && 'opacity-50',
                 )}

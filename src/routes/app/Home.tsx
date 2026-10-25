@@ -12,6 +12,7 @@ import { fetchMembership, type Membership } from '@/lib/membership';
 import { useMembershipsAvailable } from '@/lib/useMembershipsAvailable';
 import type { Item, Tag } from '@/lib/database.types';
 import { cn } from '@/lib/cn';
+import { axIcon, axRow, axRowEnd, axRowText } from '@/components/ui/largeText';
 
 /** The owner's items with their tag and lost state; used by /app and /app/items. */
 export function useOwnerItems() {
@@ -65,7 +66,7 @@ export function useOwnerItems() {
 
 /** A square photo of the item, or a quiet placeholder when it has none. */
 export function ItemThumb({ src, size = 'md' }: { src?: string | null; size?: 'sm' | 'md' }) {
-  const box = size === 'sm' ? 'size-11' : 'size-14';
+  const box = size === 'sm' ? 'size-[44px]' : 'size-[56px]';
   return src ? (
     <img src={src} alt="" className={cn(box, 'shrink-0 rounded-card bg-ink-50 object-cover')} />
   ) : (
@@ -96,17 +97,17 @@ export function ItemList({ items, tagByItemId, readOnly }: { items: Item[]; tagB
           <li key={item.id}>
             <Link
               to={`/app/items/${item.id}`}
-              className="flex min-h-[4.5rem] items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-ink-50 focus-visible:outline-offset-[-2px] active:bg-ink-50"
+              className={cn('flex min-h-[4.5rem] items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-ink-50 focus-visible:outline-offset-[-2px] active:bg-ink-50', axRow)}
             >
               <ItemThumb src={item.hero_photo_url} />
-              <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <div className={cn('flex min-w-0 flex-1 flex-col gap-1', axRowText)}>
                 <span className="line-clamp-2 break-words text-base font-semibold leading-snug text-ink-900">{item.name}</span>
                 <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
                   <LostChip lost={item.lost_mode} />
                   <span>{locked ? 'Read-only: over your plan' : tag ? 'Tag ready to print' : 'No working tag'}</span>
                 </span>
               </div>
-              <ChevronRight size={20} strokeWidth={1.75} className="shrink-0 text-ink-300" aria-hidden />
+              <ChevronRight size={20} strokeWidth={1.75} className={cn('shrink-0 text-ink-300', axRowEnd)} aria-hidden />
             </Link>
           </li>
         );
@@ -161,7 +162,7 @@ export function AddItemCard({ membership }: { count?: number; membership?: Membe
 function EmptyItems() {
   return (
     <section className="flex flex-col items-center gap-3 rounded-modal border border-hairline bg-paper px-6 py-10 text-center">
-      <div className="grid size-14 place-items-center rounded-modal bg-canvas shadow-card">
+      <div className="grid size-[56px] place-items-center rounded-modal bg-canvas shadow-card">
         <TagIcon size={24} strokeWidth={1.75} className="text-ink-900" aria-hidden />
       </div>
       <h2 className="text-xl font-semibold text-ink-900">Tag your first thing</h2>
@@ -185,7 +186,7 @@ function MoreLinks() {
     <ul className="mt-6 overflow-hidden rounded-modal border border-hairline bg-canvas md:hidden">
       <li>
         <Link to="/app/tags" className="flex min-h-14 items-center gap-3 px-4 py-3 transition-colors hover:bg-ink-50 focus-visible:outline-offset-[-2px] active:bg-ink-50">
-          <span className="grid size-9 shrink-0 place-items-center rounded-card bg-ink-100">
+          <span className={cn('grid size-[36px] shrink-0 place-items-center rounded-card bg-ink-100', axIcon)}>
             <TagIcon size={18} strokeWidth={1.75} className="text-ink-900" aria-hidden />
           </span>
           <span className="flex min-w-0 flex-1 flex-col">
@@ -230,10 +231,10 @@ export function ItemsScreen() {
           to="/app/inbox"
           className="mb-4 flex min-h-14 items-center gap-3 rounded-modal border border-signal-200 bg-signal-50 px-4 py-3 transition-colors hover:border-signal-300"
         >
-          <span className="grid size-9 shrink-0 place-items-center rounded-pill bg-signal-700 text-canvas">
+          <span className={cn('grid size-[36px] shrink-0 place-items-center rounded-pill bg-signal-700 text-canvas', axIcon)}>
             <InboxIcon size={18} strokeWidth={2} aria-hidden />
           </span>
-          <span className="flex-1 text-base font-medium text-ink-900">
+          <span className="min-w-0 flex-1 text-base font-medium text-ink-900">
             {unread === 1 ? 'Someone sent you a note' : `You have ${unread} new notes`}
           </span>
           <ChevronRight size={20} strokeWidth={1.75} className="shrink-0 text-signal-700" aria-hidden />

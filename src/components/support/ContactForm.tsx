@@ -49,7 +49,7 @@ export function ContactForm({ initialTopic = 'other', onDone }: { initialTopic?:
         <select
           value={topic}
           onChange={(e) => setTopic(e.target.value as SupportTopic)}
-          className="h-12 rounded-card border border-hairline-strong bg-canvas px-4 text-body text-ink-900"
+          className="h-12 w-full min-w-0 overflow-hidden text-ellipsis rounded-card border border-hairline-strong bg-canvas px-4 text-body text-ink-900 ax:h-auto ax:min-h-12"
         >
           {TOPICS.filter((t) => memberships || t.id !== 'billing').map((t) => (
             <option key={t.id} value={t.id}>

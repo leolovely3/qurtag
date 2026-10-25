@@ -45,7 +45,7 @@ export function BlockedFinders() {
       {rows.map((b) => (
         <li key={b.thread_id} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-start gap-3">
-            <div className="grid size-9 shrink-0 place-items-center rounded-card bg-ink-100">
+            <div className="grid size-[36px] shrink-0 place-items-center ax:hidden rounded-card bg-ink-100">
               <ShieldOff size={18} strokeWidth={1.75} className="text-ink-900" aria-hidden />
             </div>
             <div className="flex min-w-0 flex-col gap-0.5">

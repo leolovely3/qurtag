@@ -96,11 +96,11 @@ export function Inbox() {
               <li key={thread.id}>
                 <Link
                   to={`/app/inbox/${thread.id}`}
-                  className="flex items-start gap-3 px-4 py-3 transition-colors duration-150 hover:bg-ink-50 focus-visible:outline-offset-[-2px] active:bg-ink-50"
+                  className="flex items-start gap-3 px-4 py-3 transition-colors duration-150 hover:bg-ink-50 focus-visible:outline-offset-[-2px] active:bg-ink-50 ax:flex-col"
                 >
                   <ItemThumb src={thread.item?.hero_photo_url} size="sm" />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-baseline justify-between gap-3">
+                  <div className="min-w-0 flex-1 ax:w-full">
+                    <div className="flex items-baseline justify-between gap-3 ax:flex-col ax:gap-0">
                       <h3
                         className={cn(
                           'min-w-0 break-words text-base leading-snug',

@@ -236,11 +236,11 @@ export function FinderView() {
         </p>
       </div>
 
-      <div className="flex items-center gap-4 rounded-modal border border-hairline bg-canvas p-4 shadow-card">
+      <div className="flex items-center gap-4 rounded-modal border border-hairline bg-canvas p-4 shadow-card ax:flex-col ax:items-start">
         {item.photo ? (
-          <img src={item.photo} alt={`Photo of the ${item.name}`} className="size-20 shrink-0 rounded-card bg-ink-100 object-cover" />
+          <img src={item.photo} alt={`Photo of the ${item.name}`} className="size-[80px] shrink-0 rounded-card bg-ink-100 object-cover" />
         ) : (
-          <div className="grid size-20 shrink-0 place-items-center rounded-card bg-ink-100">
+          <div className="grid size-[80px] shrink-0 place-items-center rounded-card bg-ink-100">
             <Package size={28} strokeWidth={1.5} className="text-muted" aria-hidden />
           </div>
         )}
@@ -252,7 +252,7 @@ export function FinderView() {
 
       {item.reward_text && (
         <aside className="flex items-start gap-3 rounded-modal border border-hairline bg-canvas p-4">
-          <div className="grid size-10 shrink-0 place-items-center rounded-pill bg-signal-50">
+          <div className="grid size-[40px] shrink-0 place-items-center rounded-pill bg-signal-50 ax:hidden">
             <Gift size={20} strokeWidth={1.75} className="text-signal-700" aria-hidden />
           </div>
           <div className="min-w-0 flex-1">

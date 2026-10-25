@@ -9,23 +9,15 @@ import { installBootGuard } from './lib/bootGuard';
 import { installPreloadErrorHandler } from './lib/chunkRecovery';
 import { installExternalLinks } from './lib/externalLinks';
 import { isNative } from './lib/platform';
+import { installTextSizeClasses } from './lib/textSize';
 import { captureChannel } from './lib/measures';
 import { startErrorReports } from './lib/errors';
 import './index.css';
 
-if (isNative()) {
-  const root = document.documentElement;
-  root.classList.add('native-app');
-  // Text follows the phone's size setting (src/index.css), up to a limit: the largest
-  // accessibility sizes would push whole headings off the screen.
-  const MAX_ROOT_PX = 26;
-  const fitText = () => {
-    root.style.removeProperty('font-size');
-    if (parseFloat(getComputedStyle(root).fontSize) > MAX_ROOT_PX) root.style.fontSize = `${MAX_ROOT_PX}px`;
-  };
-  fitText();
-  document.addEventListener('visibilitychange', fitText);
-}
+// The iPhone app follows the phone's text size at every size, the Accessibility ones included
+// (src/index.css); screens change layout at the largest sizes (src/lib/textSize.ts).
+if (isNative()) document.documentElement.classList.add('native-app');
+installTextSizeClasses();
 
 // Where the visit came from (?ch=, else utm_source), kept in this tab only (src/lib/measures.ts).
 captureChannel();

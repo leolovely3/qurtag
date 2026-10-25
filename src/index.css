@@ -270,4 +270,73 @@ html.native-app .fixed.inset-0 {
   }
 }
 html.native-app body { overflow-x: clip; }
-html.native-app h1, html.native-app h2, html.native-app h3, html.native-app p, html.native-app a, html.native-app label { overflow-wrap: anywhere; }
+/* A long word (an email address, a short code) still wraps rather than push the screen
+   sideways, but whole words stay whole: `anywhere` would let a narrow column break every word
+   ("W a t e r"); `break-word` breaks a word only when it cannot fit a line of its own. A block of
+   text never gets wider than the box it sits in, even where it is sized to its content (a column
+   that does not stretch its children), so that such a word can break. `:where` keeps these at
+   no specificity, so a screen's own width classes still win. */
+:where(html.native-app, html.text-ax) :where(h1, h2, h3, p, li, a, label, span, summary) { overflow-wrap: break-word; }
+:where(html.native-app, html.text-ax) :where(h1, h2, h3, p, li, label, select) { max-width: 100%; }
+/* A bar that scrolls with the page at large text sizes (AppPage) needs no offset. */
+html.native-app.text-ax .sticky.ax\:relative { top: auto; }
+
+/*
+ * Accessibility text sizes (`text-ax` on <html>, src/lib/textSize.ts). Text grows with the
+ * phone's setting, but the room beside it does not: side padding, the gaps between things in a
+ * row and corner radii are in rem, so at 53 px they would each grow to 53 px and squeeze the text
+ * into a column a word wide. Above the threshold they keep their standard size in px, the way iOS
+ * keeps its margins fixed while Dynamic Type grows the text. Vertical spacing still grows.
+ */
+html.text-ax .p-0\.5, html.text-ax .px-0\.5 { padding-left: 2px; padding-right: 2px; }
+html.text-ax .pl-0\.5 { padding-left: 2px; } html.text-ax .pr-0\.5 { padding-right: 2px; }
+html.text-ax .gap-0\.5, html.text-ax .gap-x-0\.5 { column-gap: 2px; }
+html.text-ax .p-1, html.text-ax .px-1 { padding-left: 4px; padding-right: 4px; }
+html.text-ax .pl-1 { padding-left: 4px; } html.text-ax .pr-1 { padding-right: 4px; }
+html.text-ax .gap-1, html.text-ax .gap-x-1 { column-gap: 4px; }
+html.text-ax .p-1\.5, html.text-ax .px-1\.5 { padding-left: 6px; padding-right: 6px; }
+html.text-ax .pl-1\.5 { padding-left: 6px; } html.text-ax .pr-1\.5 { padding-right: 6px; }
+html.text-ax .gap-1\.5, html.text-ax .gap-x-1\.5 { column-gap: 6px; }
+html.text-ax .p-2, html.text-ax .px-2 { padding-left: 8px; padding-right: 8px; }
+html.text-ax .pl-2 { padding-left: 8px; } html.text-ax .pr-2 { padding-right: 8px; }
+html.text-ax .gap-2, html.text-ax .gap-x-2 { column-gap: 8px; }
+html.text-ax .p-2\.5, html.text-ax .px-2\.5 { padding-left: 10px; padding-right: 10px; }
+html.text-ax .pl-2\.5 { padding-left: 10px; } html.text-ax .pr-2\.5 { padding-right: 10px; }
+html.text-ax .gap-2\.5, html.text-ax .gap-x-2\.5 { column-gap: 10px; }
+html.text-ax .p-3, html.text-ax .px-3 { padding-left: 12px; padding-right: 12px; }
+html.text-ax .pl-3 { padding-left: 12px; } html.text-ax .pr-3 { padding-right: 12px; }
+html.text-ax .gap-3, html.text-ax .gap-x-3 { column-gap: 12px; }
+html.text-ax .p-3\.5, html.text-ax .px-3\.5 { padding-left: 14px; padding-right: 14px; }
+html.text-ax .pl-3\.5 { padding-left: 14px; } html.text-ax .pr-3\.5 { padding-right: 14px; }
+html.text-ax .gap-3\.5, html.text-ax .gap-x-3\.5 { column-gap: 14px; }
+html.text-ax .p-4, html.text-ax .px-4 { padding-left: 16px; padding-right: 16px; }
+html.text-ax .pl-4 { padding-left: 16px; } html.text-ax .pr-4 { padding-right: 16px; }
+html.text-ax .gap-4, html.text-ax .gap-x-4 { column-gap: 16px; }
+html.text-ax .p-5, html.text-ax .px-5 { padding-left: 20px; padding-right: 20px; }
+html.text-ax .pl-5 { padding-left: 20px; } html.text-ax .pr-5 { padding-right: 20px; }
+html.text-ax .gap-5, html.text-ax .gap-x-5 { column-gap: 20px; }
+html.text-ax .p-6, html.text-ax .px-6 { padding-left: 24px; padding-right: 24px; }
+html.text-ax .pl-6 { padding-left: 24px; } html.text-ax .pr-6 { padding-right: 24px; }
+html.text-ax .gap-6, html.text-ax .gap-x-6 { column-gap: 24px; }
+html.text-ax .p-8, html.text-ax .px-8 { padding-left: 32px; padding-right: 32px; }
+html.text-ax .pl-8 { padding-left: 32px; } html.text-ax .pr-8 { padding-right: 32px; }
+html.text-ax .gap-8, html.text-ax .gap-x-8 { column-gap: 32px; }
+html.text-ax .p-10, html.text-ax .px-10 { padding-left: 40px; padding-right: 40px; }
+html.text-ax .pl-10 { padding-left: 40px; } html.text-ax .pr-10 { padding-right: 40px; }
+html.text-ax .gap-10, html.text-ax .gap-x-10 { column-gap: 40px; }
+html.text-ax .p-12, html.text-ax .px-12 { padding-left: 48px; padding-right: 48px; }
+html.text-ax .pl-12 { padding-left: 48px; } html.text-ax .pr-12 { padding-right: 48px; }
+html.text-ax .gap-12, html.text-ax .gap-x-12 { column-gap: 48px; }
+html.text-ax .p-qurtag, html.text-ax .px-qurtag { padding-left: 8px; padding-right: 8px; }
+html.text-ax .gap-qurtag, html.text-ax .gap-x-qurtag { column-gap: 8px; }
+html.text-ax .p-qurtag-2, html.text-ax .px-qurtag-2 { padding-left: 16px; padding-right: 16px; }
+html.text-ax .gap-qurtag-2, html.text-ax .gap-x-qurtag-2 { column-gap: 16px; }
+html.text-ax .p-qurtag-3, html.text-ax .px-qurtag-3 { padding-left: 24px; padding-right: 24px; }
+html.text-ax .gap-qurtag-3, html.text-ax .gap-x-qurtag-3 { column-gap: 24px; }
+html.text-ax .p-qurtag-5, html.text-ax .px-qurtag-5 { padding-left: 40px; padding-right: 40px; }
+html.text-ax .gap-qurtag-5, html.text-ax .gap-x-qurtag-5 { column-gap: 40px; }
+html.text-ax .rounded-modal { border-radius: 16px; }
+html.text-ax .rounded-card { border-radius: 10px; }
+/* A menu's chosen option can be longer than the screen at large sizes: it ends in "..." inside
+   its box instead of widening the page. */
+:where(html.native-app, html.text-ax) select { overflow: hidden; text-overflow: ellipsis; }

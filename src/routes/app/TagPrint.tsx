@@ -209,11 +209,11 @@ export function TagPrint() {
         )}
 
         <section aria-labelledby="style-h" className="flex flex-col gap-3">
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 id="style-h" className="text-lg font-semibold text-ink-900">Choose a style</h2>
             <HelpLink section="which-style" label="Which style?" />
           </div>
-          <div role="radiogroup" aria-labelledby="style-h" className="grid gap-2 sm:grid-cols-2">
+          <div role="radiogroup" aria-labelledby="style-h" className="grid gap-2 sm:grid-cols-2 ax:grid-cols-1">
             {STYLES.map((s) => (
               <label key={s.id} className={choice(s.id === styleId)}>
                 <input type="radio" name="tag-style" className="sr-only" checked={s.id === styleId} onChange={() => setStyleId(s.id)} />
@@ -239,7 +239,7 @@ export function TagPrint() {
 
         <section aria-labelledby="look-h" className="flex flex-col gap-3">
           <h2 id="look-h" className="text-lg font-semibold text-ink-900">Choose a look</h2>
-          <div role="radiogroup" aria-labelledby="look-h" className="grid gap-2 sm:grid-cols-3">
+          <div role="radiogroup" aria-labelledby="look-h" className="grid gap-2 sm:grid-cols-3 ax:grid-cols-1">
             {LOOKS.map((l) => (
               <label key={l.id} className={choice(l.id === look)}>
                 <input type="radio" name="tag-look" className="sr-only" checked={l.id === look} onChange={() => setLook(l.id)} />
@@ -269,7 +269,7 @@ export function TagPrint() {
               <select
                 value={count}
                 onChange={(e) => setCopies(Number(e.target.value))}
-                className="h-11 rounded-card border border-hairline-strong bg-canvas px-3 text-base text-ink-900"
+                className="h-11 max-w-full rounded-card border border-hairline-strong bg-canvas px-3 text-base text-ink-900 ax:h-auto ax:min-h-[44px]"
               >
                 {choices.map((n) => (
                   <option key={n} value={n}>
@@ -293,7 +293,7 @@ export function TagPrint() {
 
         <section aria-labelledby="prev-h" className="flex flex-col gap-3">
           <h2 id="prev-h" className="text-lg font-semibold text-ink-900">Preview</h2>
-          <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 sm:grid-cols-[auto_minmax(0,1fr)]">
+          <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 sm:grid-cols-[auto_minmax(0,1fr)] ax:grid-cols-[minmax(0,1fr)]">
             {preview && (
               <figure className="flex min-w-0 flex-col gap-1">
                 <div
