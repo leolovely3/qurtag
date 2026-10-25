@@ -227,6 +227,11 @@ test('config: with no settings no plan can be bought; with them all four can', a
   assert.deepEqual(((await some.json()) as { available: Record<string, boolean> }).available, { plus_month: true, plus_year: false, family_month: false, family_year: false });
   const all = await harness(FULL).routes.config(call('billing-config', {}));
   assert.deepEqual(Object.values(((await all.json()) as { available: Record<string, boolean> }).available), [true, true, true, true]);
+  // Email availability follows RESEND_API_KEY.
+  const noMail = (await (await harness(EMPTY).routes.config(call('billing-config', {}))).json()) as { email: boolean };
+  assert.equal(noMail.email, false);
+  const mail = (await (await harness({ ...EMPTY, RESEND_API_KEY: 're_x' } as NodeJS.ProcessEnv).routes.config(call('billing-config', {}))).json()) as { email: boolean };
+  assert.equal(mail.email, true);
   assert.ok(!JSON.stringify(await harness(FULL).routes.config(call('billing-config', {})).then((r) => r.text())).includes('price_'));
 });
 

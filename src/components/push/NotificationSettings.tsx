@@ -9,10 +9,14 @@ import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/lib/cn';
 
 /**
- * The iPhone alert choices, in Settings under Notifications: on or off for each kind, hiding the
- * note on the lock screen, and the email copy. Saved per person (qurtag.push_settings), so each
- * member of a Family household has their own. Shown in the iPhone app only: the alerts are for
- * the app.
+ * The rows of Settings > Notifications. In the iPhone app: whether alerts are allowed, on or off
+ * for each kind, hiding the note on the lock screen, then the email copy. On the website there
+ * are no alerts: one row says where notes arrive, then the email copy. Saved per person
+ * (qurtag.push_settings), so each member of a Family household has their own.
+ *
+ * Email rows follow `emailAvailable`, which the server reports from whether RESEND_API_KEY is
+ * set (billing-config). While it is unknown nothing about email is shown; when email cannot be
+ * sent the row is disabled and says "Email alerts are coming soon".
  */
 interface PushSettings {
   found_on: boolean;
@@ -24,13 +28,14 @@ interface PushSettings {
 
 const DEFAULTS: PushSettings = { found_on: true, message_on: true, scan_on: false, hide_text: false, email_copy: true };
 
-const ROWS: { key: keyof PushSettings; param: string; icon: LucideIcon; title: string; body: string }[] = [
+const PUSH_ROWS: { key: keyof PushSettings; param: string; icon: LucideIcon; title: string; body: string }[] = [
   { key: 'found_on', param: 'p_found_on', icon: Bell, title: 'Someone found your item', body: 'An alert when a finder sends the first note about one of your things.' },
   { key: 'message_on', param: 'p_message_on', icon: MessageCircle, title: 'New messages', body: 'An alert for each later note in a conversation.' },
   { key: 'scan_on', param: 'p_scan_on', icon: ScanLine, title: 'Your tag was scanned', body: 'An alert when someone opens your tag but writes nothing. At most one an hour for each tag.' },
   { key: 'hide_text', param: 'p_hide_text', icon: EyeOff, title: 'Hide note text on the lock screen', body: 'The alert then says only "You have a new note", with no note and no item name.' },
-  { key: 'email_copy', param: 'p_email_copy', icon: Mail, title: 'Email me a copy', body: 'If you have not opened an alert after 10 minutes, we email you about it.' },
 ];
+
+const EMAIL_ROW = { key: 'email_copy' as const, param: 'p_email_copy', icon: Mail, title: 'Email me a copy' };
 
 function Switch({ checked, onChange, label, disabled }: { checked: boolean; onChange: (next: boolean) => void; label: string; disabled?: boolean }) {
   return (
@@ -74,7 +79,7 @@ function SettingRow({ icon: Icon, title, body, children }: { icon: LucideIcon; t
   );
 }
 
-export function NotificationSettings() {
+export function NotificationSettings({ emailAvailable }: { emailAvailable: boolean | null }) {
   const toast = useToast();
   const [settings, setSettings] = useState<PushSettings | null>(null);
   const [permission, setPermission] = useState<PermissionState>('unknown');
@@ -82,11 +87,11 @@ export function NotificationSettings() {
   const load = useCallback(async () => {
     const { data } = await db.rpc('my_push_settings');
     setSettings({ ...DEFAULTS, ...((data as Partial<PushSettings> | null) ?? {}) });
-    setPermission(await pushPermission());
+    if (isNative()) setPermission(await pushPermission());
   }, []);
 
   useEffect(() => {
-    if (isNative()) void load();
+    void load();
   }, [load]);
 
   async function change(key: keyof PushSettings, param: string, next: boolean) {
@@ -108,31 +113,61 @@ export function NotificationSettings() {
     if (r === 'granted') toast.show({ kind: 'success', title: 'Alerts are on' });
   }
 
-  if (!isNative()) return null;
+  const native = isNative();
+  const emailBody = native
+    ? 'If you have not opened an alert after 10 minutes, we email you about it.'
+    : 'We email you when a finder writes. If you also use the iPhone app, only when an alert went unopened for 10 minutes.';
 
   return (
     <>
-      <SettingRow
-        icon={permission === 'granted' ? Bell : BellOff}
-        title={permission === 'granted' ? 'Alerts on this iPhone' : 'Alerts on this iPhone are off'}
-        body={
-          permission === 'granted'
-            ? 'You will hear from us when a finder writes. Choose which alerts below.'
-            : permission === 'denied'
-              ? 'To turn them on, open the iPhone Settings app, then QuR Tag, then Notifications, and allow them.'
-              : 'Turn them on to know the moment someone finds your thing.'
-        }
-      >
-        {permission === 'prompt' && (
-          <Button onClick={allow}>Turn on</Button>
-        )}
-      </SettingRow>
-      {settings &&
-        ROWS.map((row) => (
-          <SettingRow key={row.key} icon={row.icon} title={row.title} body={row.body}>
-            <Switch checked={settings[row.key]} label={row.title} onChange={(next) => void change(row.key, row.param, next)} />
+      {native && (
+        <>
+          <SettingRow
+            icon={permission === 'granted' ? Bell : BellOff}
+            title={permission === 'granted' ? 'Alerts on this iPhone' : 'Alerts on this iPhone are off'}
+            body={
+              permission === 'granted'
+                ? 'You will hear from us when a finder writes. Choose which alerts below.'
+                : permission === 'denied'
+                  ? 'To turn them on, open the iPhone Settings app, then QuR Tag, then Notifications, and allow them.'
+                  : 'Turn them on to know the moment someone finds your thing.'
+            }
+          >
+            {permission === 'prompt' && <Button onClick={allow}>Turn on</Button>}
           </SettingRow>
-        ))}
+          {settings &&
+            PUSH_ROWS.map((row) => (
+              <SettingRow key={row.key} icon={row.icon} title={row.title} body={row.body}>
+                <Switch checked={settings[row.key]} label={row.title} onChange={(next) => void change(row.key, row.param, next)} />
+              </SettingRow>
+            ))}
+        </>
+      )}
+      {!native && (
+        <SettingRow
+          icon={Mail}
+          title="Notes from finders"
+          body={
+            emailAvailable
+              ? 'Notes arrive in your QuR Tag inbox here, and we email you when one comes in.'
+              : 'Notes arrive in your QuR Tag inbox here. Check it, especially when something is lost.'
+          }
+        />
+      )}
+      {emailAvailable !== null && (emailAvailable ? settings : true) && (
+        <SettingRow
+          icon={EMAIL_ROW.icon}
+          title={EMAIL_ROW.title}
+          body={emailAvailable ? emailBody : 'Email alerts are coming soon.'}
+        >
+          <Switch
+            checked={emailAvailable && settings ? settings.email_copy : false}
+            disabled={!emailAvailable}
+            label={EMAIL_ROW.title}
+            onChange={(next) => void change(EMAIL_ROW.key, EMAIL_ROW.param, next)}
+          />
+        </SettingRow>
+      )}
     </>
   );
 }

@@ -122,6 +122,12 @@ export async function fetchBillingConfig(): Promise<Record<string, boolean> | nu
   return a.data?.available ?? null;
 }
 
+/** Whether the server can send email (RESEND_API_KEY is set). Null when it could not be asked. */
+export async function fetchEmailAvailable(): Promise<boolean | null> {
+  const a = await post<{ email?: boolean }>('billing-config', {}, false);
+  return a.data ? a.data.email === true : null;
+}
+
 /** Starts Stripe Checkout; the page then leaves for Stripe's. */
 export async function startWebCheckout(plan: PaidPlan, interval: Interval): Promise<{ url: string } | { error: string }> {
   const a = await post<{ url: string }>('billing-checkout', { plan, interval }, true);
