@@ -72,6 +72,8 @@ const tagId = tags?.[0]?.id;
 
 const screens = [
   { name: 'sign-up', path: '/start', signedOut: true },
+  // The iPhone app's first-open welcome (src/lib/firstOpen.ts): only drawn when the page believes it is in the app.
+  { name: 'welcome', path: '/start', phone: true },
   { name: 'items', path: '/app' },
   { name: 'item', path: `/app/items/${itemId}` },
   { name: 'add-item', path: '/start/setup' },
@@ -236,6 +238,14 @@ try {
     if (!signin.ok()) throw new Error(`sign-in answered ${signin.status()}`);
     const signedOut = await browser.newContext({ viewport: { width, height: 874 }, deviceScaleFactor: 2 });
     const fresh = await browser.newContext({ viewport: { width, height: 874 }, deviceScaleFactor: 2 });
+    // Signed out, on a phone that has never had an account. Capacitor reads the iPhone's message
+    // bridge to decide it is in the app; a stand-in bridge that answers nothing is enough for
+    // /start. The app then addresses the live site, so those calls are stopped here.
+    const phone = await browser.newContext({ viewport: { width, height: 874 }, deviceScaleFactor: 2 });
+    await phone.addInitScript(() => {
+      window.webkit = { messageHandlers: { bridge: { postMessage() {} } } };
+    });
+    await phone.route(/qurtag\.com/, (r) => r.abort());
     const freshIn = await fresh.request.post(`${BASE}/api/auth/sign-in/email`, {
       data: { email: newcomerEmail, password: 'correct horse battery' },
       headers: { origin: BASE, 'x-forwarded-for': `10.79.0.${width % 250}` },
@@ -248,7 +258,7 @@ try {
         const again = await finder.send(tagPublicId, null, `Hello again, I found your glasses (${width}, ${size}).`);
         if (again.status !== 200) throw new Error(`finder-send answered ${again.status}`);
       }
-      for (const ctx of [signedIn, signedOut, fresh]) {
+      for (const ctx of [signedIn, signedOut, fresh, phone]) {
         await ctx.addInitScript((px) => {
           const apply = () => {
             document.documentElement.classList.add('native-app');
@@ -259,7 +269,7 @@ try {
         }, size);
       }
       for (const s of screens) {
-        const page = await (s.signedOut ? signedOut : s.newcomer ? fresh : signedIn).newPage();
+        const page = await (s.phone ? phone : s.signedOut ? signedOut : s.newcomer ? fresh : signedIn).newPage();
         // Each page load asks the sign-in service for the session; a page of its own network
         // address keeps the run under the per-address limit a real person never reaches.
         await page.setExtraHTTPHeaders({ 'x-forwarded-for': `10.78.${cases % 250}.${(cases >> 8) % 250 + 1}` });
@@ -294,6 +304,7 @@ try {
     await signedIn.close();
     await signedOut.close();
     await fresh.close();
+    await phone.close();
   }
 } finally {
   await browser.close();

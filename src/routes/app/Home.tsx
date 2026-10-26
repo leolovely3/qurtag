@@ -15,6 +15,7 @@ import { useAuth } from '@/lib/auth';
 import { countUnreadForHousehold, fetchItems, fetchPrimaryHouseholdId, fetchTags } from '@/lib/queries';
 import { fetchMembership, type Membership } from '@/lib/membership';
 import { useMembershipsAvailable } from '@/lib/useMembershipsAvailable';
+import { showPlusNudge } from '@/lib/plusNudge';
 import type { Item, Tag } from '@/lib/database.types';
 import { cn } from '@/lib/cn';
 import { axIcon, axRow, axRowEnd, axRowText } from '@/components/ui/largeText';
@@ -237,13 +238,29 @@ export function ItemsScreen() {
       : membership.item_limit === null
         ? `${items.length} ${items.length === 1 ? 'item' : 'items'}`
         : `${items.length} of ${membership.item_limit} items`;
+  const nudge = !loading && showPlusNudge(membership, items.length, memberships);
 
   if (!loading && !failed && items.length === 0 && !skipped) return <Navigate to="/app/first-tag" replace />;
 
   return (
     <AppPage
       title="Items"
-      subtitle={subtitle}
+      subtitle={
+        nudge ? (
+          <>
+            {subtitle}
+            <br />
+            <Link
+              to="/app/membership"
+              className="-my-2.5 inline-flex min-h-11 items-center font-medium text-ink-700 underline underline-offset-4 hover:text-ink-900"
+            >
+              Unlimited with Plus
+            </Link>
+          </>
+        ) : (
+          subtitle
+        )
+      }
       help="getting-started"
       action={!loading ? <AddItemButton membership={membership} first={items.length === 0} /> : undefined}
     >

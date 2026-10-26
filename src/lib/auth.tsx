@@ -13,6 +13,7 @@ import { iapSignOut } from './iap';
 import { recordPlatform, signupChannel } from './measures';
 import { forgetPushDevice } from './nativePush';
 import { SKIP_KEY } from './gettingStarted';
+import { rememberAccountOnDevice } from './firstOpen';
 
 /**
  * Who is signed in, for every screen. Owners sign up and in with email and password
@@ -95,6 +96,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signedInId = user?.id;
   useEffect(() => {
     if (signedInId) recordPlatform();
+  }, [signedInId]);
+
+  // An account has been used on this phone, so a signed-out open goes to signing in from now on,
+  // not the first-open welcome screen (src/lib/firstOpen.ts). Signing out does not clear it.
+  useEffect(() => {
+    if (signedInId) rememberAccountOnDevice();
   }, [signedInId]);
 
   const signUp = useCallback<AuthContextValue['signUp']>(
