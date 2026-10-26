@@ -37,7 +37,16 @@ test('signing out does not bring the welcome screen back (nothing clears the fla
   assert.equal(hasAccountOnDevice(store), true);
 });
 
+test('a cold start of the app (/start?next=/app from the signed-out redirect) still shows the welcome screen', () => {
+  assert.equal(initialStartView({ ...phone, next: '/app', accountOnDevice: false }), 'welcome');
+  assert.equal(initialStartView({ ...phone, next: '/app/', accountOnDevice: false }), 'welcome');
+  assert.equal(initialStartView({ ...phone, next: '/app', accountOnDevice: true }), 'signin');
+  assert.equal(initialStartView({ ...web, next: '/app', accountOnDevice: false }), 'create');
+});
+
 test('a link with next (an invite, a paid plan) skips the welcome screen on a fresh phone', () => {
+  assert.equal(initialStartView({ ...phone, next: '/app/membership?plan=plus', accountOnDevice: false }), 'signin');
+  assert.equal(initialStartView({ ...phone, next: '/app/inbox', accountOnDevice: false }), 'signin');
   assert.equal(initialStartView({ ...phone, next: '/join/abc', accountOnDevice: false }), 'signin');
   assert.equal(initialStartView({ ...phone, next: '/join/abc', mode: 'create', accountOnDevice: false }), 'create');
 });

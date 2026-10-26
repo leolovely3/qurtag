@@ -73,7 +73,7 @@ const tagId = tags?.[0]?.id;
 const screens = [
   { name: 'sign-up', path: '/start', signedOut: true },
   // The iPhone app's first-open welcome (src/lib/firstOpen.ts): only drawn when the page believes it is in the app.
-  { name: 'welcome', path: '/start', phone: true },
+  { name: 'welcome', path: '/start?next=%2Fapp', phone: true },
   { name: 'items', path: '/app' },
   { name: 'item', path: `/app/items/${itemId}` },
   { name: 'add-item', path: '/start/setup' },
