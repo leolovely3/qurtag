@@ -66,14 +66,21 @@ export interface StorePrice {
 
 let configuredFor: string | null = null;
 
+/**
+ * The RevenueCat plugin, wrapped in an object. A Capacitor plugin is a proxy that answers
+ * every property as a native method, `then` included, so an async function must never
+ * resolve to the plugin itself: awaiting it calls Purchases.then(), which fails on iOS
+ * ("not implemented") and left RevenueCat unconfigured with memberships hidden.
+ */
 async function sdk() {
-  return (await import('@revenuecat/purchases-capacitor')).Purchases;
+  const { Purchases } = await import('@revenuecat/purchases-capacitor');
+  return { Purchases };
 }
 
 /** Signs RevenueCat in as this account (once per account). */
 export async function iapSignIn(userId: string): Promise<void> {
   if (!iapAvailable() || configuredFor === userId) return;
-  const Purchases = await sdk();
+  const { Purchases } = await sdk();
   if (configuredFor === null) {
     await Purchases.configure({ apiKey: iapKey, appUserID: userId });
   } else {
@@ -86,7 +93,7 @@ export async function iapSignIn(userId: string): Promise<void> {
 export async function iapSignOut(): Promise<void> {
   if (!iapAvailable() || configuredFor === null) return;
   try {
-    const Purchases = await sdk();
+    const { Purchases } = await sdk();
     await Purchases.logOut();
   } catch {
     /* already anonymous */
@@ -99,7 +106,7 @@ export async function iapPrices(userId: string): Promise<Map<string, StorePrice>
   const out = new Map<string, StorePrice>();
   if (!iapAvailable()) return out;
   await iapSignIn(userId);
-  const Purchases = await sdk();
+  const { Purchases } = await sdk();
   const offerings = await Purchases.getOfferings();
   const all = [offerings.current, ...Object.values(offerings.all ?? {})].filter(Boolean);
   for (const offering of all) {
@@ -117,7 +124,7 @@ export type PurchaseOutcome = 'purchased' | 'cancelled' | 'failed';
 
 export async function iapBuy(userId: string, price: StorePrice): Promise<{ outcome: PurchaseOutcome; message?: string }> {
   await iapSignIn(userId);
-  const Purchases = await sdk();
+  const { Purchases } = await sdk();
   try {
     await Purchases.purchasePackage({ aPackage: price.packageRef as Parameters<typeof Purchases.purchasePackage>[0]['aPackage'] });
     return { outcome: 'purchased' };
@@ -131,7 +138,7 @@ export async function iapBuy(userId: string, price: StorePrice): Promise<{ outco
 export async function iapRestore(userId: string): Promise<{ found: boolean } | { error: string }> {
   try {
     await iapSignIn(userId);
-    const Purchases = await sdk();
+    const { Purchases } = await sdk();
     const { customerInfo } = await Purchases.restorePurchases();
     return { found: (customerInfo.activeSubscriptions ?? []).length > 0 };
   } catch {
