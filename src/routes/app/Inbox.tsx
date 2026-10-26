@@ -1,3 +1,4 @@
+import { finderLabels, previewLine } from '@/lib/inbox';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Inbox as InboxIcon } from 'lucide-react';
@@ -59,6 +60,8 @@ export function Inbox() {
     if (hh) setThreads(await fetchThreadsForHousehold(hh));
   }, !!user && !loading);
 
+  const labels = useMemo(() => finderLabels(threads), [threads]);
+
   const unreadTotal = useMemo(
     () => threads.reduce((sum, t) => sum + t.unread_count, 0),
     [threads],
@@ -108,6 +111,7 @@ export function Inbox() {
                         )}
                       >
                         {thread.item?.name ?? 'An item'}
+                        {labels.get(thread.id) && <span className="font-normal text-muted">{` · ${labels.get(thread.id)}`}</span>}
                       </h3>
                       <span className={cn('shrink-0 text-sm', unread ? 'font-semibold text-signal-700' : 'text-muted')}>
                         {relativeTime(thread.last_message_at)}
@@ -115,9 +119,7 @@ export function Inbox() {
                     </div>
                     <div className="mt-0.5 flex items-start gap-2">
                       <p className={cn('line-clamp-2 min-w-0 flex-1 text-sm', unread ? 'text-ink-900' : 'text-muted')}>
-                        {thread.last_message
-                          ? `${thread.last_message.sender_kind === 'finder' ? 'They wrote: ' : 'You: '}${thread.last_message.body}`
-                          : 'No messages yet.'}
+                        {previewLine(thread)}
                       </p>
                       {unread && (
                         <span className="mt-0.5 inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-pill bg-signal-700 px-1.5 text-xs font-semibold text-canvas">

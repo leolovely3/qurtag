@@ -74,3 +74,21 @@ export function viewTag(tag: string, token: string | null, scan: boolean) {
 export function sendNote(tag: string, token: string | null, body: string) {
   return call<{ ok: true; token?: string }>('/api/fn/finder-send', { tag, ...(token ? { token } : {}), body });
 }
+
+/**
+ * Whether opening the page should count as a scan. A test view never counts, a finder
+ * coming back to their own conversation is not a new scan, and the owner looking at their
+ * own tag (signed in on this browser, for example after scanning the printed tag with their
+ * own phone) is not a finder, so it is left out of the scan history and the measures.
+ */
+export function shouldRecordScan(o: { testMode: boolean; hasToken: boolean; ownsTag: boolean }): boolean {
+  return !o.testMode && !o.hasToken && !o.ownsTag;
+}
+
+/** One-tap openings for a finder's first note, so it can finish the job without a reply. */
+export const NOTE_STARTERS = ['I left it at ', 'I have it. I can meet at ', 'I handed it to staff at '] as const;
+
+/** The link that reopens this conversation on another phone or browser (the token after #). */
+export function conversationLink(origin: string, tag: string, token: string): string {
+  return `${origin}/find/${tag}#t=${token}`;
+}

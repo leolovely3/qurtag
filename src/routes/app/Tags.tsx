@@ -9,6 +9,7 @@ import { db } from '@/lib/db';
 import { fetchItems, fetchPrimaryHouseholdId, fetchTags } from '@/lib/queries';
 import type { Item, Tag } from '@/lib/database.types';
 import { useToast } from '@/components/ui/Toast';
+import { Modal } from '@/components/ui/Modal';
 import { cn } from '@/lib/cn';
 import { shortAddress } from '@/lib/tagLayout';
 
@@ -29,6 +30,8 @@ export function Tags() {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
+  // Switching a tag off is asked first: a finder holding the item could no longer write.
+  const [confirmOff, setConfirmOff] = useState<Tag | null>(null);
   const toast = useToast();
 
   const load = useCallback(async () => {
@@ -126,7 +129,7 @@ export function Tags() {
                     <button
                       type="button"
                       disabled={busy === tag.id}
-                      onClick={() => setStatus(tag, tag.status === 'active' ? 'inactive' : 'active')}
+                      onClick={() => (tag.status === 'active' ? setConfirmOff(tag) : void setStatus(tag, 'active'))}
                       className={buttonClasses({ variant: 'secondary', className: 'flex-1 sm:flex-none' })}
                     >
                       {tag.status === 'active' ? 'Switch off' : 'Switch on'}
@@ -138,6 +141,25 @@ export function Tags() {
           })}
         </ul>
       )}
+
+      <Modal
+        open={!!confirmOff}
+        onClose={() => setConfirmOff(null)}
+        eyebrow="Switch off"
+        title={`Switch off the tag on ${(confirmOff?.current_item_id && itemById.get(confirmOff.current_item_id)?.name) || 'this item'}?`}
+        description="Anyone who scans it will see that the tag is not working and will not be able to send you a note, even if they are holding your thing. Existing conversations stay in your inbox. You can switch it back on at any time."
+        primaryAction={{
+          label: 'Switch it off',
+          tone: 'destructive',
+          pending: !!confirmOff && busy === confirmOff.id,
+          onClick: async () => {
+            const t = confirmOff;
+            setConfirmOff(null);
+            if (t) await setStatus(t, 'inactive');
+          },
+        }}
+        secondaryAction={{ label: 'Keep it working', onClick: () => setConfirmOff(null) }}
+      />
     </AppPage>
   );
 }

@@ -51,7 +51,7 @@ import { recordStep } from '@/lib/useGettingStarted';
  * skip scans from a browser signed in to the tag's account, this line and the Help answer
  * "How do I test my tag?" change with them.
  */
-const OWN_SCAN_NOTE = 'Your own scan shows in your scan history, like a finder’s.';
+const OWN_SCAN_NOTE = 'If your phone’s browser is signed in to QuR Tag, your own scan is not counted as a finder’s scan. If it is not signed in, the scan shows in your scan history like a finder’s.';
 
 const ICONS = { GlassWater, Laptop, Backpack, KeyRound, Glasses, Guitar, Sparkles } as const;
 

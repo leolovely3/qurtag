@@ -122,6 +122,11 @@ export function InboxThread() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // The conversation could not be loaded (no signal, server busy): not the same as missing.
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const [thanks, setThanks] = useState('');
+  const [reportedThreat, setReportedThreat] = useState(false);
   const [actionPending, setActionPending] = useState<string | null>(null);
   const [reportFor, setReportFor] = useState<string | null>(null);
   const [offerBlock, setOfferBlock] = useState(false);
@@ -151,7 +156,15 @@ export function InboxThread() {
 
     let cancelled = false;
     (async () => {
-      const t = await fetchThreadById(threadId);
+      let t: Thread | null;
+      try {
+        t = await fetchThreadById(threadId, { throwOnError: true });
+      } catch {
+        if (cancelled) return;
+        setLoadFailed(true);
+        setLoading(false);
+        return;
+      }
       if (cancelled) return;
       if (!t) {
         setError('That conversation isn\'t in your inbox.');
@@ -177,7 +190,7 @@ export function InboxThread() {
     return () => {
       cancelled = true;
     };
-  }, [authLoading, user, threadId, navigate]);
+  }, [authLoading, user, threadId, navigate, attempt]);
 
   // New notes from the finder: ask again every few seconds while the page is open.
   usePoll(async () => {
@@ -211,9 +224,19 @@ export function InboxThread() {
     setReunitedOpen(false);
     setActionPending('reunited');
     try {
+      const note = thanks.trim();
+      if (note && thread.status === 'open') {
+        const sent = await sendOwnerReply({ threadId: thread.id, body: note });
+        if (!sent) {
+          toast.show({ kind: 'error', title: "Couldn't send your thank-you", body: 'Check your connection and try again.' });
+          return;
+        }
+        setThanks('');
+        await refetchMessages(thread.id);
+      }
       await markThreadStatus(thread.id, 'reunited');
       setThread({ ...thread, status: 'reunited' });
-      toast.show({ kind: 'success', title: 'Marked as back with you', body: 'You can still write to the finder here.' });
+      toast.show({ kind: 'success', title: 'Marked as back with you', body: 'The finder sees that you have it back. You can still write to them here.' });
       const reward = FEATURES.rewards ? await fetchActiveRewardForItem(thread.item_id) : null;
       if (reward && reward.state === 'held') {
         setReleaseRewardOpen({ amountCents: reward.amount_cents, rewardId: reward.id });
@@ -255,7 +278,7 @@ export function InboxThread() {
     try {
       await markThreadStatus(thread.id, 'closed');
       setThread({ ...thread, status: 'closed' });
-      toast.show({ kind: 'info', title: 'Conversation closed', body: 'The finder can no longer write in it.' });
+      toast.show({ kind: 'info', title: 'Conversation closed', body: 'The finder sees that it has ended and can no longer write in it.' });
     } finally {
       setActionPending(null);
     }
@@ -272,7 +295,11 @@ export function InboxThread() {
         toast.show({ kind: 'error', title: "Couldn't block this finder", body: 'Check your connection and try again.' });
         return;
       }
-      toast.show({ kind: 'info', title: 'Finder blocked', body: 'They cannot write to you again. You can unblock them in Settings.' });
+      toast.show({
+        kind: 'info',
+        title: 'Finder blocked',
+        body: 'This conversation is closed to them. To stop all new notes, switch the tag off in Tags. You can unblock them in Settings.',
+      });
       navigate('/app/inbox');
     } finally {
       setActionPending(null);
@@ -313,6 +340,7 @@ export function InboxThread() {
         return;
       }
       setReportFor(null);
+      if (reason === 'threats') setReportedThreat(true);
       await refetchMessages(thread.id);
       toast.show({ kind: 'success', title: 'Reported and hidden', body: 'We review every report within 24 hours.' });
       setOfferBlock(true);
@@ -334,6 +362,29 @@ export function InboxThread() {
     );
   }
 
+  if (loadFailed) {
+    return (
+      <AppPage title="Conversation" back={back}>
+        <section role="alert" className="flex flex-col items-center gap-3 rounded-modal border border-hairline bg-paper px-6 py-10 text-center">
+          <h2 className="text-xl font-semibold text-ink-900">We could not load this conversation</h2>
+          <p className="max-w-sm text-base text-muted">Check your connection and try again. Nothing has been deleted.</p>
+          <button
+            type="button"
+            onClick={() => {
+              setLoadFailed(false);
+              setLoading(true);
+              setAttempt((n) => n + 1);
+            }}
+            className={buttonClasses({ variant: 'primary', className: 'mt-2' })}
+          >
+            Try again
+          </button>
+        </section>
+
+      </AppPage>
+    );
+  }
+
   if (error || !thread) {
     return (
       <AppPage title="Conversation" back={back}>
@@ -349,6 +400,7 @@ export function InboxThread() {
   }
 
   const statusLabel = thread.status === 'reunited' ? 'Back with you' : thread.status === 'closed' ? 'Closed' : null;
+  const ownerReplied = messages.some((m) => m.sender_kind === 'owner');
 
   return (
     <AppPage title="Conversation" back={back}>
@@ -376,34 +428,49 @@ export function InboxThread() {
         ) : (
           <p className="px-4 py-3 text-sm text-muted">Started {relativeTime(thread.created_at)}</p>
         )}
-        <div className="flex flex-wrap gap-2 border-t border-hairline p-3">
-          <button
-            type="button"
-            onClick={() => setReunitedOpen(true)}
-            disabled={!!actionPending || thread.status === 'reunited'}
-            className={buttonClasses({ variant: 'success', className: 'flex-1 basis-[8.5rem] px-3' })}
-          >
-            {actionPending === 'reunited' ? 'Saving…' : thread.status === 'reunited' ? 'Back with you' : 'I have it back'}
-          </button>
-          <button
-            type="button"
-            onClick={() => setCloseOpen(true)}
-            disabled={!!actionPending || thread.status === 'closed'}
-            className={buttonClasses({ variant: 'secondary', className: 'flex-1 basis-[8.5rem] px-3' })}
-          >
-            {thread.status === 'closed' ? 'Closed' : 'Close conversation'}
-          </button>
-          <button
-            type="button"
-            onClick={() => setBlockOpen(true)}
-            disabled={!!actionPending}
-            className={buttonClasses({ variant: 'danger', className: 'flex-1 basis-[8.5rem] px-3' })}
-          >
-            <ShieldOff size={16} strokeWidth={1.75} aria-hidden />
-            Block this finder
-          </button>
-        </div>
       </section>
+
+      {(held.length > 0 || reportedThreat) && (
+        <aside role="note" className="mb-4 flex flex-col gap-1 rounded-modal border border-signal-300 bg-signal-50 p-4">
+          <h2 className="text-base font-semibold text-ink-900">If a note threatens you or a child</h2>
+          <p className="text-sm text-ink-900 text-pretty">
+            Do not meet alone and do not share your address. If you feel unsafe, contact your local police
+            (call 911 in an emergency). Report the note so we can review it within 24 hours, and block the
+            finder below.
+          </p>
+        </aside>
+      )}
+
+      {/* Thread */}
+      <div className="mb-4 rounded-modal border border-hairline bg-canvas p-4">
+        <ThreadView
+          messages={messages}
+          viewerKind="owner"
+          held={held}
+          onShowHeld={(id) => void handleShowHeld(id)}
+          onReport={(id) => setReportFor(id)}
+        />
+      </div>
+
+      {/* Composer */}
+      <MessageComposer
+        label="Reply"
+        placeholder="Thank you! Could you leave it at the front desk?"
+        maxLength={2000}
+        disabled={thread.status === 'closed'}
+        onSend={handleSend}
+      />
+
+      {thread.status === 'open' && ownerReplied && (
+        <button
+          type="button"
+          onClick={() => setReunitedOpen(true)}
+          disabled={!!actionPending}
+          className={buttonClasses({ variant: 'success', block: true, className: 'mt-4' })}
+        >
+          {actionPending === 'reunited' ? 'Saving…' : 'I have it back'}
+        </button>
+      )}
 
       <Modal
         open={reportFor !== null}
@@ -418,7 +485,7 @@ export function InboxThread() {
         open={offerBlock}
         onClose={() => setOfferBlock(false)}
         title="Block this finder too?"
-        description="They will not be able to write to you again. You can unblock them in Settings."
+        description="That conversation will be closed to them, and their notes leave your inbox. You can unblock them in Settings."
         primaryAction={{ label: 'Block this finder', tone: 'destructive', onClick: confirmBlockFinder, pending: actionPending === 'block' }}
         secondaryAction={{ label: 'Not now', onClick: () => setOfferBlock(false) }}
       />
@@ -428,14 +495,28 @@ export function InboxThread() {
         onClose={() => setReunitedOpen(false)}
         eyebrow="Back with you"
         title="Do you have it back?"
-        description="This marks the conversation as done. You and the finder can still write in it."
+        description="The finder's page will say that you have it back and thank them. You can both still write here."
         primaryAction={{
           label: 'Yes, I have it',
           onClick: confirmReunited,
           pending: actionPending === 'reunited',
         }}
         secondaryAction={{ label: 'Not yet', onClick: () => setReunitedOpen(false) }}
-      />
+      >
+        {thread.status === 'open' && (
+          <label className="flex flex-col gap-1">
+            <span className="text-sm font-medium text-ink-900">Add a thank-you for the finder (optional)</span>
+            <input
+              type="text"
+              value={thanks}
+              onChange={(e) => setThanks(e.target.value.slice(0, 280))}
+              maxLength={280}
+              placeholder="Thank you so much for your help!"
+              className="min-h-11 w-full rounded-card border border-hairline-strong bg-canvas px-3 text-base text-ink-900 focus:border-ink-900 focus:outline-none"
+            />
+          </label>
+        )}
+      </Modal>
 
       <Modal
         open={!!releaseRewardOpen}
@@ -461,9 +542,9 @@ export function InboxThread() {
       <Modal
         open={closeOpen}
         onClose={() => setCloseOpen(false)}
-        eyebrow="Close conversation"
-        title="Close this conversation?"
-        description="The finder will see that you closed it and can no longer write in it. Use this if the notes are not helpful or not kind."
+        eyebrow="Close to this finder"
+        title="Close this conversation to the finder?"
+        description="The finder sees that the conversation has ended and can no longer write in it. Use this if the notes are not helpful or not kind. If you have your thing back, choose I have it back instead."
         primaryAction={{ label: 'Close it', tone: 'destructive', onClick: confirmCloseConversation, pending: actionPending === 'close' }}
         secondaryAction={{ label: 'Cancel', onClick: () => setCloseOpen(false) }}
       />
@@ -473,7 +554,7 @@ export function InboxThread() {
         onClose={() => setBlockOpen(false)}
         eyebrow="Block this finder"
         title="Block this finder from contacting you again?"
-        description="This finder can no longer write to you, and their notes disappear from your inbox. They are only told that the conversation is closed. You can unblock them in Settings."
+        description="This conversation is closed to them and their notes leave your inbox. They are only told that the conversation is closed. If they scan the tag again from another phone or browser, they could start a new conversation; to stop all new notes, switch the tag off in Tags. You can unblock them in Settings."
         primaryAction={{
           label: 'Block them',
           tone: 'destructive',
@@ -532,25 +613,39 @@ export function InboxThread() {
         </div>
       )}
 
-      {/* Thread */}
-      <div className="mb-4 rounded-modal border border-hairline bg-canvas p-4">
-        <ThreadView
-          messages={messages}
-          viewerKind="owner"
-          held={held}
-          onShowHeld={(id) => void handleShowHeld(id)}
-          onReport={(id) => setReportFor(id)}
-        />
-      </div>
-
-      {/* Composer */}
-      <MessageComposer
-        label="Reply"
-        placeholder="Thank you! Could you leave it at the front desk?"
-        maxLength={2000}
-        disabled={thread.status === 'closed'}
-        onSend={handleSend}
-      />
+      {/* Less common actions, at the end so the note and the reply come first */}
+      <section aria-labelledby="thread-more" className="mt-6 flex flex-col gap-2 rounded-modal border border-hairline bg-paper p-4">
+        <h2 id="thread-more" className="text-sm font-semibold text-ink-700">More</h2>
+        {thread.status === 'open' && !ownerReplied && (
+          <button
+            type="button"
+            onClick={() => setReunitedOpen(true)}
+            disabled={!!actionPending}
+            className={buttonClasses({ variant: 'secondary', block: true })}
+          >
+            I have it back
+          </button>
+        )}
+        {thread.status === 'open' && (
+          <button
+            type="button"
+            onClick={() => setCloseOpen(true)}
+            disabled={!!actionPending}
+            className={buttonClasses({ variant: 'secondary', block: true })}
+          >
+            Close to this finder
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => setBlockOpen(true)}
+          disabled={!!actionPending}
+          className={buttonClasses({ variant: 'secondary', block: true, className: 'text-signal-700' })}
+        >
+          <ShieldOff size={16} strokeWidth={1.75} aria-hidden />
+          Block this finder
+        </button>
+      </section>
 
       {/* Privacy strip */}
       <div className="mt-4 flex items-start gap-3 px-1">

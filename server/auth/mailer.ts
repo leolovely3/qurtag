@@ -103,6 +103,9 @@ export function testAlertMail(to: string, settingsUrl: string): Mail {
   };
 }
 
+/** Said in the owner's emails, so the next one (a finder's note) does not land in spam or junk. */
+export const KEEP_OUT_OF_SPAM = 'To keep our emails out of spam or junk, add no-reply@qurtag.com to your contacts.';
+
 export function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 }
@@ -115,7 +118,7 @@ export function signInMail(kind: 'verify-email' | 'reset-password', to: string, 
           subject: 'Confirm your email for QuR Tag',
           lead: 'Confirm your email address to finish setting up your QuR Tag account.',
           button: 'Confirm my email',
-          after: 'If you did not create a QuR Tag account, you can ignore this email.',
+          after: `If you did not create a QuR Tag account, you can ignore this email. ${KEEP_OUT_OF_SPAM}`,
         }
       : {
           subject: 'Reset your QuR Tag password',
@@ -147,11 +150,12 @@ export function finderMessageMail(to: string, itemName: string, inboxUrl: string
     kind: 'finder-message',
     to,
     subject: `A note about your ${itemName}`,
-    text: `${lead}\n\nRead it and reply: ${inboxUrl}\n\n${after}\n`,
+    text: `${lead}\n\nRead it and reply: ${inboxUrl}\n\n${after}\n\n${KEEP_OUT_OF_SPAM}\n`,
     html:
       `<p>${escapeHtml(lead)}</p>` +
       `<p><a href="${escapeHtml(inboxUrl)}" style="display:inline-block;padding:10px 18px;background:#0A0B0F;color:#fff;border-radius:8px;text-decoration:none">Read and reply</a></p>` +
-      `<p style="color:#555">${escapeHtml(after)}</p>`,
+      `<p style="color:#555">${escapeHtml(after)}</p>` +
+      `<p style="color:#777;font-size:12px">${escapeHtml(KEEP_OUT_OF_SPAM)}</p>`,
   };
 }
 

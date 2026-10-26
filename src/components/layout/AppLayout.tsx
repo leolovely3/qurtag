@@ -9,7 +9,7 @@ import { AccountCard } from '@/components/account/Account';
 import { NativePushBridge } from '@/components/push/NativePushBridge';
 import { useAuth } from '@/lib/auth';
 import { useIsSuperAdmin } from '@/lib/admin';
-import { countUnreadForHousehold, fetchPrimaryHouseholdId } from '@/lib/queries';
+import { UNREAD_CHANGED, countUnreadForHousehold, fetchPrimaryHouseholdId } from '@/lib/queries';
 import { useMembershipsAvailable } from '@/lib/useMembershipsAvailable';
 import { cn } from '@/lib/cn';
 
@@ -114,6 +114,12 @@ export function AppLayout() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
+
+  useEffect(() => {
+    const again = () => void refreshUnread();
+    window.addEventListener(UNREAD_CHANGED, again);
+    return () => window.removeEventListener(UNREAD_CHANGED, again);
+  }, [refreshUnread]);
 
   // Keep the inbox count fresh while the app is open.
   usePoll(refreshUnread, !!householdId);
