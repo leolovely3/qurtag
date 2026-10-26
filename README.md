@@ -6,7 +6,8 @@ An owner makes an account, adds things (a water bottle, a violin case, keys; up 
 plan) and prints a QR tag for each. Someone who finds the thing scans the tag with their phone camera:
 a page opens with no app and no account, shows a finder-safe card for the item, and lets
 them send a note. The owner reads it in the inbox at /app and replies; the finder reads the
-reply on the same tag page. Neither side sees the other's email or phone number.
+reply on the same tag page, or on any browser with their conversation code at `/reply`, and can ask
+to be emailed when the owner replies. Neither side sees the other's email or phone number.
 
 The landing page is at `/`, the app at `/app`, a tag's page at `/find/<tag code>`, and a tag's short address at
 `/<short code>` (for example qurtag.com/k7m2p4), which sends the visitor to the same page.
@@ -28,7 +29,7 @@ project's own data API.
 | Sign-in (Better Auth, email and password) | `api/auth`, `server/auth/qurtagAuth.ts` | `qurtag_auth`: the `auth_*` tables only |
 | Schema, rules, functions for the Super Admin role | `db/admin.sql` | applied once as `postgres`, after the two above |
 | Data API for signed-in owners (PostgREST-style) | `api/data`, `server/data/` | `qurtag_authenticator`, which can only become `qurtag_user` or `qurtag_anon` |
-| Finder routes | `api/fn` (`finder-view`, `finder-send`), `server/routes/finder.ts` | `qurtag_server`: no table rights, only the `server_*` functions |
+| Finder routes | `api/fn` (`finder-view`, `finder-send`, `finder-resume`, `finder-email`, `finder-email-stop`), `server/routes/finder.ts`, `server/routes/finderLoop.ts` | `qurtag_server`: no table rights, only the `server_*` functions |
 | Outbox and scheduled jobs | `api/jobs`, `server/routes/outbox.ts`, Vercel cron every 5 minutes (outbox) and daily at 05:00 UTC | `qurtag_server` |
 | Memberships: checkout, portal, family invites, Stripe and RevenueCat webhooks | `api/fn`, `server/routes/billing.ts`, `server/billing/` | `qurtag_server`: only the `server_*` functions of `db/membership.sql` and `db/family.sql` |
 | iPhone alerts: register a phone, reply from a notification, send to Apple | `api/fn` (`push-register`, `push-unregister`, `push-reply`), `server/routes/push.ts`, `server/push/apns.ts`, the outbox | `qurtag_server`: only the `server_*` functions of `db/push.sql` |
@@ -68,7 +69,8 @@ private notes. Tested in `scripts/qurtag/e2e.test.mjs`.
 
 `QURTAG_DATABASE_URL`, `QURTAG_DATABASE_URL_DATA`, `QURTAG_DATABASE_URL_SERVER` (the three
 logins on the transaction pooler), `QURTAG_DATABASE_CA_CERT`, `QURTAG_AUTH_SECRET`,
-`QURTAG_AUTH_URL` (production: https://www.qurtag.com), `CRON_SECRET`. Values are kept in
+`QURTAG_AUTH_URL` (production: https://www.qurtag.com), `CRON_SECRET`. Optional: `QURTAG_FINDER_SECRET` (the key for
+finders' conversation codes and emails; when it is not set, `QURTAG_AUTH_SECRET` is used, which is what production does). Values are kept in
 `~/Claude/Backups/QurTag/secrets.env` on the founder's Mac. Email: `RESEND_API_KEY` (server side only) and
 `QURTAG_EMAIL_FROM` (default `QuR Tag <no-reply@qurtag.com>`; the domain must be verified in
 Resend). Replies go to info@impactconsulting.ai.
@@ -277,7 +279,7 @@ Database half: `db/moderation.sql` (rollout step 9, needs steps 3, 7 and 8). Ser
 | Filter | Every note is checked in the finder route before it reaches the database. A slur or a threat (a small hand-kept list in `server/moderation/wordlist.ts`, no outside service) is accepted and **held**: the finder sees the normal confirmation, the owner sees "This note may be offensive. Show it?" with Show it and Report, and the text reaches the owner's phone only after Show it (the owner's read policy leaves held notes out; alerts for a held note carry no text). A note that is only links, or has more than 2, is refused with a plain sentence. Limits in the database: 5 notes a minute and 30 an hour per conversation, 60 an hour per tag, 20 new conversations per tag a day, plus the route's 12 notes a minute per network address. An identical note within 10 minutes is accepted but stored once | `server/moderation/filter.ts`, `server/routes/finder.ts`, `qurtag.server_finder_open` and `server_finder_post` |
 | Report | Under each finder note in a conversation: Report, with a reason (harassment, spam, threats, inappropriate, other) and an optional comment. The note is hidden from the owner at once and goes to `qurtag.message_reports`. After a report the app offers to block the finder | `src/routes/app/InboxThread.tsx`, `qurtag.report_message` |
 | Respond within 24 hours | Super Admin area (`/app/admin`), "Reported notes": open reports oldest first, with the note's text, the reason, the owner's comment and the item. Actions: **Hide for everyone**, **Dismiss**, **Block finder**. Each closes the report and is written to the admin log (`hide_message`, `dismiss_report`, `block_finder`) in the same step | `src/routes/app/Admin.tsx`, `qurtag.admin_reports_list`, `admin_report_resolve` |
-| Block | "Block this finder" on a conversation. The finder's conversation token can no longer write (a trigger on `messages` refuses it, whichever function inserts), the conversation and its notes leave the owner's inbox, and the finder gets only "This conversation is closed." Owners see and unblock blocked finders in Settings, under Blocked finders; a finder a Super Admin blocked cannot be unblocked by the owner. A block is per conversation token: a finder who clears their browser can start a new conversation, which the limits above still cover | `src/components/moderation/BlockedFinders.tsx`, `qurtag.block_finder`, `unblock_finder`, `my_blocked_finders` |
+| Block | "Block this finder" on a conversation (under More). The finder's conversation token can no longer write (a trigger on `messages` refuses it, whichever function inserts), the conversation and its notes leave the owner's inbox, and the finder gets only "This conversation is closed." For 30 days, new conversations on any tag of the household from the same network (a keyed hash of the address, `qurtag.finder_blocks`, rollout step 13) are refused with the same words as a paused tag, so a block is not announced. Someone on another network can still write; "Pause new notes on this tag" stops that. Owners see and unblock blocked finders in Settings, under Blocked finders (unblocking lifts the network block); a finder a Super Admin blocked cannot be unblocked by the owner | `src/components/moderation/BlockedFinders.tsx`, `qurtag.block_finder`, `unblock_finder`, `my_blocked_finders` |
 | Published contact | /terms section 9 (zero tolerance, how to report and block, reports reviewed within 24 hours), the Help answer "Report or block a finder", and a "Report a problem with this page" link on the finder's page. Contact stays info@impactconsulting.ai | `src/routes/marketing/Terms.tsx`, `Help.tsx`, `src/routes/finder/FinderView.tsx` |
 
 - The Company OS counts: `qurtag.factory_metrics` returns `reports_open`, `reports_30d` and
@@ -296,6 +298,38 @@ Database half: `db/moderation.sql` (rollout step 9, needs steps 3, 7 and 8). Ser
   preview or any notification.
 - Tested in `scripts/qurtag/moderation.test.mjs` (database and routes) and `scripts/qurtag/unit/moderation.test.ts`
   (the filter). To change the word list, edit `server/moderation/wordlist.ts` only.
+
+## The finder loop (rollout step 13)
+
+`db/ux-fixes.sql` (rollout step 13, undo `db/undo-ux-fixes.sql`), `server/routes/finderLoop.ts`, `server/routes/finderCrypto.ts`,
+`src/routes/finder/FinderLoop.tsx`, `src/routes/finder/Reply.tsx`. The block comments of the SQL file and `finderLoop.ts` explain
+each choice.
+
+- **After the first note** the finder page says "Sent. We have told the owner.", with safe-handover advice, and offers "Save this
+  conversation": the private link (share sheet or copy) and a **conversation code** (12 characters, shown as K7M2-P9XQ-4TRB). Typed at
+  `qurtag.com/reply` (or carried after `#` in that address) on any browser it opens the conversation. The conversation token is derived
+  from the code with a keyed hash (`QURTAG_FINDER_SECRET`, else `QURTAG_AUTH_SECRET`), so the database still keeps only the token's
+  SHA-256; wrong codes count under the short code limits. Changing the secret stops old codes working; their links still work.
+- **Optional email for replies.** Next to the box: "Your email is never shown to the owner or anyone else. We use it only to tell you
+  when the owner replies, and delete it when the conversation closes." The server encrypts the address and the conversation token
+  (AES-256-GCM, key derived from the same secret) and the database keeps only that (`threads.finder_email_enc`); no role the app uses
+  can read the column. Each owner reply queues one `finder_reply` outbox row; the outbox sends at most one email per conversation per 10
+  minutes (replies in between go in the same email) with the replies, a link back (`/find/<tag>#t=<token>`), a spam reminder and a
+  one-click stop (`List-Unsubscribe`, `/api/fn/finder-email-stop`). An owner reply nudges the outbox at once (`afterRpc` in the data
+  API). The address is deleted when the conversation is closed or the finder is blocked, right after the last email when the owner
+  marks it returned, on stop, and after 30 days without a note (the daily job, `server_finder_sweep`). The field is shown only when
+  email is set up.
+- **Finder page states**: "Seen by the owner" under the finder's last note once the owner opened it; "The owner has it back. Thank you
+  for being kind." after "I have it back" (the owner can add a one-line thank-you); a kinder ending when closed; a paused item says the
+  owner is not taking new notes; an old (switched-off or replaced) tag answers 410 and says so, separately from a code that never existed
+  (404), with how to still help and reach QuR Tag.
+- **Owner**: in a conversation the note and the reply box come first, "I have it back" is the main action once the owner replied, and
+  Archive, Pause new notes on this tag (`set_item_notes_paused`; existing conversations go on), Close to this finder and Block are under
+  More. A held note held for a threat shows safety advice. The inbox previews a held note without its words, labels several finders of
+  one item Finder 1, Finder 2, shows who wrote a reply in a Family ("Sam:", `messages.sender_user_id`), and keeps archived conversations
+  under Archived (a new note brings one back).
+- Tested in `scripts/qurtag/finder-loop.test.mjs` (e2e, on the copy of the server that captures email) and
+  `scripts/qurtag/unit/finder-loop.test.ts`.
 
 ## Tag styles, short codes and print-ready files
 
@@ -367,7 +401,7 @@ deployed.
 npm install
 npm run typecheck     # app, Vite config and server code
 npm run test:unit     # the finder routes, the payment code, the push code, the tag layout maths and drawn tags (QR codes decoded back), the short code route, with stand-ins
-npm run test:e2e      # the whole loop, memberships, webhooks, Family, push alerts (with a stand-in Apple server) and short codes, on a throwaway local Postgres (needs Docker)
+npm run test:e2e      # the whole loop, memberships, webhooks, Family, push alerts (with a stand-in Apple server), short codes, moderation, measures and the finder loop (codes, the finder's email, blocks, pause), on a throwaway local Postgres (needs Docker)
 npm run build
 ```
 

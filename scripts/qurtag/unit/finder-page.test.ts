@@ -68,3 +68,14 @@ test("the owner's emails say how to keep the next one out of spam", async () => 
     assert.match(m.html, /spam or junk/);
   }
 });
+
+test('in a Family, a reply is shown with the first name of who wrote it; your own as "You"', async () => {
+  const { familyNames } = await import('../../../src/lib/inbox.ts');
+  const names = familyNames({ role: 'owner', members: [{ user_id: 'u1', name: 'Dana Rivera' }, { user_id: 'u2', name: 'Sam' }] });
+  assert.equal(names.get('u1'), 'Dana');
+  assert.equal(familyNames({ role: 'none' }).size, 0);
+  const t = row('a', 'x', 'z', { last_message: { sender_kind: 'owner', body: 'On my way', sender_user_id: 'u2' } });
+  assert.equal(previewLine(t, names, 'u1'), 'Sam: On my way');
+  assert.equal(previewLine(t, names, 'u2'), 'You: On my way');
+  assert.equal(previewLine(t), 'Replied: On my way');
+});

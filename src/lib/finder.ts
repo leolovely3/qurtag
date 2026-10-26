@@ -14,6 +14,8 @@ export interface FinderItem {
   photo: string | null;
   reward_text: string | null;
   lost: boolean;
+  /** The owner paused new notes: a new conversation cannot start (an existing one goes on). */
+  paused?: boolean;
 }
 
 export interface FinderMessage {
@@ -21,12 +23,16 @@ export interface FinderMessage {
   sender_kind: 'finder' | 'owner' | 'system';
   body: string;
   created_at: string;
+  /** A finder's note the owner has read. */
+  seen?: boolean;
 }
 
 export interface FinderView {
   item: FinderItem;
-  thread: { status: 'open' | 'closed' | 'reunited'; messages: FinderMessage[] } | null;
+  thread: { status: 'open' | 'closed' | 'reunited'; messages: FinderMessage[]; email_on?: boolean } | null;
   tokenValid: boolean | null;
+  /** Whether the finder can ask to be emailed about replies. */
+  emailAvailable?: boolean;
 }
 
 const KEY = (tag: string) => `qurtag.finder.${tag}`;
@@ -44,10 +50,44 @@ export function rememberedToken(tag: string): string | null {
 export function rememberToken(tag: string, token: string | null): void {
   try {
     if (token) window.localStorage.setItem(KEY(tag), token);
-    else window.localStorage.removeItem(KEY(tag));
+    else {
+      window.localStorage.removeItem(KEY(tag));
+      window.localStorage.removeItem(CODE_KEY(tag));
+    }
   } catch {
     /* private window: the conversation lasts as long as this page */
   }
+}
+
+/**
+ * The conversation code (K7M2-P9XQ-4TRB), shown once by the server when the first note is sent and kept
+ * here so this browser can show it again. Typed at qurtag.com/reply it opens the conversation on any
+ * browser (server/routes/finderLoop.ts).
+ */
+const CODE_KEY = (tag: string) => `qurtag.finder.${tag}.code`;
+const SHOWN_CODE = /^[A-HJ-KM-NP-Z2-9]{4}-[A-HJ-KM-NP-Z2-9]{4}-[A-HJ-KM-NP-Z2-9]{4}$/;
+
+export function rememberedCode(tag: string): string | null {
+  try {
+    const c = window.localStorage.getItem(CODE_KEY(tag));
+    return c && SHOWN_CODE.test(c) ? c : null;
+  } catch {
+    return null;
+  }
+}
+
+export function rememberCode(tag: string, code: string): void {
+  try {
+    if (SHOWN_CODE.test(code)) window.localStorage.setItem(CODE_KEY(tag), code);
+  } catch {
+    /* private window */
+  }
+}
+
+/** A code as the finder typed it, tidied for the box: upper case, dashes every 4 characters. */
+export function tidyCode(typed: string): string {
+  const raw = typed.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
+  return raw.replace(/(.{4})(?=.)/g, '$1-');
 }
 
 /** A token handed over in the address (#t=...), from a saved conversation link. */
@@ -72,7 +112,17 @@ export function viewTag(tag: string, token: string | null, scan: boolean) {
 }
 
 export function sendNote(tag: string, token: string | null, body: string) {
-  return call<{ ok: true; token?: string }>('/api/fn/finder-send', { tag, ...(token ? { token } : {}), body });
+  return call<{ ok: true; token?: string; code?: string }>('/api/fn/finder-send', { tag, ...(token ? { token } : {}), body });
+}
+
+/** A typed conversation code: the tag and this conversation's token, to keep in this browser. */
+export function resumeConversation(code: string) {
+  return call<{ tag: string; token: string }>('/api/fn/finder-resume', { code });
+}
+
+/** The finder's optional email for replies; null takes it back. The address is never shown to anyone. */
+export function setReplyEmail(tag: string, token: string, email: string | null) {
+  return call<{ ok: true; email_on: boolean }>('/api/fn/finder-email', { tag, token, email });
 }
 
 /**

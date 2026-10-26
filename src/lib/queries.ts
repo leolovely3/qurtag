@@ -152,7 +152,7 @@ export async function uploadItemPhoto(input: { householdId: string | null; file:
 
 export interface ThreadWithItem extends Thread {
   item: Pick<Item, 'id' | 'name' | 'brand' | 'hero_photo_url' | 'lost_mode'> | null;
-  last_message: Pick<Message, 'body' | 'sender_kind' | 'created_at'> | null;
+  last_message: Pick<Message, 'body' | 'sender_kind' | 'created_at' | 'sender_user_id'> | null;
   unread_count: number;
   /** Notes the filter held that the owner has not chosen to show (no text). */
   held_count: number;
@@ -229,13 +229,13 @@ export async function fetchThreadsForHousehold(_householdId?: string): Promise<T
   const held = await fetchHeldNotes();
   const { data: msgs } = await supabase
     .from('messages')
-    .select('thread_id, body, sender_kind, created_at, read_by_owner_at')
+    .select('thread_id, body, sender_kind, created_at, read_by_owner_at, sender_user_id')
     .in('thread_id', threadIds);
 
   const lastByThread = new Map<string, ThreadWithItem['last_message']>();
   const unreadByThread = new Map<string, number>();
   for (const m of (msgs ?? []) as Array<
-    Pick<Message, 'thread_id' | 'body' | 'sender_kind' | 'created_at' | 'read_by_owner_at'>
+    Pick<Message, 'thread_id' | 'body' | 'sender_kind' | 'created_at' | 'read_by_owner_at' | 'sender_user_id'>
   >) {
     const prev = lastByThread.get(m.thread_id);
     if (!prev || prev.created_at < m.created_at) {
@@ -243,6 +243,7 @@ export async function fetchThreadsForHousehold(_householdId?: string): Promise<T
         body: m.body,
         sender_kind: m.sender_kind,
         created_at: m.created_at,
+        sender_user_id: m.sender_user_id ?? null,
       });
     }
     if (m.sender_kind === 'finder' && !m.read_by_owner_at) {
@@ -566,6 +567,20 @@ export async function markThreadStatus(
   if (error) console.error('[QuR Tag] markThreadStatus', error);
 }
 
+/** Archives a conversation (the owner's own tidying), or brings it back. A finder's new note brings it back too. */
+export async function setThreadArchived(threadId: string, archived: boolean): Promise<boolean> {
+  const { error } = await supabase.from('threads').update({ archived_at: archived ? new Date().toISOString() : null }).eq('id', threadId);
+  if (error) console.error('[QuR Tag] setThreadArchived', error);
+  return !error;
+}
+
+/** Pauses new notes on an item's tag, or takes the pause off. Existing conversations go on. */
+export async function setItemNotesPaused(itemId: string, paused: boolean): Promise<boolean> {
+  const { error } = await supabase.rpc('set_item_notes_paused', { p_item: itemId, p_paused: paused });
+  if (error) console.error('[QuR Tag] setItemNotesPaused', error);
+  return !error;
+}
+
 /* ─────────────── moderation of finders' notes (db/moderation.sql) ─────────────── */
 
 export type ReportReason = 'harassment' | 'spam' | 'threats' | 'inappropriate' | 'other';
@@ -636,6 +651,8 @@ export interface HeldNote {
   thread_id: string;
   created_at: string;
   read: boolean;
+  /** Why the filter held it: offensive words, or a threat (which shows safety advice). */
+  reason?: 'language' | 'threat' | null;
 }
 
 /** The held notes of one conversation, or of every conversation when no id is given. */

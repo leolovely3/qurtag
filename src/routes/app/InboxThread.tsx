@@ -21,6 +21,8 @@ import {
   markThreadReadByOwner,
   markThreadStatus,
   REPORT_REASONS,
+  setItemNotesPaused,
+  setThreadArchived,
   reportMessage,
   sendOwnerReply,
   showHeldNote,
@@ -28,6 +30,8 @@ import {
   type ReportReason,
 } from '@/lib/queries';
 import { FEATURES } from '@/lib/features';
+import { fetchFamily } from '@/lib/membership';
+import { familyNames } from '@/lib/inbox';
 import { releaseReward, startStripeCheckout } from '@/lib/stripe';
 import { useToast } from '@/components/ui/Toast';
 import type { CourierOrder } from '@/lib/database.types';
@@ -127,6 +131,7 @@ export function InboxThread() {
   const [attempt, setAttempt] = useState(0);
   const [thanks, setThanks] = useState('');
   const [reportedThreat, setReportedThreat] = useState(false);
+  const [names, setNames] = useState<Map<string, string>>(new Map());
   const [actionPending, setActionPending] = useState<string | null>(null);
   const [reportFor, setReportFor] = useState<string | null>(null);
   const [offerBlock, setOfferBlock] = useState(false);
@@ -180,6 +185,9 @@ export function InboxThread() {
       ]);
       if (cancelled) return;
       setItem(it);
+      void fetchFamily().then((f) => {
+        if (!cancelled) setNames(familyNames(f));
+      });
       setMessages(msgs);
       setHeld(heldNotes);
       setCourier(co);
@@ -298,9 +306,52 @@ export function InboxThread() {
       toast.show({
         kind: 'info',
         title: 'Finder blocked',
-        body: 'This conversation is closed to them. To stop all new notes, switch the tag off in Tags. You can unblock them in Settings.',
+        body: 'This conversation is closed to them, and new notes from the same network are refused for 30 days. You can unblock them in Settings.',
       });
       navigate('/app/inbox');
+    } finally {
+      setActionPending(null);
+    }
+  }
+
+  async function togglePause() {
+    if (!item) return;
+    const pause = !item.notes_paused_at;
+    setActionPending('pause');
+    try {
+      const ok = await setItemNotesPaused(item.id, pause);
+      if (!ok) {
+        toast.show({ kind: 'error', title: "Couldn't change the tag", body: 'Check your connection and try again.' });
+        return;
+      }
+      setItem({ ...item, notes_paused_at: pause ? new Date().toISOString() : null });
+      toast.show({
+        kind: 'info',
+        title: pause ? 'New notes paused' : 'Taking new notes again',
+        body: pause
+          ? 'Nobody can start a new conversation on this tag. Conversations you have stay open. You can undo this here.'
+          : 'Finders can write to you from this tag again.',
+      });
+    } finally {
+      setActionPending(null);
+    }
+  }
+
+  async function toggleArchive() {
+    if (!thread) return;
+    const archive = !thread.archived_at;
+    setActionPending('archive');
+    try {
+      if (!(await setThreadArchived(thread.id, archive))) {
+        toast.show({ kind: 'error', title: "Couldn't archive it", body: 'Check your connection and try again.' });
+        return;
+      }
+      if (archive) {
+        toast.show({ kind: 'info', title: 'Archived', body: 'It is under Archived in your inbox. If the finder writes again, it comes back.' });
+        navigate('/app/inbox');
+      } else {
+        setThread({ ...thread, archived_at: null });
+      }
     } finally {
       setActionPending(null);
     }
@@ -430,13 +481,13 @@ export function InboxThread() {
         )}
       </section>
 
-      {(held.length > 0 || reportedThreat) && (
+      {(held.some((h) => h.reason === 'threat') || reportedThreat) && (
         <aside role="note" className="mb-4 flex flex-col gap-1 rounded-modal border border-signal-300 bg-signal-50 p-4">
           <h2 className="text-base font-semibold text-ink-900">If a note threatens you or a child</h2>
           <p className="text-sm text-ink-900 text-pretty">
-            Do not meet alone and do not share your address. If you feel unsafe, contact your local police
-            (call 911 in an emergency). Report the note so we can review it within 24 hours, and block the
-            finder below.
+            Do not meet alone and do not share your address or where your child goes to school. If you feel
+            unsafe, contact your local police (call 911 in an emergency). QuR Tag has been told about this note
+            and reviews it within 24 hours. Under More you can block this finder and pause new notes on this tag.
           </p>
         </aside>
       )}
@@ -449,6 +500,8 @@ export function InboxThread() {
           held={held}
           onShowHeld={(id) => void handleShowHeld(id)}
           onReport={(id) => setReportFor(id)}
+          ownerNames={names}
+          viewerId={user?.id}
         />
       </div>
 
@@ -485,7 +538,7 @@ export function InboxThread() {
         open={offerBlock}
         onClose={() => setOfferBlock(false)}
         title="Block this finder too?"
-        description="That conversation will be closed to them, and their notes leave your inbox. You can unblock them in Settings."
+        description="That conversation will be closed to them, their notes leave your inbox, and new notes from the same network are refused for 30 days. You can unblock them in Settings."
         primaryAction={{ label: 'Block this finder', tone: 'destructive', onClick: confirmBlockFinder, pending: actionPending === 'block' }}
         secondaryAction={{ label: 'Not now', onClick: () => setOfferBlock(false) }}
       />
@@ -554,7 +607,7 @@ export function InboxThread() {
         onClose={() => setBlockOpen(false)}
         eyebrow="Block this finder"
         title="Block this finder from contacting you again?"
-        description="This conversation is closed to them and their notes leave your inbox. They are only told that the conversation is closed. If they scan the tag again from another phone or browser, they could start a new conversation; to stop all new notes, switch the tag off in Tags. You can unblock them in Settings."
+        description="This conversation is closed to them and their notes leave your inbox. For 30 days, new notes to any of your tags from the same network are refused. They are only told that the conversation is closed. Someone on another network could still write; to stop all new notes on this tag, pause it here. You can unblock them in Settings."
         primaryAction={{
           label: 'Block them',
           tone: 'destructive',
@@ -624,6 +677,24 @@ export function InboxThread() {
             className={buttonClasses({ variant: 'secondary', block: true })}
           >
             I have it back
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={toggleArchive}
+          disabled={!!actionPending}
+          className={buttonClasses({ variant: 'secondary', block: true })}
+        >
+          {thread.archived_at ? 'Move back to the inbox' : 'Archive'}
+        </button>
+        {item && (
+          <button
+            type="button"
+            onClick={togglePause}
+            disabled={!!actionPending}
+            className={buttonClasses({ variant: 'secondary', block: true })}
+          >
+            {item.notes_paused_at ? 'Take new notes on this tag again' : 'Pause new notes on this tag'}
           </button>
         )}
         {thread.status === 'open' && (

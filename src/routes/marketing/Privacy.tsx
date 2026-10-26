@@ -55,7 +55,9 @@ export function Privacy() {
             items={[
               'A scan record: the time, which tag was scanned, and a rough device type (for example "iPhone" or "Android phone"). We do not keep the finder\'s network address or location with it.',
               'If the finder writes: their notes. Anything they choose to write, such as where they found the item, is part of the note.',
-              'A private conversation key. When a finder sends their first note, we give their browser a random key so it can reopen that conversation. The key stays in their browser; we keep only a scrambled (hashed) form of it, which cannot be turned back into the key.',
+              'A private conversation key and code. When a finder sends their first note, we give their browser a key so it can reopen that conversation, and a conversation code (12 letters and numbers) they can type at qurtag.com/reply on another phone or computer. The key stays in their browser; we keep only a scrambled (hashed) form of it, which cannot be turned back into the key or the code.',
+              'A scrambled form of the network address the first note came from. We keep a keyed hash, which cannot be turned back into the address, with each new conversation for 30 days, so that when an owner blocks a finder, new notes from the same network can be refused. We do not keep the address itself.',
+              'If the finder chooses: an email address, to be told when the owner replies. It is optional. It is kept only for that conversation, stored encrypted, and never shown to the owner, to anyone at QuR Tag through our screens, or to anyone else. We use it only to email the finder when the owner replies, with the reply and a link back to the conversation, at most once every 10 minutes, and every email has a link to stop them.',
             ]}
           />
         </Section>
@@ -104,7 +106,7 @@ export function Privacy() {
               'Apple Inc. also delivers the alerts we send to your iPhone (the Apple Push Notification service). It receives your device token and the text of each alert: the item\'s name and the finder\'s note, or only "You have a new note" if you chose to hide the note on the lock screen. We use no other push service.',
               'RevenueCat, Inc. records iPhone app subscriptions for us and tells our server when one starts, renews or ends. It receives your QuR Tag account number (a random identifier, not your email address), your purchase records from Apple, and technical details of your device and network address.',
               'Functional Software, Inc. (Sentry) receives an error report when the website or the app breaks: the error message, where in the code it happened, the kind of browser or phone and its system version, and the address of the page with any tag, invite or reset codes removed. We ask it not to record your network address, and we send no account, email address, notes, cookies or clicks. Reports are not sent from test machines.',
-              'Resend (Resend, Inc.) sends our email: the link to reset your password, and the emails that confirm your address, tell you a finder wrote (at once, or as a copy ten minutes after an alert you have not opened), or carry a family invite. It receives your email address and the text of that email.',
+              'Resend (Resend, Inc.) sends our email: the link to reset your password, and the emails that confirm your address, tell you a finder wrote (at once, or as a copy ten minutes after an alert you have not opened), or carry a family invite; and, for a finder who asked, the email that says the owner replied. It receives the address and the text of that email.',
             ]}
           />
         </Section>
@@ -112,7 +114,7 @@ export function Privacy() {
         <Section title="8. Cookies and browser storage">
           <P>
             Owners get one sign-in cookie, which keeps you signed in. A finder's browser stores the private
-            conversation key described above, so they can come back to their conversation. We use no
+            conversation key and code described above, so they can come back to their conversation. We use no
             advertising or tracking cookies and no third-party analytics. Your browser tab remembers the label of the
             link that brought you here until you close the tab, and nowhere else. The error reports in section 7 set no cookies. If you pay on the web, the payment page is
             Stripe's and uses Stripe's own cookies.
@@ -126,6 +128,8 @@ export function Privacy() {
               'Deleting an item deletes its tags, scans and conversations at once, and its tag stops working.',
               'Deleting your account deletes everything above at once. Copies in our providers\' backups are replaced on their normal schedule.',
               'Sign-in records end when the session ends or expires.',
+              'A finder\'s email address: deleted when the conversation is closed or the finder is blocked, right after the last email when the owner marks the thing returned, when the finder stops the emails, or after 30 days without a note, whichever comes first.',
+              'The scrambled network address kept with each new conversation: 30 days. A block that uses it lasts 30 days, or until the owner unblocks.',
               'Your phone\'s device token: until you sign out of the app or delete your account, or until Apple tells us it is no longer valid.',
               'Membership records: while your account exists. Deleting your account deletes them here; Stripe, Apple and RevenueCat keep their own records under their own rules. Cancel a membership that is still renewing before you delete your account, so you are not charged.',
             ]}

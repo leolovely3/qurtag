@@ -6,7 +6,7 @@
 # Starts Supabase's Postgres 17 image as a stand-in for the shared project (container
 # qurtag-e2e-pg on 127.0.0.1:56850, removed at the end), adds decoy apps
 # (scripts/qurtag/decoys.sql), applies db/qurtag.sql and db/logins.sql exactly as
-# the rollout does (db/admin.sql, db/support.sql, db/push.sql, db/moderation.sql, db/admin-alerts.sql and db/measures.sql too; as `postgres`, which is not a superuser there, with fresh passwords
+# the rollout does (db/admin.sql, db/support.sql, db/push.sql, db/moderation.sql, db/admin-alerts.sql, db/measures.sql and db/ux-fixes.sql too; as `postgres`, which is not a superuser there, with fresh passwords
 # sent as SCRAM verifiers), starts the four server functions (with email off, as in production today: accounts are confirmed at once) on 127.0.0.1:56851, and
 # runs scripts/qurtag/e2e.test.mjs. QURTAG_E2E_KEEP=1 leaves the database running
 # afterwards. QURTAG_LOCAL_SERVE=1 skips the tests and keeps the server functions up for
@@ -69,7 +69,9 @@ psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/admin-alerts.sql
 psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/shortcodes.sql
 # Rollout step 12 (first-party measures; needs steps 5, 8 and 9).
 psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/measures.sql
-echo "schema, logins, the admin role, push, moderation, short codes and measures applied"
+# Rollout step 13 (the finder loop: conversation codes, the finder's optional email, pause, network blocks; needs steps 3 to 12).
+psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/ux-fixes.sql
+echo "schema, logins, the admin role, push, moderation, short codes, measures and the finder loop applied"
 
 export QURTAG_AUTH_URL="http://127.0.0.1:$API_PORT"
 export QURTAG_DATABASE_URL="postgres://qurtag_auth:$AUTH_PW@127.0.0.1:$PG_PORT/postgres"
@@ -184,3 +186,10 @@ QURTAG_TEST_LOGIN_DB_SERVER="$QURTAG_DATABASE_URL_SERVER" \
 QURTAG_TEST_LOGIN_DB_DATA="$QURTAG_DATABASE_URL_DATA" \
 QURTAG_TEST_FACTORY_TOKEN="$FACTORY_TOKEN" \
   npx tsx scripts/qurtag/measures.test.mjs || { echo "--- server log"; tail -40 "$WORK/server.log"; exit 1; }
+# The finder loop: conversation codes, the finder's email (captured by the push copy, which runs its own
+# outbox), blocks by network, pause.
+QURTAG_TEST_BASE="http://127.0.0.1:$API_PORT" \
+QURTAG_TEST_PUSH_BASE="http://127.0.0.1:$PUSH_PORT" \
+QURTAG_TEST_MAIL_FILE="$WORK/push-mail.jsonl" \
+QURTAG_TEST_ADMIN_DB="$ADMIN" \
+  npx tsx scripts/qurtag/finder-loop.test.mjs || { echo "--- server logs"; tail -40 "$WORK/server.log" "$WORK/push-server.log"; exit 1; }

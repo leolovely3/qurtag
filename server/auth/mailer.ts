@@ -24,6 +24,8 @@ export interface Mail {
   text: string;
   html: string;
   replyTo?: string;
+  /** Extra headers, such as List-Unsubscribe. */
+  headers?: Record<string, string>;
 }
 
 export const OPERATOR = 'Impact Consulting AI LLC';
@@ -59,6 +61,7 @@ export function resendSender(apiKey: string, from: string): MailSender {
         text: mail.text,
         html: mail.html,
         reply_to: mail.replyTo ?? CONTACT_EMAIL,
+        ...(mail.headers ? { headers: mail.headers } : {}),
         tags: [{ name: 'category', value: mail.kind.replace(/[^a-z0-9_-]/gi, '_') }],
       }),
       signal: AbortSignal.timeout(15_000),
@@ -156,6 +159,54 @@ export function finderMessageMail(to: string, itemName: string, inboxUrl: string
       `<p><a href="${escapeHtml(inboxUrl)}" style="display:inline-block;padding:10px 18px;background:#0A0B0F;color:#fff;border-radius:8px;text-decoration:none">Read and reply</a></p>` +
       `<p style="color:#555">${escapeHtml(after)}</p>` +
       `<p style="color:#777;font-size:12px">${escapeHtml(KEEP_OUT_OF_SPAM)}</p>`,
+  };
+}
+
+/**
+ * Tells a finder the owner replied (or, at the end, that the owner has it back). The owner's words are
+ * written for the finder, so they are included; up to five replies, oldest first. A link back to the
+ * conversation (the token after #, which a browser never sends to a server), a way to stop the emails
+ * with one click, and nothing about the owner.
+ */
+export function finderReplyMail(input: {
+  to: string;
+  itemName: string;
+  replies: string[];
+  more: boolean;
+  returned: boolean;
+  conversationUrl: string;
+  stopUrl: string;
+}): Mail {
+  const { to, itemName, replies, more, returned, conversationUrl, stopUrl } = input;
+  const lead = returned
+    ? `The owner of the ${itemName} has it back. Thank you for being kind.`
+    : replies.length > 0
+      ? `The owner of the ${itemName} replied to your note.`
+      : 'The owner replied.';
+  const quoted = replies.map((r) => r.slice(0, 2000));
+  const moreLine = more ? 'There are more replies in the conversation.' : '';
+  const privacy = returned
+    ? 'We have now deleted your email address. The owner never saw it.'
+    : 'The owner never sees your email address. We delete it when the conversation ends, or after 30 days without a note.';
+  const keep = 'To keep these emails out of spam or junk, add no-reply@qurtag.com to your contacts.';
+  return {
+    kind: 'finder-reply',
+    to,
+    subject: returned ? `The owner has the ${itemName} back` : `The owner replied about the ${itemName}`,
+    headers: { 'List-Unsubscribe': `<${stopUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
+    text:
+      `${lead}\n\n` +
+      (quoted.length ? quoted.map((r) => `"${r}"`).join('\n\n') + '\n\n' : '') +
+      (moreLine ? `${moreLine}\n\n` : '') +
+      `Open the conversation: ${conversationUrl}\n\n${privacy}\n${keep}\n\nStop these emails: ${stopUrl}\n\n${OPERATOR}, makers of QuR Tag\n`,
+    html:
+      `<p style="font-size:20px;font-weight:600;margin:0 0 16px">QuR Tag</p>` +
+      `<p>${escapeHtml(lead)}</p>` +
+      quoted.map((r) => `<blockquote style="margin:12px 0;padding:10px 14px;border-left:3px solid #FF5C2E;background:#F6F6F4;white-space:pre-wrap">${escapeHtml(r)}</blockquote>`).join('') +
+      (moreLine ? `<p>${escapeHtml(moreLine)}</p>` : '') +
+      `<p><a href="${escapeHtml(conversationUrl)}" style="display:inline-block;padding:10px 18px;background:#0A0B0F;color:#fff;border-radius:8px;text-decoration:none">Open the conversation</a></p>` +
+      `<p style="color:#555">${escapeHtml(privacy)} ${escapeHtml(keep)}</p>` +
+      `<p style="color:#777;font-size:12px;margin-top:24px"><a href="${escapeHtml(stopUrl)}" style="color:#777">Stop these emails</a><br>${OPERATOR}, makers of QuR Tag</p>`,
   };
 }
 

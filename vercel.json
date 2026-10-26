@@ -20,6 +20,7 @@
     { "source": "/auth/callback", "destination": "/app-shell" },
     { "source": "/join/(.*)", "destination": "/app-shell" },
     { "source": "/find", "destination": "/app-shell" },
+    { "source": "/reply", "destination": "/app-shell" },
     { "source": "/find/(.*)", "destination": "/app-shell" },
     { "source": "/partners", "destination": "/app-shell" },
     { "source": "/partners/(.*)", "destination": "/app-shell" }
@@ -34,6 +35,13 @@
   "headers": [
     {
       "source": "/join/(.*)",
+      "headers": [
+        { "key": "Referrer-Policy", "value": "no-referrer" },
+        { "key": "X-Robots-Tag", "value": "noindex" }
+      ]
+    },
+    {
+      "source": "/reply",
       "headers": [
         { "key": "Referrer-Policy", "value": "no-referrer" },
         { "key": "X-Robots-Tag", "value": "noindex" }

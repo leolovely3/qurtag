@@ -27,11 +27,19 @@ export const FAQS: Faq[] = [
   },
   {
     q: 'Report or block a finder',
-    a: 'Open the conversation in your inbox. To report one note, choose Report under it, pick a reason and send. The note is hidden from you at once, and we review every report within 24 hours. To stop a finder writing to you, choose Block this finder: that conversation is closed to them and they are only told it is closed. If they scan the tag again from another phone or browser they could start a new conversation, so to stop all new notes, switch the tag off in Tags. You can unblock from Settings, under Blocked finders. If a note threatens you or a child, do not meet alone, do not share your address, and contact your local police if you feel unsafe. A note with offensive words or a threat arrives held back with "This note may be offensive. Show it?" so you choose whether to read it. For anything else, email {contact}.',
+    a: 'Open the conversation in your inbox. To report one note, choose Report under it, pick a reason and send. The note is hidden from you at once, and we review every report within 24 hours. To stop a finder writing to you, choose Block this finder: that conversation is closed to them, they are only told it is closed, and for 30 days new notes from the same network are refused. Someone on another network could still write, so to stop all new notes on a tag, choose Pause new notes on this tag in the conversation. You can unblock from Settings, under Blocked finders. If a note threatens you or a child, do not meet alone, do not share your address, and contact your local police if you feel unsafe. A note with offensive words or a threat arrives held back with "This note may be offensive. Show it?" so you choose whether to read it. For anything else, email {contact}.',
   },
   {
     q: 'How does the finder read my reply?',
-    a: 'They open the same tag page on the same phone. The page keeps their conversation in that browser and shows your reply there.',
+    a: 'On the same phone, they scan the tag again and the page shows your reply. After their first note they also get a conversation code and a private link, so they can open it on any phone or computer at qurtag.com/reply. They can also choose to get an email when you reply.',
+  },
+  {
+    q: 'I found something and sent a note. How do I see the reply?',
+    a: 'Scan the tag again on the same phone, or go to qurtag.com/reply on any phone or computer and type the conversation code you saved (like K7M2-P9XQ-4TRB). If you asked for an email, we email you when the owner replies, from no-reply@qurtag.com: check your spam or junk folder too. Your email is never shown to the owner or anyone else, and we delete it when the conversation closes.',
+  },
+  {
+    q: 'Not getting our emails?',
+    a: 'Our emails come from no-reply@qurtag.com. Check your spam or junk folder, and if one is there, mark it Not spam. Add no-reply@qurtag.com to your contacts so the next one reaches your inbox.',
   },
   {
     q: 'Is QuR Tag a tracker?',

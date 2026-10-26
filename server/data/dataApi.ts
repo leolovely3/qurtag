@@ -39,6 +39,7 @@
  */
 import type pg from 'pg';
 import { siteUrl, trustedOrigins } from '../auth/origins.js';
+import { kickOutbox } from '../routes/core.js';
 import { createPassCheck, type PassClaims } from './passCheck.js';
 import { plan, RequestError, type Plan } from './translate.js';
 import type { Visitor } from './allowlist.js';
@@ -56,6 +57,12 @@ type Queryable = Pick<pg.Pool, 'connect'>;
 export interface DataApiOptions {
   /** A pool that logs in as qurtag_authenticator. */
   pool: Queryable;
+  /**
+   * Called after a function call committed (its name only). An owner's reply runs the outbox at
+   * once, so a finder who asked for an email hears about it within seconds, not at the next
+   * scheduled run (server/routes/finderLoop.ts).
+   */
+  afterRpc?: (name: string) => void;
   checkPass: (token: string) => Promise<{ ok: true; claims: PassClaims } | { ok: false; reason: string }>;
   /** Pages allowed to call from a browser. */
   origins: string[];
@@ -352,6 +359,13 @@ export function createDataApi(opts: DataApiOptions) {
       } else payload = `[${rows.map((r) => r.j ?? 'null').join(',')}]`;
 
       await client.query('commit');
+      if (path[0] === 'rpc' && path.length === 2 && opts.afterRpc) {
+        try {
+          opts.afterRpc(path[1]);
+        } catch {
+          /* a nudge never fails the request */
+        }
+      }
       return send(p.status, payload, extra);
     } catch (e) {
       await client.query('rollback').catch((re: Error) => {
@@ -379,5 +393,8 @@ export function dataApiOptionsFromEnv(env: NodeJS.ProcessEnv, pool: Queryable): 
     origins: trustedOrigins(env),
     perIpPerMinute: env.QURTAG_DATA_RATE_PER_IP ? Number(env.QURTAG_DATA_RATE_PER_IP) : undefined,
     perAccountPerMinute: env.QURTAG_DATA_RATE_PER_ACCOUNT ? Number(env.QURTAG_DATA_RATE_PER_ACCOUNT) : undefined,
+    afterRpc: (name) => {
+      if (name === 'owner_reply') kickOutbox(env);
+    },
   };
 }
