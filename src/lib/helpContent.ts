@@ -114,7 +114,7 @@ export const HELP: HelpSection[] = [
       {
         id: 'reply',
         q: 'How do I read and reply to a note?',
-        a: 'Notes from finders wait in your Inbox. Open one, read it and reply. The finder opens the same tag page on the same phone to read your reply.',
+        a: 'Notes from finders wait in your Inbox. Open one, read it and reply. The finder reads your reply on the tag page, on the same phone or on any browser with their conversation code at qurtag.com/reply, and can ask for an email when you reply. They never see your email address and you never see theirs. To stop new notes on a tag without switching it off, choose Pause new notes on this tag under More in a conversation. Archive tidies a conversation away; it comes back if the finder writes again.',
         action: { label: 'Open your inbox', to: '/app/inbox' },
       },
       {
@@ -143,7 +143,7 @@ export const HELP: HelpSection[] = [
       {
         id: 'report-block',
         q: 'How do I report or block a finder?',
-        a: 'Open the conversation in your inbox. To report one note, choose Report under it, pick a reason and send. The note is hidden from you at once, and we review every report within 24 hours. To stop a finder writing to you, choose Block this finder: that conversation is closed to them and they are only told it is closed. If they scan the tag again from another phone or browser they could start a new conversation, so to stop all new notes, switch the tag off in Tags. If a note threatens you or a child, do not meet alone, do not share your address, and contact your local police if you feel unsafe. You can unblock in Settings, under Blocked finders. A note with offensive words or a threat arrives held back so you choose whether to read it.',
+        a: 'Open the conversation in your inbox. To report one note, choose Report under it, pick a reason and send. The note is hidden from you at once, and we review every report within 24 hours. To stop a finder writing to you, choose Block this finder under More: that conversation is closed to them, they are only told it is closed, and for 30 days new notes from the same network are refused. Someone on another network could still write, so to stop all new notes on a tag, choose Pause new notes on this tag. If a note threatens you or a child, do not meet alone, do not share your address, and contact your local police if you feel unsafe. You can unblock in Settings, under Blocked finders. A note with offensive words or a threat arrives held back so you choose whether to read it.',
         action: { label: 'Open your inbox', to: '/app/inbox' },
       },
       {

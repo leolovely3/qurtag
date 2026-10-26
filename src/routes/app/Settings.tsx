@@ -263,7 +263,7 @@ export function Settings() {
       <div className="px-1"><HelpLink section="alerts" label="How alerts work" /></div>
       </div>
 
-      <AppSection title="Blocked finders" description="Blocked conversations are closed to their finders, and their notes stay out of your inbox.">
+      <AppSection title="Blocked finders" description="Blocked conversations are closed to their finders, their notes stay out of your inbox, and new notes from the same network are refused for 30 days.">
         <BlockedFinders />
       </AppSection>
 

@@ -20,9 +20,12 @@
  * copies only the known fields into each answer (finderCard, finderThread), so a field
  * added to those functions later cannot reach a finder by accident.
  *
- * The token: 32 random bytes, base64url (43 characters), made here. The database keeps
- * only its SHA-256. Tokens travel in the request body, never in an address, so they do
- * not land in logs or browser history.
+ * The token: 43 base64url characters, made here, derived with a keyed hash from the
+ * conversation's code so the finder can type the code on another browser
+ * (server/routes/finderLoop.ts explains why), or 32 random bytes when no secret is set. The
+ * database keeps only its SHA-256. Tokens travel in the request body, never in an address
+ * sent to the server, so they do not land in logs. A new conversation also keeps a keyed hash
+ * of the network address (never the address) so a block can refuse new conversations from it.
  *
  * Limits: per network address and function instance, 60 views and 12 notes a minute;
  * the database adds its own per tag and per conversation (20 new conversations per tag a
@@ -37,7 +40,9 @@
  */
 import { randomBytes } from 'node:crypto';
 import { trustedOrigins } from '../auth/origins.js';
+import { mailConfigured } from '../auth/mailer.js';
 import { checkNote } from '../moderation/filter.js';
+import { displayCode, finderSecret, networkKey, newConversationCode, tokenForCode } from './finderCrypto.js';
 import { kickOutbox, json, serverPool } from './core.js';
 
 /** A tag's public id, as db/qurtag.sql makes them (qurtag.new_public_id). */
@@ -67,6 +72,8 @@ export interface FinderCard {
   photo: string | null;
   reward_text: string | null;
   lost: boolean;
+  /** The owner paused new notes on this item: an existing conversation goes on, a new one cannot start. */
+  paused: boolean;
 }
 
 export interface FinderMessage {
@@ -74,11 +81,15 @@ export interface FinderMessage {
   sender_kind: 'finder' | 'owner' | 'system';
   body: string;
   created_at: string;
+  /** A finder's note the owner has read. */
+  seen: boolean;
 }
 
 export interface FinderThread {
   status: 'open' | 'closed' | 'reunited';
   messages: FinderMessage[];
+  /** The finder gave an email for replies (never the address). */
+  email_on: boolean;
 }
 
 const str = (v: unknown): string | null => (typeof v === 'string' ? v : null);
@@ -95,6 +106,7 @@ export function finderCard(raw: unknown): FinderCard | null {
     photo: photo && /^data:image\/(jpeg|png|webp);base64,/.test(photo) ? photo : null,
     reward_text: str(r.reward_text),
     lost: r.lost === true,
+    paused: r.paused === true,
   };
 }
 
@@ -113,9 +125,9 @@ export function finderThread(raw: unknown): FinderThread | null {
     const body = str(x.body);
     const at = str(x.created_at);
     if (!kind || !id || body === null || !at) continue;
-    messages.push({ id, sender_kind: kind, body, created_at: at });
+    messages.push({ id, sender_kind: kind, body, created_at: at, seen: kind === 'finder' && x.seen === true });
   }
-  return { status, messages };
+  return { status, messages, email_on: r.email_on === true };
 }
 
 // ------------------------------------------------------------------ limits
@@ -180,6 +192,8 @@ const REASONS: Record<string, [number, string, string]> = {
   thread_closed: [409, 'thread_closed', 'This conversation is closed.'],
   thread_blocked: [409, 'thread_closed', 'This conversation is closed.'],
   too_many: [429, 'too_many', 'Too many notes for now. Please wait a little and try again.'],
+  // A paused item, or a network the owner blocked: the same words, so a block is not announced.
+  not_taking: [409, 'not_taking', 'The owner is not taking new notes on this tag right now. If you have the item, please hand it in where you found it.'],
   empty_message: [400, 'empty_message', 'Write a short note first.'],
   bad_token: [400, 'bad_request', 'That request is not valid.'],
 };
@@ -219,10 +233,12 @@ export function createFinderRoutes(opts: { query?: Query; env?: NodeJS.ProcessEn
       return fromDatabase(e);
     }
     const v = rows[0]?.v as Record<string, unknown> | null | undefined;
+    // A tag that exists but was switched off or replaced: the finder is told it is an old tag.
+    if (v?.gone === true) return json(410, { error: 'gone', message: 'This tag was switched off or replaced by its owner.' });
     const item = finderCard(v?.item);
     if (!v || !item) return notFound();
     const thread = finderThread(v.thread);
-    return json(200, { item, thread, tokenValid: usable ? thread !== null : null });
+    return json(200, { item, thread, tokenValid: usable ? thread !== null : null, emailAvailable: mailConfigured(env) && !!finderSecret(env) });
   }
 
   async function send(request: Request): Promise<Response> {
@@ -247,10 +263,14 @@ export function createFinderRoutes(opts: { query?: Query; env?: NodeJS.ProcessEn
         afterNote();
         return json(200, { ok: true });
       }
-      const token = newThreadToken();
-      await query('select qurtag.server_finder_open($1, $2, $3, $4)', [tag, token, note, hold]);
+      // The token is derived from a conversation code the finder can type on any browser
+      // (server/routes/finderLoop.ts); with no secret set it is random and there is no code.
+      const code = newConversationCode();
+      const derived = tokenForCode(code, env);
+      const token = derived ?? newThreadToken();
+      await query('select qurtag.server_finder_open($1, $2, $3, $4, $5)', [tag, token, note, hold, networkKey('finder-net', clientIp(request), env)]);
       afterNote();
-      return json(200, { ok: true, token });
+      return json(200, { ok: true, token, ...(derived ? { code: displayCode(code) } : {}) });
     } catch (e) {
       return fromDatabase(e);
     }

@@ -30,7 +30,7 @@ function stub(answer: (text: string, values: unknown[]) => Record<string, unknow
   return { query, calls };
 }
 
-test('finderCard keeps only name, photo, reward text and lost', () => {
+test('finderCard keeps only name, photo, reward text, lost and paused', () => {
   const card = finderCard({
     name: 'Violin case',
     photo: 'data:image/jpeg;base64,AAAA',
@@ -40,7 +40,7 @@ test('finderCard keeps only name, photo, reward text and lost', () => {
     notes: 'private',
     household_id: 'x',
   });
-  assert.deepEqual(card, { name: 'Violin case', photo: 'data:image/jpeg;base64,AAAA', reward_text: 'A thank-you', lost: true });
+  assert.deepEqual(card, { name: 'Violin case', photo: 'data:image/jpeg;base64,AAAA', reward_text: 'A thank-you', lost: true, paused: false });
 });
 
 test('finderCard drops a photo that is not an image data address', () => {
@@ -50,22 +50,25 @@ test('finderCard drops a photo that is not an image data address', () => {
   assert.equal(finderCard(null), null);
 });
 
-test('finderThread keeps only id, sender, body and time of each message', () => {
+test('finderThread keeps only id, sender, body, time and seen of each message, and whether email is on', () => {
   const t = finderThread({
     status: 'open',
     household_id: 'secret',
+    finder_email_enc: 'v1.secret',
+    email_on: true,
     messages: [
-      { id: '1', sender_kind: 'finder', body: 'hi', created_at: '2026-10-25T10:00:00Z', read_by_owner_at: 'x' },
-      { id: '2', sender_kind: 'owner', body: 'thanks', created_at: '2026-10-25T10:01:00Z', owner_email: 'o@example.com' },
+      { id: '1', sender_kind: 'finder', body: 'hi', created_at: '2026-10-25T10:00:00Z', read_by_owner_at: 'x', seen: true },
+      { id: '2', sender_kind: 'owner', body: 'thanks', created_at: '2026-10-25T10:01:00Z', owner_email: 'o@example.com', seen: true },
       { id: '3', sender_kind: 'robot', body: 'bad', created_at: '2026-10-25T10:02:00Z' },
     ],
   });
   assert.deepEqual(t, {
     status: 'open',
     messages: [
-      { id: '1', sender_kind: 'finder', body: 'hi', created_at: '2026-10-25T10:00:00Z' },
-      { id: '2', sender_kind: 'owner', body: 'thanks', created_at: '2026-10-25T10:01:00Z' },
+      { id: '1', sender_kind: 'finder', body: 'hi', created_at: '2026-10-25T10:00:00Z', seen: true },
+      { id: '2', sender_kind: 'owner', body: 'thanks', created_at: '2026-10-25T10:01:00Z', seen: false },
     ],
+    email_on: true,
   });
 });
 
@@ -110,7 +113,7 @@ test('the view answers only finder-safe fields even if the database sent more', 
   const text = await r.text();
   assert.equal(r.status, 200);
   assert.ok(!text.includes('PRIVATE') && !text.includes('o@example.com') && !text.includes('hh'));
-  assert.deepEqual(JSON.parse(text), { item: { name: 'Blue water bottle', photo: null, reward_text: null, lost: false }, thread: null, tokenValid: null });
+  assert.deepEqual(JSON.parse(text), { item: { name: 'Blue water bottle', photo: null, reward_text: null, lost: false, paused: false }, thread: null, tokenValid: null, emailAvailable: false });
   assert.equal(db.calls[0].values[3], true);
 });
 

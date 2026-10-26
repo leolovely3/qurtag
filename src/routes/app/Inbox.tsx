@@ -1,4 +1,5 @@
-import { finderLabels, previewLine } from '@/lib/inbox';
+import { familyNames, finderLabels, previewLine } from '@/lib/inbox';
+import { fetchFamily } from '@/lib/membership';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Inbox as InboxIcon } from 'lucide-react';
@@ -61,6 +62,71 @@ export function Inbox() {
   }, !!user && !loading);
 
   const labels = useMemo(() => finderLabels(threads), [threads]);
+  const active = useMemo(() => threads.filter((t) => !t.archived_at), [threads]);
+  const archived = useMemo(() => threads.filter((t) => t.archived_at), [threads]);
+  const [names, setNames] = useState<Map<string, string>>(new Map());
+  useEffect(() => {
+    if (!user) return;
+    void fetchFamily().then((f) => setNames(familyNames(f)));
+  }, [user]);
+
+  // A render function, not a component, so a poll does not remount the rows.
+  const threadList = (list: ThreadWithItem[]) => {
+    return (
+  <ul className="overflow-hidden rounded-modal border border-hairline bg-canvas divide-y divide-hairline">
+    {list.map((thread) => {
+      const unread = thread.unread_count > 0;
+      return (
+        <li key={thread.id}>
+          <Link
+            to={`/app/inbox/${thread.id}`}
+            className="flex items-start gap-3 px-4 py-3 transition-colors duration-150 hover:bg-ink-50 focus-visible:outline-offset-[-2px] active:bg-ink-50 ax:flex-col"
+          >
+            <ItemThumb src={thread.item?.hero_photo_url} size="sm" />
+            <div className="min-w-0 flex-1 ax:w-full">
+              <div className="flex items-baseline justify-between gap-3 ax:flex-col ax:gap-0">
+                <h3
+                  className={cn(
+                    'min-w-0 break-words text-base leading-snug',
+                    unread ? 'font-semibold text-ink-900' : 'font-medium text-ink-900',
+                  )}
+                >
+                  {thread.item?.name ?? 'An item'}
+                  {labels.get(thread.id) && <span className="font-normal text-muted">{` · ${labels.get(thread.id)}`}</span>}
+                </h3>
+                <span className={cn('shrink-0 text-sm', unread ? 'font-semibold text-signal-700' : 'text-muted')}>
+                  {relativeTime(thread.last_message_at)}
+                </span>
+              </div>
+              <div className="mt-0.5 flex items-start gap-2">
+                <p className={cn('line-clamp-2 min-w-0 flex-1 text-sm', unread ? 'text-ink-900' : 'text-muted')}>
+                  {previewLine(thread, names, user?.id)}
+                </p>
+                {unread && (
+                  <span className="mt-0.5 inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-pill bg-signal-700 px-1.5 text-xs font-semibold text-canvas">
+                    {thread.unread_count}
+                    <span className="sr-only"> new</span>
+                  </span>
+                )}
+              </div>
+              {(thread.status !== 'open' || thread.item?.lost_mode) && (
+                <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                  {thread.status !== 'open' && (
+                    <span className="inline-flex h-6 items-center rounded-pill bg-ink-100 px-2 text-xs font-medium text-ink-700">
+                      {thread.status === 'reunited' ? 'Back with you' : 'Closed'}
+                    </span>
+                  )}
+                  <LostChip lost={!!thread.item?.lost_mode} />
+                </div>
+              )}
+            </div>
+          </Link>
+        </li>
+      );
+    })}
+  </ul>
+    );
+  }
 
   const unreadTotal = useMemo(
     () => threads.reduce((sum, t) => sum + t.unread_count, 0),
@@ -91,59 +157,19 @@ export function Inbox() {
         </section>
       )}
 
-      {!loading && threads.length > 0 && (
-        <ul className="overflow-hidden rounded-modal border border-hairline bg-canvas divide-y divide-hairline">
-          {threads.map((thread) => {
-            const unread = thread.unread_count > 0;
-            return (
-              <li key={thread.id}>
-                <Link
-                  to={`/app/inbox/${thread.id}`}
-                  className="flex items-start gap-3 px-4 py-3 transition-colors duration-150 hover:bg-ink-50 focus-visible:outline-offset-[-2px] active:bg-ink-50 ax:flex-col"
-                >
-                  <ItemThumb src={thread.item?.hero_photo_url} size="sm" />
-                  <div className="min-w-0 flex-1 ax:w-full">
-                    <div className="flex items-baseline justify-between gap-3 ax:flex-col ax:gap-0">
-                      <h3
-                        className={cn(
-                          'min-w-0 break-words text-base leading-snug',
-                          unread ? 'font-semibold text-ink-900' : 'font-medium text-ink-900',
-                        )}
-                      >
-                        {thread.item?.name ?? 'An item'}
-                        {labels.get(thread.id) && <span className="font-normal text-muted">{` · ${labels.get(thread.id)}`}</span>}
-                      </h3>
-                      <span className={cn('shrink-0 text-sm', unread ? 'font-semibold text-signal-700' : 'text-muted')}>
-                        {relativeTime(thread.last_message_at)}
-                      </span>
-                    </div>
-                    <div className="mt-0.5 flex items-start gap-2">
-                      <p className={cn('line-clamp-2 min-w-0 flex-1 text-sm', unread ? 'text-ink-900' : 'text-muted')}>
-                        {previewLine(thread)}
-                      </p>
-                      {unread && (
-                        <span className="mt-0.5 inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-pill bg-signal-700 px-1.5 text-xs font-semibold text-canvas">
-                          {thread.unread_count}
-                          <span className="sr-only"> new</span>
-                        </span>
-                      )}
-                    </div>
-                    {(thread.status !== 'open' || thread.item?.lost_mode) && (
-                      <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                        {thread.status !== 'open' && (
-                          <span className="inline-flex h-6 items-center rounded-pill bg-ink-100 px-2 text-xs font-medium text-ink-700">
-                            {thread.status === 'reunited' ? 'Back with you' : 'Closed'}
-                          </span>
-                        )}
-                        <LostChip lost={!!thread.item?.lost_mode} />
-                      </div>
-                    )}
-                  </div>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+      {!loading && active.length > 0 && threadList(active)}
+      {!loading && threads.length > 0 && active.length === 0 && (
+        <p className="rounded-modal border border-hairline bg-paper px-4 py-6 text-center text-base text-muted">
+          Nothing new. Archived conversations are below.
+        </p>
+      )}
+      {!loading && archived.length > 0 && (
+        <details className="mt-4 group">
+          <summary className="flex min-h-11 cursor-pointer items-center px-1 text-sm font-semibold text-ink-700">
+            Archived ({archived.length})
+          </summary>
+          {threadList(archived)}
+        </details>
       )}
       {!loading && threads.length > 0 && (
         <div className="mt-3 px-1">

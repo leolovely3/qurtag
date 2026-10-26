@@ -36,6 +36,7 @@ export function titleForPath(pathname: string): string {
   if (PUBLIC_TITLES[path]) return pageTitle(PUBLIC_TITLES[path]);
   if (path.startsWith('/join/')) return pageTitle('Join a family');
   if (path.startsWith('/find/')) return pageTitle('You found something');
+  if (path === '/reply') return pageTitle('Open your conversation');
   return SITE_TITLE;
 }
 

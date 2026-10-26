@@ -58,6 +58,8 @@ export const TABLES: Readonly<Record<string, TableRule>> = {
     columns: [
       'id', 'household_id', 'name', 'brand', 'color', 'hero_photo_url', 'lost_mode',
       'reward_text', 'notes', 'created_at', 'updated_at',
+      // Set only by set_item_notes_paused (db/ux-fixes.sql).
+      'notes_paused_at',
     ],
     user: { ops: ['select', 'update', 'delete'], write: ['name', 'brand', 'color', 'hero_photo_url', 'lost_mode', 'reward_text', 'notes'] },
   },
@@ -70,14 +72,14 @@ export const TABLES: Readonly<Record<string, TableRule>> = {
     columns: ['id', 'tag_id', 'item_id', 'scanned_at', 'user_agent_class'],
     user: { ops: ['select'] },
   },
-  // Never finder_token_sha256.
+  // Never finder_token_sha256, finder_net_key or the finder's email columns (db/ux-fixes.sql).
   threads: {
-    columns: ['id', 'item_id', 'household_id', 'tag_id', 'status', 'last_message_at', 'created_at'],
-    user: { ops: ['select', 'update'], write: ['status'] },
+    columns: ['id', 'item_id', 'household_id', 'tag_id', 'status', 'last_message_at', 'created_at', 'archived_at'],
+    user: { ops: ['select', 'update'], write: ['status', 'archived_at'] },
   },
   // Replies go through owner_reply; reading marks through mark_thread_read.
   messages: {
-    columns: ['id', 'thread_id', 'sender_kind', 'body', 'read_by_owner_at', 'read_by_finder_at', 'created_at'],
+    columns: ['id', 'thread_id', 'sender_kind', 'body', 'read_by_owner_at', 'read_by_finder_at', 'created_at', 'sender_user_id'],
     user: { ops: ['select'] },
   },
 };
@@ -133,6 +135,8 @@ export const RPCS: Readonly<Record<string, RpcRule>> = {
   my_blocked_finders: { args: {}, returns: 'value', callers: ['user'] },
   my_held_notes: { args: { p_thread: 'uuid' }, returns: 'value', callers: ['user'] },
   release_held_note: { args: { p_message: 'uuid' }, returns: 'value', callers: ['user'] },
+  // Pause new notes on an item's tag (db/ux-fixes.sql).
+  set_item_notes_paused: { args: { p_item: 'uuid', p_paused: 'boolean' }, returns: 'value', callers: ['user'] },
   // Super admins (db/admin.sql). Listed for every signed-in person; each function checks
   // for itself, in the database, that the live session belongs to a super admin, and
   // refuses everyone else with 403. is_super_admin only answers true or false.

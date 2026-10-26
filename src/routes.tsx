@@ -117,6 +117,7 @@ export const routes: RouteObject[] = [
     ...screen(finderLayout, 'FinderLayout'),
     children: [
       { path: '/find/:tagId', ...screen(() => import('@/routes/finder/FinderView'), 'FinderView') },
+      { path: '/reply', ...screen(() => import('@/routes/finder/Reply'), 'Reply') },
       { path: '/find', element: <Navigate to="/" replace /> },
     ],
   },
