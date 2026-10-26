@@ -20,6 +20,7 @@
     { "source": "/auth/callback", "destination": "/app-shell" },
     { "source": "/join/(.*)", "destination": "/app-shell" },
     { "source": "/find", "destination": "/app-shell" },
+    { "source": "/reply", "destination": "/app-shell" },
     { "source": "/find/(.*)", "destination": "/app-shell" },
     { "source": "/partners", "destination": "/app-shell" },
     { "source": "/partners/(.*)", "destination": "/app-shell" }
