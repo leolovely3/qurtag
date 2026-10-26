@@ -261,6 +261,12 @@ html.native-app .fixed.inset-0 {
   padding-top: max(1rem, env(safe-area-inset-top));
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
+/* A full-height layout fills the space between the safe areas, not the whole screen: the body's
+   padding already holds the safe areas, so 100vh on top of it made every short screen scroll
+   by their height and pushed anything pinned to the bottom (the welcome screen's buttons) off it. */
+html.native-app .min-h-screen {
+  min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
 
 /* The iPhone app follows the phone's text size setting (Dynamic Type): the root font size
    comes from the system body size, and Tailwind sizes are in rem, so the text scales with it. */
