@@ -16,7 +16,9 @@
  *
  * Links that say what they want win over all of this: ?mode=create and ?mode=signin open that
  * form, and a `next` (an invite, a paid plan from Pricing) skips the welcome screen, because the
- * person is already in the middle of something.
+ * person is already in the middle of something. The one `next` that does not count is the app's
+ * own home: the app opens at /app, and AppLayout sends a signed-out person to /start?next=/app,
+ * so every cold start carries it and it says nothing about what the person wants.
  */
 
 export type StartView = 'welcome' | 'create' | 'signin';
@@ -41,8 +43,13 @@ export function initialStartView({
 }): StartView {
   if (mode === 'signin') return 'signin';
   if (mode === 'create' || !native) return 'create';
-  if (next || accountOnDevice) return 'signin';
+  if (accountOnDevice || (next && !isAppHome(next))) return 'signin';
   return 'welcome';
+}
+
+/** The address every signed-out cold start of the app carries as `next`: /app, with or without a slash. */
+function isAppHome(next: string): boolean {
+  return /^\/app\/?$/.test(next);
 }
 
 function storage(): FlagStorage | null {
