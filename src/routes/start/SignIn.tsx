@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail } from 'lucide-react';
 import { LogoMark } from '@/components/brand/Wordmark';
@@ -8,12 +8,15 @@ import { planFromNext, planIntentLine } from '@/lib/planIntent';
 import { useAuth } from '@/lib/auth';
 import { isNative } from '@/lib/platform';
 import { cn } from '@/lib/cn';
+import { hasAccountOnDevice, initialStartView, type StartView } from '@/lib/firstOpen';
+import { Welcome } from './Welcome';
 
 type Mode = 'create' | 'signin';
 
 /**
  * /start: create an account or sign in, with email and password. A new account goes on
- * to the first-tag walkthrough (/app/first-tag); someone signing in goes to /app.
+ * to the first-tag walkthrough (/app/first-tag); someone signing in goes to /app. The iPhone
+ * app's first open on a phone shows a welcome screen before the form (src/lib/firstOpen.ts).
  */
 export function StartSignIn() {
   const { user, loading, signUp, signIn } = useAuth();
@@ -24,7 +27,17 @@ export function StartSignIn() {
   const next = rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') && !rawNext.includes('\\') ? rawNext : null;
   // Pressed a paid plan on Pricing while signed out: say what comes after the account.
   const intent = planFromNext(next);
-  const [mode, setMode] = useState<Mode>(params.get('mode') === 'signin' || (isNative() && params.get('mode') !== 'create') ? 'signin' : 'create');
+  const [view, setView] = useState<StartView>(() =>
+    initialStartView({ native: isNative(), mode: params.get('mode'), next, accountOnDevice: hasAccountOnDevice() }),
+  );
+  const mode: Mode = view === 'signin' ? 'signin' : 'create';
+  const setMode = (m: Mode) => setView(m);
+  // Leaving the welcome screen: the form's heading takes focus, so VoiceOver starts at the top.
+  const heading = useRef<HTMLHeadingElement>(null);
+  const [leftWelcome, setLeftWelcome] = useState(false);
+  useEffect(() => {
+    if (leftWelcome) heading.current?.focus();
+  }, [leftWelcome]);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -63,11 +76,19 @@ export function StartSignIn() {
     }
   }
 
+  if (view === 'welcome') {
+    const leave = (m: Mode) => {
+      setView(m);
+      setLeftWelcome(true);
+    };
+    return <Welcome onCreate={() => leave('create')} onSignIn={() => leave('signin')} />;
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-md flex-col px-4 pb-16 pt-8 sm:pt-16">
       <div className="mb-6 flex flex-col items-center gap-3 text-center">
         <LogoMark size={56} />
-        <h1 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900 sm:text-3xl">
+        <h1 ref={heading} tabIndex={-1} className="outline-none text-2xl font-semibold tracking-[-0.02em] text-ink-900 sm:text-3xl">
           {mode === 'create' ? (intent ? 'Create your account' : 'Make your free tag') : 'Welcome back'}
         </h1>
         <p className="max-w-sm text-base text-muted text-pretty">
