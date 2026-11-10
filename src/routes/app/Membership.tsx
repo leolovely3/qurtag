@@ -260,7 +260,7 @@ function MembershipScreen() {
               <button
                 type="button"
                 className={primary}
-                onClick={() => void openOutside(storeSubscriptionsUrl(phoneProvider, paidPlan ? productFor(paidPlan, 'year').appleId : null))}
+                onClick={() => void openOutside(storeSubscriptionsUrl(phoneProvider, paidPlan ? (phoneProvider === 'google' ? productFor(paidPlan, 'year').googleId : productFor(paidPlan, 'year').appleId) : null))}
               >
                 Manage subscription
               </button>

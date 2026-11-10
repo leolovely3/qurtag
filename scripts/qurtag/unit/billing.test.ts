@@ -179,8 +179,8 @@ test('RevenueCat: a Google Play purchase from the Android app is recorded as goo
     const a = actionForRevenueCatEvent(rc({ store: 'PLAY_STORE', original_transaction_id: 'GPA.3311-2222-3333-44444', ...over }));
     return a.kind === 'apply' ? a.apply : null;
   };
-  // Google Play and RevenueCat may name the product with its base plan, or without it.
-  for (const product_id of ['app.impactconsultingai.qurtag.plus.yearly:yearly', 'app.impactconsultingai.qurtag.plus.yearly']) {
+  // Google Play and RevenueCat may name the product with its base plan, or without it (Google Play ids, which fit its 40-character limit).
+  for (const product_id of ['qurtag.plus.yearly:yearly', 'qurtag.plus.yearly']) {
     const a = get({ product_id });
     assert.equal(a?.provider, 'google', product_id);
     assert.equal(a?.plan, 'plus');
@@ -188,18 +188,22 @@ test('RevenueCat: a Google Play purchase from the Android app is recorded as goo
     assert.equal(a?.status, 'active');
     assert.equal(a?.externalId, 'GPA.3311-2222-3333-44444');
   }
-  assert.equal(get({ product_id: 'app.impactconsultingai.qurtag.family.yearly:yearly' })?.plan, 'family');
-  assert.equal(get({ type: 'CANCELLATION', cancel_reason: 'UNSUBSCRIBE', product_id: 'app.impactconsultingai.qurtag.plus.yearly:yearly' })?.status, 'canceling');
-  assert.equal(get({ type: 'EXPIRATION', product_id: 'app.impactconsultingai.qurtag.plus.yearly:yearly' })?.status, 'expired');
-  const change = get({ type: 'PRODUCT_CHANGE', product_id: 'app.impactconsultingai.qurtag.plus.yearly:yearly', new_product_id: 'app.impactconsultingai.qurtag.family.yearly:yearly' });
+  assert.equal(get({ product_id: 'qurtag.family.yearly:yearly' })?.plan, 'family');
+  assert.equal(get({ type: 'CANCELLATION', cancel_reason: 'UNSUBSCRIBE', product_id: 'qurtag.plus.yearly:yearly' })?.status, 'canceling');
+  assert.equal(get({ type: 'EXPIRATION', product_id: 'qurtag.plus.yearly:yearly' })?.status, 'expired');
+  const change = get({ type: 'PRODUCT_CHANGE', product_id: 'qurtag.plus.yearly:yearly', new_product_id: 'qurtag.family.yearly:yearly' });
   assert.equal(change?.plan, 'family');
   assert.equal(change?.keepHigher, true);
 });
 
 test('store product ids: both stores map to the same two products, only on the yearly base plan', () => {
   assert.equal(productByStoreId('app.impactconsultingai.qurtag.plus.yearly')?.plan, 'plus');
-  assert.equal(productByStoreId('app.impactconsultingai.qurtag.plus.yearly:yearly')?.plan, 'plus');
-  assert.equal(productByStoreId('app.impactconsultingai.qurtag.family.yearly:yearly')?.plan, 'family');
+  assert.equal(productByStoreId('qurtag.plus.yearly:yearly')?.plan, 'plus');
+  assert.equal(productByStoreId('qurtag.family.yearly:yearly')?.plan, 'family');
+  assert.equal(productByStoreId('qurtag.plus.yearly')?.plan, 'plus');
+  // Google Play ids must fit its 40-character limit; the App Store ids are only matched without a base plan.
+  for (const p of PRODUCTS) assert.ok(p.googleId.length <= 40, p.googleId);
+  assert.equal(productByStoreId('app.impactconsultingai.qurtag.plus.yearly:yearly'), undefined);
   assert.equal(productByStoreId('app.impactconsultingai.qurtag.plus.yearly:monthly'), undefined);
   assert.equal(productByStoreId('app.impactconsultingai.qurtag.plus.yearly:'), undefined);
   assert.equal(productByStoreId('other:yearly'), undefined);
