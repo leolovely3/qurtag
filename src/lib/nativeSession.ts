@@ -10,10 +10,10 @@
  *  - say which Apple push server this build talks to (Xcode builds: sandbox; TestFlight and the
  *    App Store: production).
  *
- * On the web these do nothing.
+ * On the web and in the Android app these do nothing.
  */
 import { registerPlugin } from '@capacitor/core';
-import { apiOrigin, isNative } from './platform';
+import { apiOrigin, isIosApp } from './platform';
 
 interface QurTagPushPlugin {
   setSession(options: { token: string; apiBase: string }): Promise<void>;
@@ -23,7 +23,8 @@ interface QurTagPushPlugin {
   environment(): Promise<{ environment: 'sandbox' | 'production' }>;
 }
 
-const plugin = isNative() ? registerPlugin<QurTagPushPlugin>('QurTagPush') : null;
+// The plugin is the iPhone app's own code; the Android app has no such plugin.
+const plugin = isIosApp() ? registerPlugin<QurTagPushPlugin>('QurTagPush') : null;
 
 async function quietly(work: (() => Promise<unknown>) | undefined): Promise<void> {
   try {

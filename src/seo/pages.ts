@@ -43,6 +43,7 @@ export const PUBLIC_PAGES: PublicPage[] = [
   page('/security', 'What a finder sees on a QuR Tag page and what they cannot. Your email and phone number stay private, and every conversation stays between you and the finder.', 'monthly', 0.8),
   page('/help', 'Answers about QuR Tag: what a finder sees, how replies work, what it costs, how to make a tag last, how to report a finder and how to delete your account.', 'monthly', 0.6),
   page('/privacy', 'What QuR Tag collects, why, who can see it and how to get it deleted, written in plain words.', 'monthly', 0.4),
+  page('/delete-account', 'How to delete your QuR Tag account and everything in it, in the app or by email, and what is deleted.', 'monthly', 0.3),
   page('/terms', 'The terms for using QuR Tag, the free QR tag service from Impact Consulting AI LLC: your account, the plans, finders\' notes and what we expect of you.', 'monthly', 0.4),
 ];
 

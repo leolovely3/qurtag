@@ -12,7 +12,7 @@
  *
  * Every call here is fire and forget: a failed measure never blocks, delays or shows an error to a person.
  */
-import { isNative } from './platform';
+import { isAndroidApp, isNative } from './platform';
 
 export const CHANNEL_KEY = 'qurtag.channel';
 const SHAPE = /^[a-z0-9][a-z0-9_-]{0,31}$/;
@@ -45,7 +45,7 @@ export function captureChannel(search: string = typeof location === 'undefined' 
   }
 }
 
-/** The channel to store on a new account: the remembered one; in the iPhone app, which has no landing page, "ios-app". */
+/** The channel to store on a new account: the remembered one; in the phone apps, which have no landing page, "ios-app" or "android-app". */
 export function signupChannel(store?: Pick<Storage, 'getItem'>): string | null {
   try {
     const found = (store ?? window.sessionStorage).getItem(CHANNEL_KEY);
@@ -53,7 +53,8 @@ export function signupChannel(store?: Pick<Storage, 'getItem'>): string | null {
   } catch {
     /* storage off */
   }
-  return isNative() ? 'ios-app' : null;
+  if (!isNative()) return null;
+  return isAndroidApp() ? 'android-app' : 'ios-app';
 }
 
 export type PrintAction = 'print' | 'download_pdf' | 'download_print_ready_png' | 'download_print_ready_pdf';
@@ -76,6 +77,6 @@ export function recordTagPrint(input: { style: string; look: string; paper: stri
 /** Notes which platform this account is using (the database writes it at most once a day). Never throws. */
 export function recordPlatform(): void {
   void import('./db')
-    .then(({ db }) => db.rpc('record_app_platform', { p_platform: isNative() ? 'ios' : 'web' }))
+    .then(({ db }) => db.rpc('record_app_platform', { p_platform: !isNative() ? 'web' : isAndroidApp() ? 'android' : 'ios' }))
     .catch(() => {});
 }

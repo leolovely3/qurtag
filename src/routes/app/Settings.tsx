@@ -14,7 +14,7 @@ import { fetchHousehold, fetchPrimaryHouseholdId, updateHousehold } from '@/lib/
 import { FEATURES } from '@/lib/features';
 import { fetchEmailConfig } from '@/lib/membership';
 import { EmailCheck } from '@/components/alerts/EmailCheck';
-import { isNative } from '@/lib/platform';
+import { pushOffered } from '@/lib/platform';
 import { useMembershipsAvailable } from '@/lib/useMembershipsAvailable';
 import { NotificationSettings } from '@/components/push/NotificationSettings';
 import { BlockedFinders } from '@/components/moderation/BlockedFinders';
@@ -254,7 +254,8 @@ export function Settings() {
         )}
 
         <NotificationSettings emailAvailable={emailAvailable} />
-        {emailAvailable && !isNative() && (
+        {/* The test email, where notes arrive by email: the web and the Android app. */}
+        {emailAvailable && !pushOffered() && (
           <div className="border-t border-hairline">
             <EmailCheck from={emailFrom} />
           </div>

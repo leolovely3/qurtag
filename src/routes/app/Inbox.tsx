@@ -1,6 +1,7 @@
 import { familyNames, finderLabels, previewLine } from '@/lib/inbox';
 import { fetchFamily } from '@/lib/membership';
 import { useEffect, useMemo, useState } from 'react';
+import { pushOffered } from '@/lib/platform';
 import { Link } from 'react-router-dom';
 import { Inbox as InboxIcon } from 'lucide-react';
 import { AppPage } from '@/components/layout/AppPage';
@@ -32,6 +33,8 @@ export function Inbox() {
   const { user, loading: authLoading } = useAuth();
   const [threads, setThreads] = useState<ThreadWithItem[]>([]);
   const [loading, setLoading] = useState(true);
+  // No answer (no network): say so and keep what was shown, never "No notes yet".
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     if (authLoading || !user) {
@@ -41,13 +44,12 @@ export function Inbox() {
     let cancelled = false;
     (async () => {
       const hh = await fetchPrimaryHouseholdId();
-      if (cancelled || !hh) {
-        setLoading(false);
-        return;
-      }
-      const t = await fetchThreadsForHousehold(hh);
       if (cancelled) return;
-      setThreads(t);
+      // Every owner has a household, so no answer here means the request failed.
+      const t = hh ? await fetchThreadsForHousehold(hh, true) : null;
+      if (cancelled) return;
+      setFailed(t === null);
+      if (t) setThreads(t);
       setLoading(false);
     })();
     return () => {
@@ -58,7 +60,9 @@ export function Inbox() {
   // New notes from finders: ask again every few seconds while the inbox is open.
   usePoll(async () => {
     const hh = await fetchPrimaryHouseholdId();
-    if (hh) setThreads(await fetchThreadsForHousehold(hh));
+    const t = hh ? await fetchThreadsForHousehold(hh, true) : null;
+    setFailed(t === null);
+    if (t) setThreads(t);
   }, !!user && !loading);
 
   const labels = useMemo(() => finderLabels(threads), [threads]);
@@ -143,15 +147,23 @@ export function Inbox() {
         </div>
       )}
 
-      {!loading && threads.length === 0 && (
+      {failed && (
+        <p role="status" className="mb-3 rounded-card bg-signal-50 px-4 py-3 text-body text-signal-700 text-pretty">
+          We could not load your notes. Check your connection; we will try again in a few seconds.
+        </p>
+      )}
+
+      {!loading && !failed && threads.length === 0 && (
         <section className="flex flex-col items-center gap-3 rounded-modal border border-hairline bg-paper px-6 py-10 text-center">
           <div className="grid size-14 place-items-center rounded-modal bg-canvas shadow-card">
             <InboxIcon size={24} strokeWidth={1.75} className="text-ink-900" aria-hidden />
           </div>
           <h2 className="text-xl font-semibold text-ink-900">No notes yet</h2>
           <p className="max-w-sm text-base text-muted text-pretty">
-            When someone scans one of your tags and writes to you, the note shows up here. Turn on
-            alerts in Settings to hear about it the moment it arrives.
+            When someone scans one of your tags and writes to you, the note shows up here.{' '}
+            {pushOffered()
+              ? 'Turn on alerts in Settings to hear about it the moment it arrives.'
+              : 'We also email you when a note arrives.'}
           </p>
           <HelpLink section="finder-sees" label="Need help? See what a finder sees" />
         </section>

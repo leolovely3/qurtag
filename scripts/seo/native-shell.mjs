@@ -1,5 +1,5 @@
 /*
- * For the iPhone app: puts the empty app shell where Capacitor expects the start page.
+ * For the phone apps (iPhone and Android): puts the empty app shell where Capacitor expects the start page.
  *
  * `npm run build` writes the finished home page to dist/index.html, which is right for the
  * website. The iPhone app loads dist/index.html too, but it opens to the app, not the home page,
@@ -11,4 +11,4 @@ import path from 'node:path';
 
 const dist = path.join(process.cwd(), 'dist');
 await copyFile(path.join(dist, 'app-shell.html'), path.join(dist, 'index.html'));
-console.log('dist/index.html is now the app shell, for the iPhone app.');
+console.log('dist/index.html is now the app shell, for the phone apps.');

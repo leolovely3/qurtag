@@ -9,7 +9,7 @@ export interface HelpEntry {
   q: string;
   a: string;
   action?: { label: string; to: string };
-  /** About plans and prices: left out in the iPhone app while memberships are hidden. */
+  /** About plans and prices: left out in the phone apps while memberships are hidden. */
   paid?: boolean;
   /** About the iPhone app only. */
   iphone?: boolean;
@@ -120,8 +120,8 @@ export const HELP: HelpSection[] = [
       {
         id: 'alerts',
         q: 'How do I get an alert when a finder writes?',
-        a: 'In the iPhone app, turn on alerts in Settings, under Notifications. You choose which alerts you want, and you can reply from the alert itself. On the website, we email you when a finder writes, from no-reply@qurtag.com. In Settings, send yourself a test email and check it is not in spam.',
-        action: { label: 'Turn on alerts', to: '/app/settings#alerts' },
+        a: 'In the iPhone app, turn on alerts in Settings, under Notifications. You choose which alerts you want, and you can reply from the alert itself. On the website and in the Android app, we email you when a finder writes, from no-reply@qurtag.com. In Settings, send yourself a test email and check it is not in spam.',
+        action: { label: 'Open Notifications', to: '/app/settings#alerts' },
       },
       {
         id: 'lost',
@@ -204,7 +204,7 @@ export const HELP: HelpSection[] = [
         id: 'cancel',
         q: 'How do I cancel?',
         paid: true,
-        a: 'On the web, open Membership in your account and choose Manage membership. On iPhone, open Settings, tap your name, then Subscriptions. You keep your plan until the end of the period you paid for.',
+        a: 'On the web, open Membership in your account and choose Manage membership. On iPhone, open Settings, tap your name, then Subscriptions. On Android, open the Google Play app, tap your profile picture, then Payments and subscriptions, then Subscriptions. You keep your plan until the end of the period you paid for.',
         action: { label: 'Open Membership', to: '/app/membership' },
       },
       {

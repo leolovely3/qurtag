@@ -16,9 +16,11 @@
     "brand": "node scripts/brand/build-brand.mjs",
     "cap:sync": "npm run build && node scripts/seo/native-shell.mjs && npx cap sync ios",
     "cap:ios": "npm run cap:sync && npx cap open ios",
+    "cap:android": "npm run build && node scripts/seo/native-shell.mjs && npx cap sync android && node scripts/native/check-android-bundle.mjs",
     "build:pages": "VITE_QURTAG_API_URL=https://www.qurtag.com vite build --ssr src/seo/entry-server.tsx --outDir .seo-build --logLevel warn && node scripts/seo/prerender.mjs"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.3",
     "@capacitor/app": "^8.1.2",
     "@capacitor/browser": "^8.0.5",
     "@capacitor/core": "^8.5.3",

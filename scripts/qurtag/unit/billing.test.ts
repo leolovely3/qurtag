@@ -6,7 +6,7 @@
  */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { dollars, FREE_ITEM_LIMIT, priceLabel, productByAppleId, PRODUCTS, PLAN_INFO } from '../../../server/billing/catalog.ts';
+import { dollars, FREE_ITEM_LIMIT, priceLabel, productByAppleId, productByStoreId, PRODUCTS, PLAN_INFO } from '../../../server/billing/catalog.ts';
 import { actionForRevenueCatEvent, sentSecret } from '../../../server/billing/revenuecat.ts';
 import { actionForStripeEvent, signStripePayload, verifyStripeSignature } from '../../../server/billing/stripe.ts';
 // The routes read their per-minute limits when loaded; these tests make more calls than a person would.
@@ -174,10 +174,46 @@ test('RevenueCat: events become plan states', () => {
   assert.equal(get({ app_user_id: 'x', original_app_user_id: 'y', aliases: ['z', USER] })?.userId, USER);
 });
 
+test('RevenueCat: a Google Play purchase from the Android app is recorded as google, with the same plans', () => {
+  const get = (over: Record<string, unknown>) => {
+    const a = actionForRevenueCatEvent(rc({ store: 'PLAY_STORE', original_transaction_id: 'GPA.3311-2222-3333-44444', ...over }));
+    return a.kind === 'apply' ? a.apply : null;
+  };
+  // Google Play and RevenueCat may name the product with its base plan, or without it.
+  for (const product_id of ['app.impactconsultingai.qurtag.plus.yearly:yearly', 'app.impactconsultingai.qurtag.plus.yearly']) {
+    const a = get({ product_id });
+    assert.equal(a?.provider, 'google', product_id);
+    assert.equal(a?.plan, 'plus');
+    assert.equal(a?.interval, 'year');
+    assert.equal(a?.status, 'active');
+    assert.equal(a?.externalId, 'GPA.3311-2222-3333-44444');
+  }
+  assert.equal(get({ product_id: 'app.impactconsultingai.qurtag.family.yearly:yearly' })?.plan, 'family');
+  assert.equal(get({ type: 'CANCELLATION', cancel_reason: 'UNSUBSCRIBE', product_id: 'app.impactconsultingai.qurtag.plus.yearly:yearly' })?.status, 'canceling');
+  assert.equal(get({ type: 'EXPIRATION', product_id: 'app.impactconsultingai.qurtag.plus.yearly:yearly' })?.status, 'expired');
+  const change = get({ type: 'PRODUCT_CHANGE', product_id: 'app.impactconsultingai.qurtag.plus.yearly:yearly', new_product_id: 'app.impactconsultingai.qurtag.family.yearly:yearly' });
+  assert.equal(change?.plan, 'family');
+  assert.equal(change?.keepHigher, true);
+});
+
+test('store product ids: both stores map to the same two products, only on the yearly base plan', () => {
+  assert.equal(productByStoreId('app.impactconsultingai.qurtag.plus.yearly')?.plan, 'plus');
+  assert.equal(productByStoreId('app.impactconsultingai.qurtag.plus.yearly:yearly')?.plan, 'plus');
+  assert.equal(productByStoreId('app.impactconsultingai.qurtag.family.yearly:yearly')?.plan, 'family');
+  assert.equal(productByStoreId('app.impactconsultingai.qurtag.plus.yearly:monthly'), undefined);
+  assert.equal(productByStoreId('app.impactconsultingai.qurtag.plus.yearly:'), undefined);
+  assert.equal(productByStoreId('other:yearly'), undefined);
+  assert.equal(productByStoreId(null), undefined);
+  assert.equal(productByStoreId(''), undefined);
+});
+
 test('RevenueCat: what is not ours is ignored', () => {
   for (const over of [
-    { type: 'TEST' }, { type: 'TRANSFER' }, { type: 'NON_RENEWING_PURCHASE' }, { store: 'PLAY_STORE' },
-    { product_id: 'com.other.app' }, { app_user_id: '$RCAnonymousID:1', original_app_user_id: '$RCAnonymousID:1', aliases: [] },
+    { type: 'TEST' }, { type: 'TRANSFER' }, { type: 'NON_RENEWING_PURCHASE' }, { store: 'STRIPE' }, { store: 'AMAZON' },
+    { store: 'PROMOTIONAL' }, { store: undefined },
+    { product_id: 'com.other.app' },
+    { store: 'PLAY_STORE', product_id: 'app.impactconsultingai.qurtag.plus.yearly:monthly' },
+    { store: 'PLAY_STORE', product_id: 'app.impactconsultingai.qurtag.plus.yearly:yearly:x' }, { app_user_id: '$RCAnonymousID:1', original_app_user_id: '$RCAnonymousID:1', aliases: [] },
   ]) assert.equal(actionForRevenueCatEvent(rc(over)).kind, 'ignore', JSON.stringify(over));
   assert.equal(actionForRevenueCatEvent(null).kind, 'ignore');
   assert.throws(() => actionForRevenueCatEvent(rc({ expiration_at_ms: null })), /expiration/);
@@ -288,7 +324,11 @@ test('checkout: refuses to start a second membership', async () => {
   const stripe = harness(FULL, () => [{ a: account({ live_providers: ['stripe'] }) }]);
   const s = await stripe.routes.checkout(call('billing-checkout', { plan: 'plus', interval: 'year' }, signedIn));
   assert.equal(((await s.json()) as { error: string }).error, 'use_portal');
-  assert.equal(apple.fetched.length + stripe.fetched.length, 0);
+  const google = harness(FULL, () => [{ a: account({ live_providers: ['google'] }) }]);
+  const g = await google.routes.checkout(call('billing-checkout', { plan: 'plus', interval: 'year' }, signedIn));
+  assert.equal(g.status, 409);
+  assert.equal(((await g.json()) as { error: string }).error, 'managed_on_android');
+  assert.equal(apple.fetched.length + stripe.fetched.length + google.fetched.length, 0);
 });
 
 test('portal: opens only for someone with a Stripe customer', async () => {

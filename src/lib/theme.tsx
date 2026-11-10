@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { setAndroidBars } from './platform';
 
 type ThemePreference = 'system' | 'light' | 'dark';
 type ResolvedTheme = 'light' | 'dark';
@@ -39,6 +40,8 @@ function applyTheme(resolved: ResolvedTheme) {
   else html.classList.remove('dark');
   html.setAttribute('data-theme', resolved);
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', resolved === 'dark' ? '#0A0B0F' : '#FFFFFF');
+  // The Android app draws edge to edge: the strips behind its system bars follow the page.
+  setAndroidBars(resolved === 'dark' ? '#0A0B0F' : '#FFFFFF', resolved !== 'dark');
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {

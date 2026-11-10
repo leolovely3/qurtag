@@ -257,6 +257,29 @@ await signUp(ana, 'ana@example.com', 'Ana Free');
   check('RevenueCat: a refund ends the plan at once', refunded.json?.result === 'applied' && (await planOf(bea)) === 'free');
 }
 
+// An Android membership through RevenueCat and Google Play (db/google-play.sql allows the provider).
+{
+  const gia = new Person('gia', '10.7.0.9');
+  await signUp(gia, 'gia@example.com', 'Gia Android');
+  const play = (over) => {
+    const e = rcEvent({ user: gia.id, product: 'app.impactconsultingai.qurtag.plus.yearly:yearly', orig: 'GPA.3311-2222-3333-44444', ...over });
+    e.event.store = 'PLAY_STORE';
+    return e;
+  };
+  const buy = await postRc(play({}));
+  check('Google Play: INITIAL_PURCHASE (product with its base plan) makes the account Plus', buy.json?.result === 'applied' && (await planOf(gia)) === 'plus', JSON.stringify(buy));
+  const { rows: [row] } = await sql(`select provider, plan, billing_interval, status from qurtag.subscriptions where user_id = $1`, [gia.id]);
+  check('Google Play: the row is google, Plus, yearly, active', row?.provider === 'google' && row?.plan === 'plus' && row?.billing_interval === 'year' && row?.status === 'active', JSON.stringify(row));
+  check('Google Play: my_membership says where it was bought', (await membership(gia))?.provider === 'google');
+  const again = await postRc(play({ id: 'rc-play-dup' }));
+  const twice = await postRc(play({ id: 'rc-play-dup' }));
+  check('Google Play: the same delivery twice changes nothing', again.json?.result === 'applied' && twice.json?.result === 'duplicate');
+  const cancel = await postRc(play({ type: 'CANCELLATION', extra: { cancel_reason: 'UNSUBSCRIBE' } }));
+  check('Google Play: CANCELLATION keeps the plan until it expires', cancel.json?.result === 'applied' && (await membership(gia))?.status === 'canceling' && (await planOf(gia)) === 'plus');
+  const end = await postRc(play({ type: 'EXPIRATION', exp: Date.now() - 1000 }));
+  check('Google Play: EXPIRATION returns the account to Free', end.json?.result === 'applied' && (await planOf(gia)) === 'free');
+}
+
 // The clock decides, not only the webhook: a lapsed period stops counting.
 {
   const cal = new Person('cal', '10.7.0.3');

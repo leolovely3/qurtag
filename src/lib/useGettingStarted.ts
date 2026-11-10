@@ -12,7 +12,7 @@ import {
   type Progress,
   type StepId,
 } from './gettingStarted';
-import { isNative } from './platform';
+import { pushOffered } from './platform';
 import { pushPermission } from './nativePush';
 
 function storage(): Storage | null {
@@ -40,7 +40,7 @@ export function useGettingStarted(itemCount: number) {
     // The test view of the finder page does not tick "Scan the printed tag": only the owner's own
     // word that a scan of the paper tag opened the page does (it checks the paper, the view does not).
     setProgress(loadProgress(storage(), userId));
-    if (isNative()) void pushPermission().then((v) => setAlertsOn(v === 'granted'));
+    if (pushOffered()) void pushPermission().then((v) => setAlertsOn(v === 'granted'));
   }, [userId]);
 
   useEffect(() => {
@@ -62,7 +62,8 @@ export function useGettingStarted(itemCount: number) {
     [userId],
   );
 
-  const facts = useMemo(() => ({ itemCount, native: isNative(), alertsOn }), [itemCount, alertsOn]);
+  // The alerts step is for the iPhone app only: the Android app has no push (src/lib/platform.ts).
+  const facts = useMemo(() => ({ itemCount, native: pushOffered(), alertsOn }), [itemCount, alertsOn]);
   return {
     steps: stepStates(progress, facts),
     next: nextStep(progress, facts),

@@ -6,7 +6,7 @@
 # Starts Supabase's Postgres 17 image as a stand-in for the shared project (container
 # qurtag-e2e-pg on 127.0.0.1:56850, removed at the end), adds decoy apps
 # (scripts/qurtag/decoys.sql), applies db/qurtag.sql and db/logins.sql exactly as
-# the rollout does (db/admin.sql, db/support.sql, db/push.sql, db/moderation.sql, db/admin-alerts.sql, db/measures.sql and db/ux-fixes.sql too; as `postgres`, which is not a superuser there, with fresh passwords
+# the rollout does (db/admin.sql, db/support.sql, db/push.sql, db/moderation.sql, db/admin-alerts.sql, db/measures.sql, db/ux-fixes.sql and db/google-play.sql too; as `postgres`, which is not a superuser there, with fresh passwords
 # sent as SCRAM verifiers), starts the four server functions (with email off, as in production today: accounts are confirmed at once) on 127.0.0.1:56851, and
 # runs scripts/qurtag/e2e.test.mjs. QURTAG_E2E_KEEP=1 leaves the database running
 # afterwards. QURTAG_LOCAL_SERVE=1 skips the tests and keeps the server functions up for
@@ -71,7 +71,9 @@ psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/shortcodes.sql
 psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/measures.sql
 # Rollout step 13 (the finder loop: conversation codes, the finder's optional email, pause, network blocks; needs steps 3 to 12).
 psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/ux-fixes.sql
-echo "schema, logins, the admin role, push, moderation, short codes, measures and the finder loop applied"
+# Rollout step 15 (memberships bought in the Android app through Google Play; needs steps 5 and 12).
+psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/google-play.sql
+echo "schema, logins, the admin role, push, moderation, short codes, measures, the finder loop and Google Play memberships applied"
 
 export QURTAG_AUTH_URL="http://127.0.0.1:$API_PORT"
 export QURTAG_DATABASE_URL="postgres://qurtag_auth:$AUTH_PW@127.0.0.1:$PG_PORT/postgres"

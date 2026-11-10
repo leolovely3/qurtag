@@ -23,7 +23,7 @@ export const FAQS: Faq[] = [
   },
   {
     q: 'What do I see as the owner?',
-    a: 'Your QuR Tag inbox shows each note from a finder. You can reply there. In the iPhone app you can also get an alert the moment a finder writes, and reply from the alert itself. Turn it on in Settings, under Notifications. You choose which alerts you want.',
+    a: 'Your QuR Tag inbox shows each note from a finder. You can reply there. In the iPhone app you can also get an alert the moment a finder writes, and reply from the alert itself. Turn it on in Settings, under Notifications. You choose which alerts you want. On the website and in the Android app, we email you when a finder writes.',
   },
   {
     q: 'Report or block a finder',
@@ -57,7 +57,7 @@ export const FAQS: Faq[] = [
   {
     q: 'How do I cancel?',
     paid: true,
-    a: 'On the web, open Membership in your account and choose Manage membership. On iPhone, open Settings, tap your name, then Subscriptions. You keep your plan until the end of the period you paid for.',
+    a: 'On the web, open Membership in your account and choose Manage membership. On iPhone, open Settings, tap your name, then Subscriptions. On Android, open the Google Play app, tap your profile picture, then Payments and subscriptions, then Subscriptions. You keep your plan until the end of the period you paid for.',
   },
   {
     q: 'What happens to my items if I go back to Free?',

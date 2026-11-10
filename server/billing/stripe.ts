@@ -137,7 +137,7 @@ export async function createPortalSession(env: NodeJS.ProcessEnv, f: Fetch, inpu
 // ------------------------------------------------------------------ events
 
 export interface Applied {
-  provider: 'stripe' | 'apple';
+  provider: 'stripe' | 'apple' | 'google';
   eventId: string;
   eventType: string;
   eventAt: Date;

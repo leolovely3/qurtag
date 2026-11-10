@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Tag PDFs, sticker files and the data export are written to the app's cache and handed
+         to the share sheet (src/lib/saveFile.ts); nothing is written to shared storage. -->
+    <cache-path name="shared_files" path="." />
+</paths>

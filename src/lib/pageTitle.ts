@@ -19,6 +19,7 @@ const PUBLIC_TITLES: Record<string, string> = {
   '/tags': 'Tag styles',
   '/make-it-last': 'Make your tag last',
   '/privacy': 'Privacy',
+  '/delete-account': 'Delete your account',
   '/terms': 'Terms',
   '/start': 'Sign in or create an account',
   '/forgot-password': 'Forgot password',

@@ -117,9 +117,9 @@ The rollout that creates the schema and logins in production is
 The plans and prices are written once, in `server/billing/catalog.ts`, which the server and the screens
 both import.
 
-**One entitlement, two ways to pay.** The web pays through Stripe Checkout (with the customer portal to
-change or cancel); the iPhone app pays through Apple's in-app purchase, with RevenueCat in between. Both
-end up as rows in `qurtag.subscriptions`, written only by `qurtag.server_apply_subscription` after a
+**One entitlement, three ways to pay.** The web pays through Stripe Checkout (with the customer portal to
+change or cancel); the iPhone app pays through Apple's in-app purchase and the Android app through Google Play <!-- source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) -->
+Billing, both with RevenueCat in between. All end up as rows in `qurtag.subscriptions`, written only by `qurtag.server_apply_subscription` after a
 webhook passed its check. `qurtag.household_plan` turns the rows and the clock into `free`, `plus` or
 `family`; a membership bought either way works on both, and if someone holds two, the better plan counts.
 The app never decides a plan: the screens ask `my_membership`.
@@ -129,7 +129,9 @@ The app never decides a plan: the screens ask `my_membership`.
   paid. Events: `checkout.session.completed`, `customer.subscription.created`, `.updated`, `.deleted`.
 - RevenueCat webhook `POST /api/fn/revenuecat-webhook`: trusted only with `Authorization` equal to
   `REVENUECAT_WEBHOOK_AUTH`. The account is RevenueCat's app user id, which the app sets to the QuR Tag
-  account id. Products other than the two yearly ones below are ignored.
+  account id. App Store events are recorded with provider `apple`, Google Play events with `google` <!-- source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) -->
+  (`db/google-play.sql`, rollout step 15); other stores, and products other than the two yearly ones below
+  (on Google Play: their `yearly` base plan), are ignored. <!-- source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) -->
 - Idempotent: every delivery id is kept (`qurtag.billing_events`); a repeat changes nothing, and an event
   older than the one already applied to a subscription never overwrites it. A failed write answers 500 so
   the sender retries.
@@ -160,6 +162,7 @@ the Membership screen say "Coming soon"):
 | `STRIPE_PRICE_PLUS_YEARLY`, `STRIPE_PRICE_FAMILY_YEARLY` | the two yearly recurring prices (`price_...`) |
 | `REVENUECAT_WEBHOOK_AUTH` | a long random string, also pasted into RevenueCat's webhook as the Authorization value |
 | `VITE_REVENUECAT_IOS_API_KEY` | RevenueCat's public iOS SDK key (`appl_...`). Public. A build setting for the iPhone app (`.env.local` on the building Mac), not a Vercel one |
+| `VITE_REVENUECAT_ANDROID_API_KEY` | RevenueCat's public Android SDK key (`goog_...`), from the same RevenueCat project. Public. A build setting for the Android app (`.env.local`); `npm run cap:android` refuses a bundle without it |
 
 Optional: `QURTAG_BILLING_RATE_PER_ACCOUNT` (default 12 a minute) and `QURTAG_BILLING_RATE_PER_IP` (60).
 `.env.example` lists them all.
@@ -182,7 +185,18 @@ Until the key is set in the build and RevenueCat returns offerings, the app hide
 pricing link (`membershipsAvailableInApp()` in `src/lib/iap.ts`, the rule in `src/lib/membership-flag.ts`); the website is
 unchanged, and `/join/<token>` still works.
 
-Database changes are the rollout files 5 (memberships), 6 (family) and 11 (Free allows 3 items; it changes only `household_item_limit`, which `db/membership.sql` already holds with 3) in
+**Android setup.** The same two subscriptions exist in Google Play Console with the same product ids, <!-- source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) -->
+`app.impactconsultingai.qurtag.plus.yearly` ($19) and `app.impactconsultingai.qurtag.family.yearly` ($29),
+each with one auto-renewing base plan `yearly` (1 year). In RevenueCat the Android app (package
+`app.impactconsultingai.qurtag`, connected to Play with a service account) has the two Play products
+(`<id>:yearly`), attached to the same entitlement `member` and to the same packages `plus` and `family` of the
+offering `default` as the App Store products. The Android app shows Google Play's own prices, Restore purchases <!-- source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) -->
+and Manage subscription (Google Play's subscription centre), and no way to pay outside Google Play. While Google <!-- source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) -->
+Play returns no products (the phone has no Play account, or no network) it hides memberships as the iPhone app
+does, and at the item limit it says Google Play is not available right now. <!-- source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) -->
+
+Database changes are the rollout files 5 (memberships), 6 (family), 15 (Google Play: `db/google-play.sql`, undo <!-- source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) -->
+`db/undo-google-play.sql`; run it before deploying the website that records Google Play events) and 11 (Free allows 3 items; it changes only `household_item_limit`, which `db/membership.sql` already holds with 3) in <!-- source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) -->
 `~/Claude/Rollouts/QurTag-rollout-schema` (copies of `db/membership.sql` and `db/family.sql`, each with an
 undo). The schema comments in those two files explain every rule.
 
@@ -426,6 +440,39 @@ Stack: React 18, TypeScript, Vite, Tailwind, React Router 7, Better Auth 1.7.7, 
 postgrest-js. QR codes are made in the browser (`qrcode.react`) and drawn by `src/lib/tagStyles.ts`; the tag page
 prints a vector page of tags, or saves it as a PDF. Colours are CSS variables (`src/index.css`)
 with a dark set under `.dark`, so every page follows the theme without per-page dark rules.
+
+## Android app
+
+The Android app (package `app.impactconsultingai.qurtag`, Google Play) is the same web app in a Capacitor shell <!-- source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) -->
+(`android/`), configured in the `android` part of `capacitor.config.ts`.
+
+- `npm run cap:android` builds the web app, puts the app shell in place, syncs it into `android/` and checks the
+  bundle (`scripts/native/check-android-bundle.mjs`: the app shell, the live site, the RevenueCat Android key, no
+  local server, no plain http, no inspector). Then `cd android && ./gradlew bundleRelease` with Android Studio's
+  JDK writes `android/app/build/outputs/bundle/release/app-release.aab`. Release signing reads the gitignored
+  `android/keystore.properties` (see `keystore.properties.example`); the upload key is outside the repo.
+  versionName follows the iPhone app's version; versionCode counts up by one for every upload.
+- The pages load from `https://localhost`, which the server trusts and answers with CORS as it does the iPhone
+  origin (`server/auth/origins.ts`, `server/auth/phoneCors.ts`).
+- No push on Android: there is no Firebase project, so the push plugin is left out of the Android build
+  (`android.includePlugins`) and `pushOffered()` in `src/lib/platform.ts` hides the alert settings, the alerts
+  step and the permission question. Finders' notes reach Android owners by email, as on the web. The app asks for
+  no runtime permission: the photo picker is Android's own, which needs none, and files go to the app's cache
+  before the share sheet (which offers Print, Drive and others). The manifest holds only internet, network state
+  and Google Play Billing. <!-- source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) -->
+- The back button closes an open dialog, steps back through screens, goes to Items from a screen with nothing
+  behind it, and leaves the app on Items or the sign-in screen (`src/lib/androidBack.ts`).
+- With no network at start, the phone apps say "Can't reach QuR Tag" with Try again instead of the sign-in
+  screen, and a failed session check never signs anyone out (`src/lib/auth.tsx`). The inbox says when notes could
+  not load instead of "No notes yet".
+- The window, the launch screen (near-black with the mark) and the strips behind the system bars follow the
+  page's light or dark mode (`AndroidBarsPlugin.java`, `setAndroidBars`). Icons and the launch screen are drawn
+  from `public/brand/qurtag-mark.svg` by `design/android/build.sh`, which also writes the Play Store icon and <!-- source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) -->
+  feature graphic.
+- An emulator test build against the local server: `QURTAG_ANDROID_TEST_BUILD=1 VITE_QURTAG_API_URL=http://localhost:56861`
+  for the build and sync, `adb reverse tcp:56861 tcp:56861`, and `npm run dev:local` for the server. That build
+  allows plain http to the local server and Chrome's inspector; the bundle check refuses both for an upload.
+- `/delete-account` is the public page that says how to delete an account without the app (Google Play asks for one). <!-- source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) -->
 
 ## iPhone app
 

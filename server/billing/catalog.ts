@@ -1,11 +1,17 @@
 /**
- * The plans QuR Tag sells, in one place: what each includes, what it costs, the iPhone
+ * The plans QuR Tag sells, in one place: what each includes, what it costs, the store
  * product ids and the names of the Stripe price settings. Shared by the server (which maps
  * a payment to a plan) and the screens (the pricing page and the Membership screen), so a
  * price is written exactly once. No imports: both sides load this file.
  *
- * The prices here are the US dollar prices set in Stripe and in App Store Connect. The
- * iPhone shows the price StoreKit reports for the person's country; the web shows these.
+ * The prices here are the US dollar prices set in Stripe, App Store Connect and Google Play
+ * Console. The phone apps show the price their store reports for the person's country; the
+ * web shows these.
+ *
+ * Store product ids: each subscription has the same id in App Store Connect and in Google Play
+ * Console (`appleId` below). On Google Play a subscription is sold through a base plan, and
+ * Google Play and RevenueCat name the product `<subscription id>:<base plan id>`, for example
+ * `app.impactconsultingai.qurtag.plus.yearly:yearly`; productByStoreId reads either form.
  *
  * Free: 3 items, 1 person, scan history of the last 30 days.
  * Plus: unlimited items, 1 person, the full scan history.
@@ -30,7 +36,7 @@ export interface Product {
   interval: Interval;
   /** US dollars, in cents. */
   cents: number;
-  /** The auto-renewable subscription's product id in App Store Connect. */
+  /** The auto-renewable subscription's product id in App Store Connect, and the subscription id in Google Play Console. */
   appleId: string;
   /** The setting that holds the Stripe price id (a server setting). */
   stripeEnv: string;
@@ -47,6 +53,21 @@ export function productFor(plan: PaidPlan, interval: Interval): Product {
 
 export function productByAppleId(id: string | null | undefined): Product | undefined {
   return PRODUCTS.find((p) => p.appleId === id);
+}
+
+/** The base plan every Google Play subscription of QuR Tag sells through: yearly, auto-renewing. */
+export const GOOGLE_BASE_PLAN = 'yearly';
+
+/**
+ * The product for a store's product id: an App Store id, a Google Play subscription id, or a
+ * Google Play `<subscription id>:<base plan id>` (only the yearly base plan counts).
+ */
+export function productByStoreId(id: string | null | undefined): Product | undefined {
+  if (!id) return undefined;
+  const [subscription, basePlan, ...rest] = id.split(':');
+  if (rest.length > 0) return undefined;
+  if (basePlan !== undefined && basePlan !== GOOGLE_BASE_PLAN) return undefined;
+  return productByAppleId(subscription);
 }
 
 export function dollars(cents: number): string {
