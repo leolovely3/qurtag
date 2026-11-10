@@ -45,8 +45,8 @@ export function Terms() {
             in your account. On iPhone, payment is taken by Apple through the App Store. It is charged to your Apple
             ID at confirmation of purchase and renews unless you cancel at least 24 hours before the period ends; you
             manage or cancel it in your iPhone's Settings, under Subscriptions. On Android, payment is taken by Google
-            through Google Play. It is charged to your Google Play account when you confirm the purchase and renews unless
-            you cancel before the renewal date; you manage or cancel it in the Google Play app, under Payments and
+            through Google Play. It is charged to your Google Play account when you confirm the purchase and renews unless {/* source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) */}
+            you cancel before the renewal date; you manage or cancel it in the Google Play app, under Payments and {/* source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) */}
             subscriptions. A membership bought any of these ways applies to your QuR Tag account wherever you sign in. If
             you have bought more than one, the better plan applies.
           </P>

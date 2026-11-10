@@ -157,6 +157,7 @@ function MembershipScreen() {
         m && m.plan !== 'free'
           ? `Restored. You are on ${PLAN_INFO[m.plan].name}.`
           : android
+            // source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026)
             ? 'Google Play has a membership for this Google account, but it belongs to a different QuR Tag account. Sign in to the account you bought it with.'
             : 'Apple has a membership for this Apple ID, but it belongs to a different QuR Tag account. Sign in to the account you bought it with.',
       );
@@ -187,6 +188,7 @@ function MembershipScreen() {
       membership.provider === 'apple'
         ? 'Bought in the iPhone app, with Apple.'
         : membership.provider === 'google'
+          // source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026)
           ? 'Bought in the Android app, with Google Play.'
           : 'Bought on the web, with Stripe.';
     return { name, status, source };
@@ -264,6 +266,7 @@ function MembershipScreen() {
               </button>
               <p className="text-caption text-muted text-pretty">
                 {android
+                  // source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026)
                   ? 'Opens your Google Play subscriptions, where you can change or cancel.'
                   : 'Opens your Apple subscriptions, where you can change or cancel.'}
               </p>
@@ -276,7 +279,7 @@ function MembershipScreen() {
           )}
           {membership.provider === 'google' && (!native || !android) && (
             <p className="text-caption text-muted text-pretty">
-              To change or cancel it, open the Google Play app on your Android phone, tap your profile picture, then Payments and subscriptions, then Subscriptions.
+              To change or cancel it, open the Google Play app on your Android phone, tap your profile picture, then Payments and subscriptions, then Subscriptions. {/* source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) */}
             </p>
           )}
         </section>
@@ -313,7 +316,7 @@ function MembershipScreen() {
                           Not available right now
                         </button>
                         <p className="text-caption text-muted text-pretty">
-                          {Store} did not answer. Check your connection{android ? ' and that you are signed in to Google Play' : ''}, then open this page again.
+                          {Store} did not answer. Check your connection{android ? ' and that you are signed in to Google Play' : ''}, then open this page again. {/* source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) */}
                         </p>
                       </div>
                     );
@@ -381,10 +384,10 @@ function MembershipScreen() {
         )}
         {(android || membership?.provider === 'google') && (
         <p>
-          On Android, payment is charged to your Google Play account when you confirm the purchase. The subscription renews every
-          year unless you cancel it before the renewal date. Manage or cancel it in the Google Play app: tap your profile picture,
+          On Android, payment is charged to your Google Play account when you confirm the purchase. The subscription renews every {/* source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) */}
+          year unless you cancel it before the renewal date. Manage or cancel it in the Google Play app: tap your profile picture, {/* source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) */}
           then Payments and subscriptions, then Subscriptions, or use Manage subscription above. Refunds for purchases made in the
-          app are handled by Google Play.
+          app are handled by Google Play. {/* source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) */}
         </p>
         )}
         {(!native || membership?.provider === 'stripe') && (

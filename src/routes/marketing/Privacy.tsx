@@ -65,7 +65,7 @@ export function Privacy() {
         <Section title="4. What we do not collect">
           <P>
             We do not collect or store payment card or bank details: payments are taken by Stripe (on the
-            web), Apple (in the iPhone app) or Google Play (in the Android app), and we never see the card number. We do not collect government ID,
+            web), Apple (in the iPhone app) or Google Play (in the Android app), and we never see the card number. We do not collect government ID, {/* source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) */}
             health or medical information, or precise location. There is no field for any of these, and we
             ask you not to put them in an item name, a note or a message. Please do not put a child's full name on a tag.
           </P>
@@ -103,8 +103,10 @@ export function Privacy() {
               'Supabase Inc. runs the database where your account, items, tags and conversations are stored, in the United States.',
               'Stripe, Inc. takes card payments on the web and runs the payment and membership pages you are sent to. It receives your email address, your card details (which it keeps, not us) and your payment history, under its own privacy policy.',
               'Apple Inc. takes payment for memberships bought in the iPhone app, under Apple\'s own terms and privacy policy. We receive only whether a subscription is active, which plan it is and when it ends.',
+              // source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026)
               'Google LLC takes payment for memberships bought in the Android app, through Google Play, under Google\'s own terms and privacy policy. We receive only whether a subscription is active, which plan it is and when it ends.',
               'Apple Inc. also delivers the alerts we send to your iPhone (the Apple Push Notification service). It receives your device token and the text of each alert: the item\'s name and the finder\'s note, or only "You have a new note" if you chose to hide the note on the lock screen. We use no other push service.',
+              // source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026)
               'RevenueCat, Inc. records subscriptions bought in the iPhone and Android apps for us and tells our server when one starts, renews or ends. It receives your QuR Tag account number (a random identifier, not your email address), your purchase records from Apple or Google Play, and technical details of your device and network address.',
               'Functional Software, Inc. (Sentry) receives an error report when the website or the app breaks: the error message, where in the code it happened, the kind of browser or phone and its system version, and the address of the page with any tag, invite or reset codes removed. We ask it not to record your network address, and we send no account, email address, notes, cookies or clicks. Reports are not sent from test machines.',
               'Resend (Resend, Inc.) sends our email: the link to reset your password, and the emails that confirm your address, tell you a finder wrote (at once, or as a copy ten minutes after an alert you have not opened), or carry a family invite; and, for a finder who asked, the email that says the owner replied. It receives the address and the text of that email.',

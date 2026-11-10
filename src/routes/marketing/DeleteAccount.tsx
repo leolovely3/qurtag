@@ -49,7 +49,7 @@ export function DeleteAccount() {
           <P>
             It is deleted at once and cannot be brought back. Copies in our providers' backups are replaced on their normal
             schedule. A message you sent us through Contact us is kept, without your account, until the question is dealt
-            with. A subscription bought through Google Play or the App Store is also listed in that store's own purchase
+            with. A subscription bought through Google Play or the App Store is also listed in that store's own purchase {/* source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) */}
             history, under their rules.
           </P>
           <P>
