@@ -18,7 +18,7 @@ android {
         // versionName is the live iPhone app's version (QuR Tag 1.0 on the App Store, the
         // MARKETING_VERSION in ios/App/App.xcodeproj). versionCode 20 is the first Google Play
         // upload; count it up by one for every upload after it.
-        versionCode 20
+        versionCode 21
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
