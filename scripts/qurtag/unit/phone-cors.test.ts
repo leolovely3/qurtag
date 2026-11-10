@@ -31,3 +31,20 @@ test('any other origin gets no CORS headers', async () => {
 test('the sign-in service and the data API trust the iPhone app origin', () => {
   assert.ok(trustedOrigins({ QURTAG_AUTH_URL: 'https://www.qurtag.com' } as NodeJS.ProcessEnv).includes(origin));
 });
+
+test('the Android app origin (https://localhost) is answered and trusted like the iPhone one', async () => {
+  const android = 'https://localhost';
+  const pre = await handler(
+    new Request('https://www.qurtag.com/api/auth/sign-in/email', {
+      method: 'OPTIONS',
+      headers: { origin: android, 'access-control-request-method': 'POST', 'access-control-request-headers': 'authorization, content-type' },
+    }),
+  );
+  assert.equal(pre.status, 204);
+  assert.equal(pre.headers.get('access-control-allow-origin'), android);
+  assert.equal(pre.headers.get('access-control-expose-headers'), 'set-auth-token');
+  assert.ok(trustedOrigins({ QURTAG_AUTH_URL: 'https://www.qurtag.com' } as NodeJS.ProcessEnv).includes(android));
+  // Only that exact origin: another port or host on localhost is not the app.
+  const other = await handler(new Request('https://www.qurtag.com/api/fn/x', { method: 'POST', headers: { origin: 'https://localhost:8443' } }));
+  assert.equal(other.headers.get('access-control-allow-origin'), null);
+});

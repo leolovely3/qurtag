@@ -4,7 +4,7 @@ import { ChevronDown, Search, X } from 'lucide-react';
 import { AppPage } from '@/components/layout/AppPage';
 import { ContactForm } from '@/components/support/ContactForm';
 import { HELP, visibleHelp } from '@/lib/helpContent';
-import { isNative } from '@/lib/platform';
+import { isIosApp } from '@/lib/platform';
 import { useHashScroll } from '@/lib/useHashScroll';
 import { useMembershipsAvailable } from '@/lib/useMembershipsAvailable';
 import { cn } from '@/lib/cn';
@@ -18,7 +18,7 @@ import { cn } from '@/lib/cn';
 export function HelpCenter() {
   const memberships = useMembershipsAvailable();
   const [query, setQuery] = useState('');
-  const sections = useMemo(() => visibleHelp(HELP, { memberships, native: isNative(), query }), [memberships, query]);
+  const sections = useMemo(() => visibleHelp(HELP, { memberships, native: isIosApp(), query }), [memberships, query]);
   const searching = query.trim().length > 0;
 
   useHashScroll((el) => {

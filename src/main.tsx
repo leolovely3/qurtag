@@ -10,6 +10,7 @@ import { isNative } from './lib/platform';
 import { installTextSizeClasses } from './lib/textSize';
 import { captureChannel } from './lib/measures';
 import { startErrorReports } from './lib/errors';
+import { installAndroidBack } from './lib/androidBack';
 import '@fontsource/inter/latin-400.css';
 import '@fontsource/inter/latin-500.css';
 import '@fontsource/inter/latin-600.css';
@@ -41,6 +42,10 @@ installExternalLinks(document, window, {
     await Browser.open({ url });
   },
 });
+
+// The Android back button: closes a dialog, steps back through screens, leaves the app on the
+// first screen (src/lib/androidBack.ts). Nothing on the web or iPhone.
+void installAndroidBack(() => void router.navigate('/app', { replace: true })).catch(() => undefined);
 
 const root = document.getElementById('root')!;
 const app = (

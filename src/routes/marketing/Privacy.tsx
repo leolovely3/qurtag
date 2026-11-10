@@ -10,7 +10,7 @@ export function Privacy() {
   return (
     <>
       <PageHero eyebrow="Privacy" title="Privacy policy" lede="What QuR Tag collects, why, who can see it, and how to get it deleted.">
-        <p className="text-caption text-muted">Last updated 26 October 2026</p>
+        <p className="text-caption text-muted">Last updated 10 November 2026</p>
       </PageHero>
       <PageBody>
         <Section title="Who we are">
@@ -41,10 +41,10 @@ export function Privacy() {
               'Items you add (up to three on the Free plan): the name, an optional description, an optional photo (we shrink it on your device before it is saved), an optional note for the finder, an optional private note, and whether you marked it lost.',
               'Tags: the code of each tag you make and whether it is switched on.',
               'Conversations: the notes you and a finder write to each other, and when they were read.',
-              'Membership, if you buy one: which plan you have, whether it renews, when it ends, and the reference numbers Stripe or Apple give the subscription. We do not receive or keep your card number.',
+              'Membership, if you buy one: which plan you have, whether it renews, when it ends, and the reference numbers Stripe, Apple or Google give the subscription. We do not receive or keep your card number.',
               'Messages you send through the Contact us form: the text, the topic, the email address to reply to, and, if you were signed in, your account and plan. We keep them until the question is dealt with and as long after as we need to answer follow-ups.',
               'Notifications, if you allow them in the iPhone app: your phone\'s device token (a code Apple gives the app so that our server can send it alerts), whether the app is a test or a live build, and the notification choices you make in Settings. We keep the token until you sign out, delete your account, or Apple tells us it no longer works.',
-              'How the app is used, kept as counts in our own database and nowhere else: when you press "I have it back" on a conversation, when you print, share or download a tag file (which style, look and paper, and whether in the app or on the website), whether you use the iPhone app or the website, and which link brought you to QuR Tag if it carried a label such as ?ch=newsletter (kept in your browser tab until you create the account, then stored once on the account). None of this is used to profile you; it is used only to count.',
+              'How the app is used, kept as counts in our own database and nowhere else: when you press "I have it back" on a conversation, when you print, share or download a tag file (which style, look and paper, and whether in the app or on the website), whether you use the iPhone app, the Android app or the website, and which link brought you to QuR Tag if it carried a label such as ?ch=newsletter (kept in your browser tab until you create the account, then stored once on the account). None of this is used to profile you; it is used only to count.',
               'Family, if you use it: the email address you invite, until the invite is used, canceled or has expired (and for 30 days after), and the names and email addresses of the people in the family, which they can all see.',
             ]}
           />
@@ -65,7 +65,7 @@ export function Privacy() {
         <Section title="4. What we do not collect">
           <P>
             We do not collect or store payment card or bank details: payments are taken by Stripe (on the
-            web) or Apple (in the app), and we never see the card number. We do not collect government ID,
+            web), Apple (in the iPhone app) or Google Play (in the Android app), and we never see the card number. We do not collect government ID,
             health or medical information, or precise location. There is no field for any of these, and we
             ask you not to put them in an item name, a note or a message. Please do not put a child's full name on a tag.
           </P>
@@ -103,8 +103,9 @@ export function Privacy() {
               'Supabase Inc. runs the database where your account, items, tags and conversations are stored, in the United States.',
               'Stripe, Inc. takes card payments on the web and runs the payment and membership pages you are sent to. It receives your email address, your card details (which it keeps, not us) and your payment history, under its own privacy policy.',
               'Apple Inc. takes payment for memberships bought in the iPhone app, under Apple\'s own terms and privacy policy. We receive only whether a subscription is active, which plan it is and when it ends.',
+              'Google LLC takes payment for memberships bought in the Android app, through Google Play, under Google\'s own terms and privacy policy. We receive only whether a subscription is active, which plan it is and when it ends.',
               'Apple Inc. also delivers the alerts we send to your iPhone (the Apple Push Notification service). It receives your device token and the text of each alert: the item\'s name and the finder\'s note, or only "You have a new note" if you chose to hide the note on the lock screen. We use no other push service.',
-              'RevenueCat, Inc. records iPhone app subscriptions for us and tells our server when one starts, renews or ends. It receives your QuR Tag account number (a random identifier, not your email address), your purchase records from Apple, and technical details of your device and network address.',
+              'RevenueCat, Inc. records subscriptions bought in the iPhone and Android apps for us and tells our server when one starts, renews or ends. It receives your QuR Tag account number (a random identifier, not your email address), your purchase records from Apple or Google Play, and technical details of your device and network address.',
               'Functional Software, Inc. (Sentry) receives an error report when the website or the app breaks: the error message, where in the code it happened, the kind of browser or phone and its system version, and the address of the page with any tag, invite or reset codes removed. We ask it not to record your network address, and we send no account, email address, notes, cookies or clicks. Reports are not sent from test machines.',
               'Resend (Resend, Inc.) sends our email: the link to reset your password, and the emails that confirm your address, tell you a finder wrote (at once, or as a copy ten minutes after an alert you have not opened), or carry a family invite; and, for a finder who asked, the email that says the owner replied. It receives the address and the text of that email.',
             ]}

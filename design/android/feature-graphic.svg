@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1024" height="500" viewBox="0 0 1024 500">
+  <!-- Google Play feature graphic for QuR Tag: the icon tile, the name with the orange u, and the
+       tagline from the logo lockup. No badges, checkmarks, ratings or award words. -->
+  <defs><clipPath id="tile"><rect x="96" y="110" width="280" height="280" rx="63"/></clipPath></defs>
+  <rect width="1024" height="500" fill="#0A0B0F"/>
+  <rect x="0" y="0" width="1024" height="500" fill="#FFFFFF" fill-opacity="0.03"/>
+  <image x="96" y="110" width="280" height="280" clip-path="url(#tile)" xlink:href="icon-512.png"/>
+  <rect x="96.5" y="110.5" width="279" height="279" rx="63" fill="none" stroke="#FFFFFF" stroke-opacity="0.14"/>
+  <text x="430" y="238" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-weight="700" font-size="96" fill="#FFFFFF" letter-spacing="-2">Q<tspan fill="#FF5C2E">u</tspan>R Tag</text>
+  <text x="434" y="300" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="31" fill="#C9CACE">A free tag so a kind stranger</text>
+  <text x="434" y="342" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="31" fill="#C9CACE">can message you</text>
+</svg>

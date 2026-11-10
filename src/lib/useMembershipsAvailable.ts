@@ -3,7 +3,7 @@ import { useAuth } from './auth';
 import { membershipsAvailableInApp, probeOfferings, subscribeMemberships } from './iap';
 
 /**
- * True when screens may show memberships (see membership-flag.ts). In the iPhone app it
+ * True when screens may show memberships (see membership-flag.ts). In the phone apps it
  * starts false and turns true by itself when RevenueCat's offerings load.
  */
 export function useMembershipsAvailable(): boolean {

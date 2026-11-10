@@ -4,7 +4,7 @@ export function Terms() {
   return (
     <>
       <PageHero eyebrow="Terms" title="Terms of use" lede="The rules for using QuR Tag, in plain words.">
-        <p className="text-caption text-muted">Last updated 25 October 2026</p>
+        <p className="text-caption text-muted">Last updated 10 November 2026</p>
       </PageHero>
       <PageBody>
         <Section title="1. Who we are and what this covers">
@@ -44,12 +44,16 @@ export function Terms() {
             On the web, payment is taken by Stripe, and you manage or cancel your membership from the Membership page
             in your account. On iPhone, payment is taken by Apple through the App Store. It is charged to your Apple
             ID at confirmation of purchase and renews unless you cancel at least 24 hours before the period ends; you
-            manage or cancel it in your iPhone's Settings, under Subscriptions. A membership bought either way applies
-            to your QuR Tag account wherever you sign in. If you have bought one both ways, the better plan applies.
+            manage or cancel it in your iPhone's Settings, under Subscriptions. On Android, payment is taken by Google
+            through Google Play. It is charged to your Google Play account when you confirm the purchase and renews unless
+            you cancel before the renewal date; you manage or cancel it in the Google Play app, under Payments and
+            subscriptions. A membership bought any of these ways applies to your QuR Tag account wherever you sign in. If
+            you have bought more than one, the better plan applies.
           </P>
           <P>
             Refunds for purchases made in the iPhone app are handled by Apple, under Apple's rules, at
-            reportaproblem.apple.com. If you think you were charged by mistake on the web, use the Contact us form (in{' '}
+            reportaproblem.apple.com. Refunds for purchases made in the Android app are handled by Google, under Google
+            Play's rules. If you think you were charged by mistake on the web, use the Contact us form (in{' '}
             <DocLink to="/help" className="text-ink-900 underline underline-offset-4">Help</DocLink>, or "Question about a charge?" on the Membership page),
             or email <ContactLink /> if you cannot sign in. If we change a price, we will tell you before the new price
             applies to your next renewal.

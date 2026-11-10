@@ -12,7 +12,7 @@ import { useToast } from '@/components/ui/Toast';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/cn';
 import { markPushExplained, pushPermission, turnOnPush } from '@/lib/nativePush';
-import { isNative, publicUrl } from '@/lib/platform';
+import { isNative, publicUrl, pushOffered } from '@/lib/platform';
 import { createItemWithPrintableTag, fetchItems, fetchPrimaryHouseholdId, fetchTagById } from '@/lib/queries';
 import { PICKS, recommendStyle, type Pick, type PickId } from '@/lib/tagRecommend';
 import { STYLES, defaultCopies, defaultPaper, styleById, type StyleId } from '@/lib/tagLayout';
@@ -105,12 +105,14 @@ export function FirstTag() {
   const [tested, setTested] = useState(false);
   const [alerts, setAlerts] = useState<'unknown' | 'granted' | 'denied'>('unknown');
   const native = isNative();
-  // The web's last step is the email check, when email is on (the server says so).
+  // The last step: alerts in the iPhone app; the email check on the web and in the Android app
+  // (no push there, so finders' notes arrive by email), when email is on (the server says so).
+  const alertsStep = pushOffered();
   const [emailFrom, setEmailFrom] = useState<string | null>(null);
   useEffect(() => {
-    if (!native) void fetchEmailConfig().then((c) => setEmailFrom(c?.email ? c.from : null));
-  }, [native]);
-  const total = native || emailFrom ? 7 : 6;
+    if (!alertsStep) void fetchEmailConfig().then((c) => setEmailFrom(c?.email ? c.from : null));
+  }, [alertsStep]);
+  const total = alertsStep || emailFrom ? 7 : 6;
 
   useEffect(() => {
     if (loading) return;
@@ -170,8 +172,8 @@ export function FirstTag() {
   }, [s.created]);
 
   useEffect(() => {
-    if (s.step === 7 && native) void pushPermission().then((v) => setAlerts(v === 'granted' ? 'granted' : v === 'denied' ? 'denied' : 'unknown'));
-  }, [s.step, native]);
+    if (s.step === 7 && alertsStep) void pushPermission().then((v) => setAlerts(v === 'granted' ? 'granted' : v === 'denied' ? 'denied' : 'unknown'));
+  }, [s.step, alertsStep]);
 
   const styleId: StyleId = s.styleId ?? recommendStyle(s.pick, s.name);
   const spec = styleById(styleId);
@@ -241,7 +243,7 @@ export function FirstTag() {
 
   /** After the test: alerts (iPhone), the email check (web, when email is on), or done. */
   function afterTest() {
-    if (native || emailFrom) go(7);
+    if (alertsStep || emailFrom) go(7);
     else finish();
   }
 
@@ -506,7 +508,7 @@ export function FirstTag() {
           </>
         )}
 
-        {s.step === 7 && !native && emailFrom && (
+        {s.step === 7 && !alertsStep && emailFrom && (
           <>
             <h2 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900 text-balance">Know when someone writes</h2>
             <p className="text-base text-ink-700 text-pretty">
@@ -517,7 +519,7 @@ export function FirstTag() {
           </>
         )}
 
-        {s.step === 7 && native && (
+        {s.step === 7 && alertsStep && (
           <>
             <h2 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900 text-balance">Know the moment someone finds it</h2>
             <p className="text-base text-ink-700 text-pretty">

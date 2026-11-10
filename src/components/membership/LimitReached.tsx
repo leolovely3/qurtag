@@ -3,11 +3,19 @@ import { buttonClasses } from '@/components/ui/Button';
 import { limitCopy } from '@/lib/itemLimit';
 import type { Membership } from '@/lib/membership';
 import { useMembershipsAvailable } from '@/lib/useMembershipsAvailable';
+import { iapAvailable } from '@/lib/iap';
+import { storeName } from '@/lib/platform';
 
 /** The plan holds no more items: what that means and the way on (rules in src/lib/itemLimit.ts). */
 export function LimitReached({ membership, className }: { membership: Membership; className?: string }) {
   const shown = useMembershipsAvailable();
-  const c = limitCopy({ membershipsShown: shown, itemLimit: membership.item_limit, itemsUsed: membership.items_used });
+  const c = limitCopy({
+    membershipsShown: shown,
+    itemLimit: membership.item_limit,
+    itemsUsed: membership.items_used,
+    // This build sells through its store, but the store has not answered.
+    unavailableStore: !shown && iapAvailable() ? storeName() : undefined,
+  });
   return (
     <section role="status" className={className ?? 'flex flex-col items-start gap-3 rounded-modal border border-hairline bg-paper p-4'}>
       <h2 className="text-base font-semibold text-ink-900 text-balance">{c.title}</h2>

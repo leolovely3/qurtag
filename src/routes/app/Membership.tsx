@@ -8,7 +8,7 @@ import { ContactForm } from '@/components/support/ContactForm';
 import { useToast } from '@/components/ui/Toast';
 import { useAuth } from '@/lib/auth';
 import { useMembershipsAvailable } from '@/lib/useMembershipsAvailable';
-import { iapAvailable, iapBuy, iapPrices, iapRestore, type StorePrice } from '@/lib/iap';
+import { iapAvailable, iapBuy, iapPrices, iapRestore, storeSubscriptionsUrl, type StorePrice } from '@/lib/iap';
 import {
   fetchBillingConfig,
   fetchFamily,
@@ -24,11 +24,8 @@ import {
   type InviteResult,
   type Membership,
 } from '@/lib/membership';
-import { isNative, openOutside } from '@/lib/platform';
+import { isAndroidApp, isNative, openOutside, storeName } from '@/lib/platform';
 import { FAMILY_SEATS, PLAN_INFO, priceLabel, productFor, type Interval, type PaidPlan } from '../../../server/billing/catalog';
-
-/** Apple's page where a person changes or cancels their subscriptions. */
-const APPLE_SUBSCRIPTIONS = 'https://apps.apple.com/account/subscriptions';
 
 const when = (iso: string | null | undefined) =>
   iso ? new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : '';
@@ -41,10 +38,12 @@ const secondary = `${button} border border-hairline-strong text-ink-900 hover:bo
 /**
  * /app/membership: the person's plan, how to change it, and the Family household.
  *
- * Buying differs by device and the plan reads the same on both: on the web the buttons go
- * to Stripe Checkout; in the iPhone app they go to Apple's in-app purchase (the app never
- * shows a way to pay outside Apple). A membership bought either way is shown here and
- * works everywhere, because the plan is recorded by the server (src/lib/membership.ts).
+ * Buying differs by device and the plan reads the same everywhere: on the web the buttons go
+ * to Stripe Checkout; in the iPhone app they go to Apple's in-app purchase and in the Android
+ * app to Google Play Billing (a phone app never shows a price link, a checkout or any way to
+ * pay outside its store, as Apple's and Google Play's payment rules require). A membership
+ * bought any way is shown here and works everywhere, because the plan is recorded by the
+ * server (src/lib/membership.ts).
  */
 export function MembershipPage() {
   const memberships = useMembershipsAvailable();
@@ -57,10 +56,16 @@ function MembershipScreen() {
   const toast = useToast();
   const [params, setParams] = useSearchParams();
   const native = isNative();
+  const android = isAndroidApp();
+  // "Google Play" or "the App Store", and the same at the start of a sentence.
+  const store = storeName();
+  const Store = store.charAt(0).toUpperCase() + store.slice(1);
+  /** The phone's own provider: what this app sells through and can manage. */
+  const phoneProvider = android ? 'google' : 'apple';
   const [membership, setMembership] = useState<Membership | null>(null);
   const [family, setFamily] = useState<Family | null>(null);
   const [web, setWeb] = useState<Record<string, boolean> | null>(null);
-  const [store, setStore] = useState<Map<string, StorePrice> | null>(null);
+  const [prices, setPrices] = useState<Map<string, StorePrice> | null>(null);
   const [failed, setFailed] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -79,7 +84,8 @@ function MembershipScreen() {
     if (!user) return;
     void reload();
     if (native) {
-      iapPrices(user.id).then(setStore, () => setStore(new Map()));
+      // No answer from the store (Google Play missing or signed out, no network): the plans say "Not available".
+      iapPrices(user.id).then(setPrices, () => setPrices(new Map()));
     } else {
       fetchBillingConfig().then((c) => setWeb(c ?? {}));
     }
@@ -117,8 +123,8 @@ function MembershipScreen() {
   }
 
   async function buyOnPhone(plan: PaidPlan, interval: Interval) {
-    if (!user || !store) return;
-    const price = store.get(productFor(plan, interval).appleId);
+    if (!user || !prices) return;
+    const price = prices.get(productFor(plan, interval).appleId);
     if (!price) return;
     setError(null);
     setBusy(`${plan}_${interval}`);
@@ -142,12 +148,18 @@ function MembershipScreen() {
     if ('error' in r) {
       setError(r.error);
     } else if (!r.found) {
-      setNotice('No active membership was found for this Apple ID.');
+      setNotice(android ? 'No active membership was found for this Google account.' : 'No active membership was found for this Apple ID.');
     } else {
       setNotice('Restoring your membership...');
       const m = await waitForMembership((x) => x.plan !== 'free', 10);
       await reload();
-      setNotice(m && m.plan !== 'free' ? `Restored. You are on ${PLAN_INFO[m.plan].name}.` : 'Apple has a membership for this Apple ID, but it belongs to a different QuR Tag account. Sign in to the account you bought it with.');
+      setNotice(
+        m && m.plan !== 'free'
+          ? `Restored. You are on ${PLAN_INFO[m.plan].name}.`
+          : android
+            ? 'Google Play has a membership for this Google account, but it belongs to a different QuR Tag account. Sign in to the account you bought it with.'
+            : 'Apple has a membership for this Apple ID, but it belongs to a different QuR Tag account. Sign in to the account you bought it with.',
+      );
     }
     setBusy(null);
   }
@@ -171,7 +183,12 @@ function MembershipScreen() {
     if (membership.status === 'canceling') status = `Auto-renew is off. Your ${name} plan ends on ${when(membership.period_end)}.`;
     else if (membership.status === 'billing_issue') status = `The last payment did not go through. Update your payment method to keep ${name}.`;
     else status = `Billed yearly. Renews on ${when(membership.period_end)}.`;
-    const source = membership.provider === 'apple' ? 'Bought in the iPhone app, with Apple.' : 'Bought on the web, with Stripe.';
+    const source =
+      membership.provider === 'apple'
+        ? 'Bought in the iPhone app, with Apple.'
+        : membership.provider === 'google'
+          ? 'Bought in the Android app, with Google Play.'
+          : 'Bought on the web, with Stripe.';
     return { name, status, source };
   })();
 
@@ -236,17 +253,30 @@ function MembershipScreen() {
               To change or cancel it, sign in to your QuR Tag account on the web.
             </p>
           )}
-          {membership.provider === 'apple' && native && (
+          {(membership.provider === 'apple' || membership.provider === 'google') && native && membership.provider === phoneProvider && (
             <div className="flex flex-col gap-2 items-start">
-              <button type="button" className={primary} onClick={() => void openOutside(APPLE_SUBSCRIPTIONS)}>
+              <button
+                type="button"
+                className={primary}
+                onClick={() => void openOutside(storeSubscriptionsUrl(phoneProvider, paidPlan ? productFor(paidPlan, 'year').appleId : null))}
+              >
                 Manage subscription
               </button>
-              <p className="text-caption text-muted text-pretty">Opens your Apple subscriptions, where you can change or cancel.</p>
+              <p className="text-caption text-muted text-pretty">
+                {android
+                  ? 'Opens your Google Play subscriptions, where you can change or cancel.'
+                  : 'Opens your Apple subscriptions, where you can change or cancel.'}
+              </p>
             </div>
           )}
-          {membership.provider === 'apple' && !native && (
+          {membership.provider === 'apple' && (!native || android) && (
             <p className="text-caption text-muted text-pretty">
               To change or cancel it, open Settings on your iPhone, tap your name, then Subscriptions.
+            </p>
+          )}
+          {membership.provider === 'google' && (!native || !android) && (
+            <p className="text-caption text-muted text-pretty">
+              To change or cancel it, open the Google Play app on your Android phone, tap your profile picture, then Payments and subscriptions, then Subscriptions.
             </p>
           )}
         </section>
@@ -266,26 +296,31 @@ function MembershipScreen() {
       <section aria-label="Plans" className="grid md:grid-cols-3 gap-qurtag-3 items-stretch">
         <PlanCard plan="free" current={membership?.plan === 'free'} />
         {(['plus', 'family'] as const).map((plan) => {
-          const prices = store ? new Map([...store].map(([id, p]) => [id, p.priceString])) : undefined;
+          const shown = prices ? new Map([...prices].map(([id, p]) => [id, p.priceString])) : undefined;
           const showBuy = !paidPlan;
           return (
-            <PlanCard key={plan} plan={plan} current={membership?.plan === plan} prices={native && prices && prices.size ? prices : undefined}>
+            <PlanCard key={plan} plan={plan} current={membership?.plan === plan} prices={native && shown && shown.size ? shown : undefined}>
               {showBuy && (() => {
                 const interval = 'year' as const;
                 const key = `${plan}_${interval}`;
                 const product = productFor(plan, interval);
                 if (native) {
-                  const price = store?.get(product.appleId);
-                  if (!iapAvailable() || (store && !price)) {
+                  const price = prices?.get(product.appleId);
+                  if (!iapAvailable() || (prices && !price)) {
                     return (
-                      <button type="button" className={secondary} disabled>
-                        Coming soon
-                      </button>
+                      <div className="flex flex-col gap-1 items-start">
+                        <button type="button" className={secondary} disabled>
+                          Not available right now
+                        </button>
+                        <p className="text-caption text-muted text-pretty">
+                          {Store} did not answer. Check your connection{android ? ' and that you are signed in to Google Play' : ''}, then open this page again.
+                        </p>
+                      </div>
                     );
                   }
                   return (
                     <button type="button" className={primary} disabled={!price || !!busy} onClick={() => void buyOnPhone(plan, interval)}>
-                      {busy === key ? 'Opening the App Store...' : `Pay ${price ? `${price.priceString} ` : ''}a year`}
+                      {busy === key ? `Opening ${store}...` : `Pay ${price ? `${price.priceString} ` : ''}a year`}
                     </button>
                   );
                 }
@@ -313,7 +348,9 @@ function MembershipScreen() {
             {busy === 'restore' ? 'Restoring...' : 'Restore purchases'}
           </button>
           <p className="text-caption text-muted text-pretty">
-            Already subscribed with this Apple ID, on another phone or before you reinstalled? Restore brings your membership back.
+            {android
+              ? 'Already subscribed with this Google account, on another phone or before you reinstalled? Restore brings your membership back.'
+              : 'Already subscribed with this Apple ID, on another phone or before you reinstalled? Restore brings your membership back.'}
           </p>
         </div>
       )}
@@ -334,12 +371,20 @@ function MembershipScreen() {
           cancel. You can cancel at any time, and you keep your plan until the end of the period you already paid for. Canceling stops the
           next payment; it does not delete anything you made.
         </p>
-        {(native || membership?.provider === 'apple') && (
+        {((native && !android) || membership?.provider === 'apple') && (
         <p>
           On iPhone, payment is charged to your Apple ID at confirmation of purchase. The subscription renews unless it is canceled at
           least 24 hours before the end of the current period, and your Apple ID is charged for the renewal within 24 hours before the
           period ends. Manage or cancel it in Settings on your iPhone: tap your name, then Subscriptions. Refunds for purchases made in the
           app are handled by Apple, at reportaproblem.apple.com.
+        </p>
+        )}
+        {(android || membership?.provider === 'google') && (
+        <p>
+          On Android, payment is charged to your Google Play account when you confirm the purchase. The subscription renews every
+          year unless you cancel it before the renewal date. Manage or cancel it in the Google Play app: tap your profile picture,
+          then Payments and subscriptions, then Subscriptions, or use Manage subscription above. Refunds for purchases made in the
+          app are handled by Google Play.
         </p>
         )}
         {(!native || membership?.provider === 'stripe') && (

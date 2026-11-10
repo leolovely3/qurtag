@@ -10,6 +10,7 @@ import { MarketingHome } from '@/routes/marketing/Home';
 import { HowItWorks } from '@/routes/marketing/HowItWorks';
 import { Pricing } from '@/routes/marketing/Pricing';
 import { Privacy } from '@/routes/marketing/Privacy';
+import { DeleteAccount } from '@/routes/marketing/DeleteAccount';
 import { SecurityPage } from '@/routes/marketing/Security';
 import { Terms } from '@/routes/marketing/Terms';
 import { Tags } from '@/routes/marketing/Tags';
@@ -50,6 +51,7 @@ export const routes: RouteObject[] = [
       { path: '/tags', element: <Tags /> },
       { path: '/make-it-last', element: <MakeItLast /> },
       { path: '/privacy', element: <Privacy /> },
+      { path: '/delete-account', element: <DeleteAccount /> },
       { path: '/terms', element: <Terms /> },
       // An address the site does not have: the website says so (the server answers 404 too); the iPhone app goes home.
       { path: '*', element: isNative() ? <Navigate to="/" replace /> : <NotFound /> },

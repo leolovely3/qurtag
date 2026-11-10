@@ -52,7 +52,7 @@ test('at the limit the words point somewhere: plans on the web, deleting an item
   assert.match(web.title, /three items, the most on Free/);
   const app = limitCopy({ membershipsShown: false, itemLimit: 3 });
   assert.equal(app.action, 'items');
-  assert.match(app.body, /More items are coming to the iPhone app/);
+  assert.match(app.body, /More items are coming to the app\./);
   assert.ok(!/Membership/.test(app.body), 'the app has no Membership page to point to');
   assert.equal(limitCopy({ membershipsShown: true, itemLimit: 10 }).action, 'items');
 });
@@ -78,4 +78,12 @@ test('deleting asks for the typed word when a lot would go', () => {
   assert.equal(needsTypedConfirm({ itemsUsed: 1, familyRole: 'owner', otherPeople: 0 }), false);
   assert.equal(needsTypedConfirm({ itemsUsed: 1, familyRole: 'member', otherPeople: 3 }), false);
   assert.ok(typedOk(' delete ') && typedOk('DELETE') && !typedOk('DELET') && !typedOk(''));
+});
+
+test('at the limit in a phone app whose store did not answer, the words name the store, not "coming"', () => {
+  const c = limitCopy({ membershipsShown: false, itemLimit: 3, unavailableStore: 'Google Play' });
+  assert.equal(c.action, 'items');
+  assert.match(c.title, /three items, the most on Free/);
+  assert.match(c.body, /through Google Play, which is not available on this phone right now/);
+  assert.ok(!/coming/i.test(c.body));
 });

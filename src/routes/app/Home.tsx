@@ -6,7 +6,7 @@ import { GettingStarted } from '@/components/GettingStarted';
 import { LimitReached } from '@/components/membership/LimitReached';
 import { browserStorage, loadEmailCheck, showEmailReminder } from '@/lib/emailCheck';
 import { fetchEmailConfig } from '@/lib/membership';
-import { isNative } from '@/lib/platform';
+import { pushOffered } from '@/lib/platform';
 import { deviceStorage, itemStatus, tagProgress } from '@/lib/tagProgress';
 import { SKIP_KEY } from '@/lib/gettingStarted';
 import { buttonClasses } from '@/components/ui/Button';
@@ -157,11 +157,12 @@ function EmailReminder({ itemCount }: { itemCount: number }) {
   const { user } = useAuth();
   const [emailOn, setEmailOn] = useState(false);
   useEffect(() => {
-    if (!isNative()) void fetchEmailConfig().then((c) => setEmailOn(c?.email === true));
+    // The email reminder is for those who hear about notes by email: the web and the Android app.
+    if (!pushOffered()) void fetchEmailConfig().then((c) => setEmailOn(c?.email === true));
   }, []);
   if (!user) return null;
   const check = loadEmailCheck(browserStorage(), user.id);
-  if (!showEmailReminder({ native: isNative(), emailOn, itemCount, check })) return null;
+  if (!showEmailReminder({ native: pushOffered(), emailOn, itemCount, check })) return null;
   return (
     <Link
       to="/app/settings#email-check"

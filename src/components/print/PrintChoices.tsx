@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Copy, Download, ExternalLink, Printer, Share } from 'lucide-react';
 import { buttonClasses } from '@/components/ui/Button';
 import { chromeIntentUrl, inAppBrowserName, isAndroid } from '@/lib/inAppBrowser';
-import { isNative, publicUrl } from '@/lib/platform';
+import { isAndroidApp, isNative, publicUrl } from '@/lib/platform';
 import { saveTagPdf } from '@/lib/tagExport';
 import { pageToSvg } from '@/lib/tagSvg';
 import { PAPERS, type PaperId } from '@/lib/tagLayout';
@@ -79,7 +79,11 @@ export function PrintChoices({
           <Share size={18} aria-hidden />
           {busy ? 'Preparing…' : 'Print or share'}
         </button>
-        <p className="text-sm text-muted text-pretty">Print or share opens the share sheet: print it, save it to Files or AirDrop it to a computer.</p>
+        <p className="text-sm text-muted text-pretty">
+          {isAndroidApp()
+            ? 'Print or share opens the share sheet: print it, save it to Drive or send it to a computer.'
+            : 'Print or share opens the share sheet: print it, save it to Files or AirDrop it to a computer.'}
+        </p>
         {error && <p role="alert" className="text-sm text-signal-700">{error}</p>}
       </div>
     );

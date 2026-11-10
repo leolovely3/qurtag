@@ -3,7 +3,7 @@ import { Bell, BellOff, EyeOff, Mail, ScanLine, MessageCircle, ShieldAlert } fro
 import type { LucideIcon } from 'lucide-react';
 import { db } from '@/lib/db';
 import { pushPermission, turnOnPush, type PushPermission } from '@/lib/nativePush';
-import { isNative } from '@/lib/platform';
+import { pushOffered } from '@/lib/platform';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/lib/cn';
@@ -94,7 +94,7 @@ export function NotificationSettings({ emailAvailable }: { emailAvailable: boole
   const load = useCallback(async () => {
     const { data } = await db.rpc('my_push_settings');
     setSettings({ ...DEFAULTS, ...((data as Partial<PushSettings> | null) ?? {}) });
-    if (isNative()) setPermission(await pushPermission());
+    if (pushOffered()) setPermission(await pushPermission());
     const a = await db.rpc('my_admin_alerts');
     setAdminAlerts(typeof a.data === 'boolean' ? a.data : null);
   }, []);
@@ -132,7 +132,8 @@ export function NotificationSettings({ emailAvailable }: { emailAvailable: boole
     if (r === 'granted') toast.show({ kind: 'success', title: 'Alerts are on' });
   }
 
-  const native = isNative();
+  // Phone alerts are offered only in the iPhone app; the Android app and the web email.
+  const native = pushOffered();
   const emailBody = native
     ? 'If you have not opened an alert after 10 minutes, we email you about it.'
     : 'We email you when a finder writes. If you also use the iPhone app, only when an alert went unopened for 10 minutes.';

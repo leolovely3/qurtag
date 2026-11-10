@@ -221,6 +221,9 @@ export function createBillingRoutes(opts: BillingOptions = {}) {
     if (account.live_providers.includes('apple')) {
       return json(409, { error: 'managed_on_iphone', message: "You already have a membership through Apple. Change or cancel it in your iPhone's Settings, under Subscriptions." });
     }
+    if (account.live_providers.includes('google')) {
+      return json(409, { error: 'managed_on_android', message: 'You already have a membership through Google Play. Change or cancel it in the Google Play app, under Payments and subscriptions.' });
+    }
     if (account.live_providers.includes('stripe')) {
       return json(409, { error: 'use_portal', message: 'You already have a membership. Use Manage membership to change it.' });
     }

@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -14,6 +15,8 @@ import { recordPlatform, signupChannel } from './measures';
 import { forgetPushDevice } from './nativePush';
 import { SKIP_KEY } from './gettingStarted';
 import { rememberAccountOnDevice } from './firstOpen';
+import { isNative } from './platform';
+import { ConnectionProblem } from '@/components/ui/ConnectionProblem';
 
 /**
  * Who is signed in, for every screen. Owners sign up and in with email and password
@@ -70,17 +73,37 @@ function words(error: { code?: string; message?: string; status?: number } | nul
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [loading, setLoading] = useState(true);
+  // No answer yet from the sign-in service (no network, or the server is down), as opposed to an
+  // answer of "nobody is signed in". A failed check never signs a person out: the last answer
+  // stands. With no answer at all, the phone apps say so with Try again (ConnectionProblem)
+  // instead of showing the sign-in screen to someone who is signed in.
+  const answered = useRef(false);
+  const [unreachable, setUnreachable] = useState(false);
+  const [retrying, setRetrying] = useState(false);
 
   const refresh = useCallback(async () => {
     try {
-      const { data } = await authClient.getSession();
+      const { data, error } = await authClient.getSession();
+      const status = (error as { status?: number } | null)?.status ?? 0;
+      if (error && (status === 0 || status >= 500)) {
+        if (!answered.current) setUnreachable(true);
+        return;
+      }
+      answered.current = true;
+      setUnreachable(false);
       setUser(data?.user ? { id: data.user.id, email: data.user.email, name: data.user.name } : null);
     } catch {
-      setUser(null);
+      if (!answered.current) setUnreachable(true);
     } finally {
       setLoading(false);
     }
   }, []);
+
+  const retry = useCallback(async () => {
+    setRetrying(true);
+    await refresh();
+    setRetrying(false);
+  }, [refresh]);
 
   useEffect(() => {
     void refresh();
@@ -193,10 +216,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { ok: true };
   }, []);
 
+
   const value = useMemo<AuthContextValue>(
     () => ({ user, loading, signUp, signIn, signOut, updateName, changePassword, deleteAccount }),
     [user, loading, signUp, signIn, signOut, updateName, changePassword, deleteAccount],
   );
+
+  if (unreachable && !user && isNative()) return <ConnectionProblem onRetry={() => void retry()} busy={retrying} />;
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

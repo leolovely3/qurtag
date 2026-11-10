@@ -202,14 +202,17 @@ export async function fetchMessagesForThread(threadId: string): Promise<Message[
   return (data ?? []) as Message[];
 }
 
-export async function fetchThreadsForHousehold(_householdId?: string): Promise<ThreadWithItem[]> {
+/** The conversations the person can read; [] when the request fails, or null with `orNull` (the inbox says so). */
+export async function fetchThreadsForHousehold(_householdId?: string): Promise<ThreadWithItem[]>;
+export async function fetchThreadsForHousehold(_householdId: string | undefined, orNull: true): Promise<ThreadWithItem[] | null>;
+export async function fetchThreadsForHousehold(_householdId?: string, orNull = false): Promise<ThreadWithItem[] | null> {
   const { data: threads, error } = await supabase
     .from('threads')
     .select('*')
     .order('last_message_at', { ascending: false });
   if (error) {
     console.error('[QuR Tag] fetchThreadsForHousehold', error);
-    return [];
+    return orNull ? null : [];
   }
   if (!threads || threads.length === 0) return [];
 
