@@ -6,10 +6,11 @@ An owner makes an account, adds things (a water bottle, a violin case, keys; up 
 plan) and prints a QR tag for each. Someone who finds the thing scans the tag with their phone camera:
 a page opens with no app and no account, shows a finder-safe card for the item, and lets
 them send a note. The owner reads it in the inbox at /app and replies; the finder reads the
-reply on the same tag page. Neither side sees the other's email or phone number.
+reply on the same tag page, or on any browser with their conversation code at `/reply`, and can ask
+to be emailed when the owner replies. Neither side sees the other's email or phone number.
 
 The landing page is at `/`, the app at `/app`, a tag's page at `/find/<tag code>`, and a tag's short address at
-`/<short code>` (for example qurtag.com/k7m2p), which sends the visitor to the same page.
+`/<short code>` (for example qurtag.com/k7m2p4), which sends the visitor to the same page.
 
 Run by Impact Consulting AI LLC, a Florida limited liability company. Contact:
 info@impactconsulting.ai.
@@ -28,7 +29,7 @@ project's own data API.
 | Sign-in (Better Auth, email and password) | `api/auth`, `server/auth/qurtagAuth.ts` | `qurtag_auth`: the `auth_*` tables only |
 | Schema, rules, functions for the Super Admin role | `db/admin.sql` | applied once as `postgres`, after the two above |
 | Data API for signed-in owners (PostgREST-style) | `api/data`, `server/data/` | `qurtag_authenticator`, which can only become `qurtag_user` or `qurtag_anon` |
-| Finder routes | `api/fn` (`finder-view`, `finder-send`), `server/routes/finder.ts` | `qurtag_server`: no table rights, only the `server_*` functions |
+| Finder routes | `api/fn` (`finder-view`, `finder-send`, `finder-resume`, `finder-email`, `finder-email-stop`), `server/routes/finder.ts`, `server/routes/finderLoop.ts` | `qurtag_server`: no table rights, only the `server_*` functions |
 | Outbox and scheduled jobs | `api/jobs`, `server/routes/outbox.ts`, Vercel cron every 5 minutes (outbox) and daily at 05:00 UTC | `qurtag_server` |
 | Memberships: checkout, portal, family invites, Stripe and RevenueCat webhooks | `api/fn`, `server/routes/billing.ts`, `server/billing/` | `qurtag_server`: only the `server_*` functions of `db/membership.sql` and `db/family.sql` |
 | iPhone alerts: register a phone, reply from a notification, send to Apple | `api/fn` (`push-register`, `push-unregister`, `push-reply`), `server/routes/push.ts`, `server/push/apns.ts`, the outbox | `qurtag_server`: only the `server_*` functions of `db/push.sql` |
@@ -39,7 +40,11 @@ the item's name, photo, the owner's note for the finder and the lost flag, plus 
 own conversation when the browser holds its secret token. The database keeps only the
 token's SHA-256. No policy in the schema is open to a visitor without a pass.
 
-Email goes through Resend, called from the server. Password reset ("Forgot password?" at
+Email goes through Resend, called from the server. On the web a finder's note reaches the owner by email, so Settings and the
+last step of the first-tag walkthrough say which address it goes to and from, and offer "Send me a test email"
+(`POST /api/fn/email-test`, `server/routes/billing.ts`: signed in, only to the account's own address, 3 an hour per account
+and 10 per network address); the owner's "It arrived" is kept in the browser (`src/lib/emailCheck.ts`) and Items reminds web
+owners who have not confirmed. Password reset ("Forgot password?" at
 `/forgot-password`, the link opens `/reset-password`) sends its email inside the request, not
 through the outbox. The link works once and expires in 1 hour; a reset ends every session of
 the account. Requests are limited to 3 per 5 minutes per IP address and 3 per hour per email
@@ -64,7 +69,8 @@ private notes. Tested in `scripts/qurtag/e2e.test.mjs`.
 
 `QURTAG_DATABASE_URL`, `QURTAG_DATABASE_URL_DATA`, `QURTAG_DATABASE_URL_SERVER` (the three
 logins on the transaction pooler), `QURTAG_DATABASE_CA_CERT`, `QURTAG_AUTH_SECRET`,
-`QURTAG_AUTH_URL` (production: https://www.qurtag.com), `CRON_SECRET`. Values are kept in
+`QURTAG_AUTH_URL` (production: https://www.qurtag.com), `CRON_SECRET`. Optional: `QURTAG_FINDER_SECRET` (the key for
+finders' conversation codes and emails; when it is not set, `QURTAG_AUTH_SECRET` is used, which is what production does). Values are kept in
 `~/Claude/Backups/QurTag/secrets.env` on the founder's Mac. Email: `RESEND_API_KEY` (server side only) and
 `QURTAG_EMAIL_FROM` (default `QuR Tag <no-reply@qurtag.com>`; the domain must be verified in
 Resend). Replies go to info@impactconsulting.ai.
@@ -84,7 +90,7 @@ A scan counts as followed by a note when a conversation was opened on the same t
 no visitor id by design). Print events count button presses (Print, a PDF or print-ready download), not copies.
 
 In the app: `src/lib/measures.ts` keeps `?ch=<channel>` (else `utm_source`) in the tab's `sessionStorage` (no cookie), sends it
-with the sign-up (the iPhone app uses `ios-app` when it has none), records prints and downloads from `TagPrint.tsx`, and
+with the sign-up (the iPhone app uses `ios-app` when it has none), records prints and downloads from the tag page, the several-items page and the first-tag walkthrough, and
 records the platform after sign-in. Every call is fire and forget. Deploy order: run rollout step 12 first, then merge: the
 new site writes `signup_channel` at sign-up.
 
@@ -118,9 +124,9 @@ The rollout that creates the schema and logins in production is
 The plans and prices are written once, in `server/billing/catalog.ts`, which the server and the screens
 both import.
 
-**One entitlement, two ways to pay.** The web pays through Stripe Checkout (with the customer portal to
-change or cancel); the iPhone app pays through Apple's in-app purchase, with RevenueCat in between. Both
-end up as rows in `qurtag.subscriptions`, written only by `qurtag.server_apply_subscription` after a
+**One entitlement, three ways to pay.** The web pays through Stripe Checkout (with the customer portal to
+change or cancel); the iPhone app pays through Apple's in-app purchase and the Android app through Google Play <!-- source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) -->
+Billing, both with RevenueCat in between. All end up as rows in `qurtag.subscriptions`, written only by `qurtag.server_apply_subscription` after a
 webhook passed its check. `qurtag.household_plan` turns the rows and the clock into `free`, `plus` or
 `family`; a membership bought either way works on both, and if someone holds two, the better plan counts.
 The app never decides a plan: the screens ask `my_membership`.
@@ -130,7 +136,9 @@ The app never decides a plan: the screens ask `my_membership`.
   paid. Events: `checkout.session.completed`, `customer.subscription.created`, `.updated`, `.deleted`.
 - RevenueCat webhook `POST /api/fn/revenuecat-webhook`: trusted only with `Authorization` equal to
   `REVENUECAT_WEBHOOK_AUTH`. The account is RevenueCat's app user id, which the app sets to the QuR Tag
-  account id. Products other than the two yearly ones below are ignored.
+  account id. App Store events are recorded with provider `apple`, Google Play events with `google` <!-- source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) -->
+  (`db/google-play.sql`, rollout step 15); other stores, and products other than the two yearly ones below
+  (on Google Play: their `yearly` base plan), are ignored. <!-- source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) -->
 - Idempotent: every delivery id is kept (`qurtag.billing_events`); a repeat changes nothing, and an event
   older than the one already applied to a subscription never overwrites it. A failed write answers 500 so
   the sender retries.
@@ -161,6 +169,7 @@ the Membership screen say "Coming soon"):
 | `STRIPE_PRICE_PLUS_YEARLY`, `STRIPE_PRICE_FAMILY_YEARLY` | the two yearly recurring prices (`price_...`) |
 | `REVENUECAT_WEBHOOK_AUTH` | a long random string, also pasted into RevenueCat's webhook as the Authorization value |
 | `VITE_REVENUECAT_IOS_API_KEY` | RevenueCat's public iOS SDK key (`appl_...`). Public. A build setting for the iPhone app (`.env.local` on the building Mac), not a Vercel one |
+| `VITE_REVENUECAT_ANDROID_API_KEY` | RevenueCat's public Android SDK key (`goog_...`), from the same RevenueCat project. Public. A build setting for the Android app (`.env.local`); `npm run cap:android` refuses a bundle without it |
 
 Optional: `QURTAG_BILLING_RATE_PER_ACCOUNT` (default 12 a minute) and `QURTAG_BILLING_RATE_PER_IP` (60).
 `.env.example` lists them all.
@@ -183,7 +192,18 @@ Until the key is set in the build and RevenueCat returns offerings, the app hide
 pricing link (`membershipsAvailableInApp()` in `src/lib/iap.ts`, the rule in `src/lib/membership-flag.ts`); the website is
 unchanged, and `/join/<token>` still works.
 
-Database changes are the rollout files 5 (memberships), 6 (family) and 11 (Free allows 3 items; it changes only `household_item_limit`, which `db/membership.sql` already holds with 3) in
+**Android setup.** The same two subscriptions exist in Google Play Console with the same product ids, <!-- source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) -->
+`app.impactconsultingai.qurtag.plus.yearly` ($19) and `app.impactconsultingai.qurtag.family.yearly` ($29),
+each with one auto-renewing base plan `yearly` (1 year). In RevenueCat the Android app (package
+`app.impactconsultingai.qurtag`, connected to Play with a service account) has the two Play products
+(`<id>:yearly`), attached to the same entitlement `member` and to the same packages `plus` and `family` of the
+offering `default` as the App Store products. The Android app shows Google Play's own prices, Restore purchases <!-- source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) -->
+and Manage subscription (Google Play's subscription centre), and no way to pay outside Google Play. While Google <!-- source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) -->
+Play returns no products (the phone has no Play account, or no network) it hides memberships as the iPhone app
+does, and at the item limit it says Google Play is not available right now. <!-- source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) -->
+
+Database changes are the rollout files 5 (memberships), 6 (family), 15 (Google Play: `db/google-play.sql`, undo <!-- source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) -->
+`db/undo-google-play.sql`; run it before deploying the website that records Google Play events) and 11 (Free allows 3 items; it changes only `household_item_limit`, which `db/membership.sql` already holds with 3) in <!-- source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) -->
 `~/Claude/Rollouts/QurTag-rollout-schema` (copies of `db/membership.sql` and `db/family.sql`, each with an
 undo). The schema comments in those two files explain every rule.
 
@@ -280,7 +300,7 @@ Database half: `db/moderation.sql` (rollout step 9, needs steps 3, 7 and 8). Ser
 | Filter | Every note is checked in the finder route before it reaches the database. A slur or a threat (a small hand-kept list in `server/moderation/wordlist.ts`, no outside service) is accepted and **held**: the finder sees the normal confirmation, the owner sees "This note may be offensive. Show it?" with Show it and Report, and the text reaches the owner's phone only after Show it (the owner's read policy leaves held notes out; alerts for a held note carry no text). A note that is only links, or has more than 2, is refused with a plain sentence. Limits in the database: 5 notes a minute and 30 an hour per conversation, 60 an hour per tag, 20 new conversations per tag a day, plus the route's 12 notes a minute per network address. An identical note within 10 minutes is accepted but stored once | `server/moderation/filter.ts`, `server/routes/finder.ts`, `qurtag.server_finder_open` and `server_finder_post` |
 | Report | Under each finder note in a conversation: Report, with a reason (harassment, spam, threats, inappropriate, other) and an optional comment. The note is hidden from the owner at once and goes to `qurtag.message_reports`. After a report the app offers to block the finder | `src/routes/app/InboxThread.tsx`, `qurtag.report_message` |
 | Respond within 24 hours | Super Admin area (`/app/admin`), "Reported notes": open reports oldest first, with the note's text, the reason, the owner's comment and the item. Actions: **Hide for everyone**, **Dismiss**, **Block finder**. Each closes the report and is written to the admin log (`hide_message`, `dismiss_report`, `block_finder`) in the same step | `src/routes/app/Admin.tsx`, `qurtag.admin_reports_list`, `admin_report_resolve` |
-| Block | "Block this finder" on a conversation. The finder's conversation token can no longer write (a trigger on `messages` refuses it, whichever function inserts), the conversation and its notes leave the owner's inbox, and the finder gets only "This conversation is closed." Owners see and unblock blocked finders in Settings, under Blocked finders; a finder a Super Admin blocked cannot be unblocked by the owner. A block is per conversation token: a finder who clears their browser can start a new conversation, which the limits above still cover | `src/components/moderation/BlockedFinders.tsx`, `qurtag.block_finder`, `unblock_finder`, `my_blocked_finders` |
+| Block | "Block this finder" on a conversation (under More). The finder's conversation token can no longer write (a trigger on `messages` refuses it, whichever function inserts), the conversation and its notes leave the owner's inbox, and the finder gets only "This conversation is closed." For 30 days, new conversations on any tag of the household from the same network (a keyed hash of the address, `qurtag.finder_blocks`, rollout step 13) are refused with the same words as a paused tag, so a block is not announced. Someone on another network can still write; "Pause new notes on this tag" stops that. Owners see and unblock blocked finders in Settings, under Blocked finders (unblocking lifts the network block); a finder a Super Admin blocked cannot be unblocked by the owner | `src/components/moderation/BlockedFinders.tsx`, `qurtag.block_finder`, `unblock_finder`, `my_blocked_finders` |
 | Published contact | /terms section 9 (zero tolerance, how to report and block, reports reviewed within 24 hours), the Help answer "Report or block a finder", and a "Report a problem with this page" link on the finder's page. Contact stays info@impactconsulting.ai | `src/routes/marketing/Terms.tsx`, `Help.tsx`, `src/routes/finder/FinderView.tsx` |
 
 - The Company OS counts: `qurtag.factory_metrics` returns `reports_open`, `reports_30d` and
@@ -300,6 +320,38 @@ Database half: `db/moderation.sql` (rollout step 9, needs steps 3, 7 and 8). Ser
 - Tested in `scripts/qurtag/moderation.test.mjs` (database and routes) and `scripts/qurtag/unit/moderation.test.ts`
   (the filter). To change the word list, edit `server/moderation/wordlist.ts` only.
 
+## The finder loop (rollout step 13)
+
+`db/ux-fixes.sql` (rollout step 13, undo `db/undo-ux-fixes.sql`), `server/routes/finderLoop.ts`, `server/routes/finderCrypto.ts`,
+`src/routes/finder/FinderLoop.tsx`, `src/routes/finder/Reply.tsx`. The block comments of the SQL file and `finderLoop.ts` explain
+each choice.
+
+- **After the first note** the finder page says "Sent. We have told the owner.", with safe-handover advice, and offers "Save this
+  conversation": the private link (share sheet or copy) and a **conversation code** (12 characters, shown as K7M2-P9XQ-4TRB). Typed at
+  `qurtag.com/reply` (or carried after `#` in that address) on any browser it opens the conversation. The conversation token is derived
+  from the code with a keyed hash (`QURTAG_FINDER_SECRET`, else `QURTAG_AUTH_SECRET`), so the database still keeps only the token's
+  SHA-256; wrong codes count under the short code limits. Changing the secret stops old codes working; their links still work.
+- **Optional email for replies.** Next to the box: "Your email is never shown to the owner or anyone else. We use it only to tell you
+  when the owner replies, and delete it when the conversation closes." The server encrypts the address and the conversation token
+  (AES-256-GCM, key derived from the same secret) and the database keeps only that (`threads.finder_email_enc`); no role the app uses
+  can read the column. Each owner reply queues one `finder_reply` outbox row; the outbox sends at most one email per conversation per 10
+  minutes (replies in between go in the same email) with the replies, a link back (`/find/<tag>#t=<token>`), a spam reminder and a
+  one-click stop (`List-Unsubscribe`, `/api/fn/finder-email-stop`). An owner reply nudges the outbox at once (`afterRpc` in the data
+  API). The address is deleted when the conversation is closed or the finder is blocked, right after the last email when the owner
+  marks it returned, on stop, and after 30 days without a note (the daily job, `server_finder_sweep`). The field is shown only when
+  email is set up.
+- **Finder page states**: "Seen by the owner" under the finder's last note once the owner opened it; "The owner has it back. Thank you
+  for being kind." after "I have it back" (the owner can add a one-line thank-you); a kinder ending when closed; a paused item says the
+  owner is not taking new notes; an old (switched-off or replaced) tag answers 410 and says so, separately from a code that never existed
+  (404), with how to still help and reach QuR Tag.
+- **Owner**: in a conversation the note and the reply box come first, "I have it back" is the main action once the owner replied, and
+  Archive, Pause new notes on this tag (`set_item_notes_paused`; existing conversations go on), Close to this finder and Block are under
+  More. A held note held for a threat shows safety advice. The inbox previews a held note without its words, labels several finders of
+  one item Finder 1, Finder 2, shows who wrote a reply in a Family ("Sam:", `messages.sender_user_id`), and keeps archived conversations
+  under Archived (a new note brings one back).
+- Tested in `scripts/qurtag/finder-loop.test.mjs` (e2e, on the copy of the server that captures email) and
+  `scripts/qurtag/unit/finder-loop.test.ts`.
+
 ## Tag styles, short codes and print-ready files
 
 **Styles** (tag page, `src/routes/app/TagPrint.tsx`): six styles, each in three looks (Clean, Bold, Playful), on US
@@ -307,12 +359,28 @@ Letter or A4 with several copies a page.
 
 | Style | One piece | Copies on Letter / A4 | Notes |
 | --- | --- | --- | --- |
-| Small sticker | 1.25 x 1.25 in | 35 / 35 | cut marks; bold "LOST? SCAN ME" line above the code (1 in leaves no room for a line a person can read) |
+| Small sticker | 1.25 x 1.25 in | 35 / 35 | cut marks; bold "LOST? SCAN ME" line above the code (1 in leaves no room for a line a person can read), the QuR mark beside the code and the short address under it, horizontal, at about 8 pt |
 | Label strip | 2.625 x 1 in | 30 / 18 | on Letter the standard 30 per sheet address label sheet (3 across, 10 down), no marks |
 | Key fob insert | 1 x 1.4 in, two sides | 18 / 18 | front "IF FOUND, SCAN ME" and QR, back short code and address; fold line; the back is printed upside down so it reads upright once folded |
 | Wallet card | 3.375 x 2.125 in | 8 / 8 | cut marks |
 | Bag tag | 2.4 x 3.5 in folded | 3 / 3 | "If found" large; fold line |
 | Clothing strip | 2.5 x 1 in | 16 / 18 | "IF FOUND, SCAN ME" in large capitals; iron-on transfer paper; "Print mirrored" flips the whole page |
+
+The page prints a few copies unless the person chooses more (`defaultCopies` in `src/lib/tagLayout.ts`: 4 small stickers,
+3 label strips, 2 key fob inserts, 2 wallet cards, 1 bag tag, 4 clothing strips), so the rest of a sheet is left for the
+next thing. "Print several items on one page" (`/app/tags/sheet`, `src/routes/app/TagSheet.tsx`, linked from Tags and from
+each tag page) puts the tags of several items on one sheet in one style, with the number of copies of each; the top margin
+of every sheet names each item with its short address (`sheetLabel`), which is also printed on each piece. A tag's page
+opens on the style the tag was last printed in or, for a tag never printed, the style its item's name suits
+(`src/lib/printPrefs.ts`, kept on the device); the look and paper are remembered for all tags. The item's name is printed on
+a tag ("On: ..." on the wallet card and the bag tag) only when the owner ticks "Print the item's name on the tag"; it is
+off by default because a name on a child's bag tells any stranger the child's name. Each style says what it needs (a
+clear holder for the key fob, wallet card and bag tag) and a way to do without.
+
+On the web, Print and Save the PDF are two equal choices (`src/components/print/PrintChoices.tsx`), with a line for people
+without a printer (a library or a print shop). Inside another app's browser (Facebook, Instagram, Messenger, TikTok,
+LinkedIn and others, `src/lib/inAppBrowser.ts`) the screen first says to open the page in Safari or Chrome, with Copy the
+link and, on Android, Open in Chrome.
 
 Every style has a thin orange QuR Tag frame (with a black keyline on the yellow Playful plate). Heavy lines are set in
 Helvetica-Bold; the PDF names that face, but `pdftoppm` without a Helvetica Bold substitute draws it regular, so check
@@ -354,9 +422,17 @@ deployed.
 npm install
 npm run typecheck     # app, Vite config and server code
 npm run test:unit     # the finder routes, the payment code, the push code, the tag layout maths and drawn tags (QR codes decoded back), the short code route, with stand-ins
-npm run test:e2e      # the whole loop, memberships, webhooks, Family, push alerts (with a stand-in Apple server) and short codes, on a throwaway local Postgres (needs Docker)
+npm run test:e2e      # the whole loop, memberships, webhooks, Family, push alerts (with a stand-in Apple server), short codes, moderation, measures and the finder loop (codes, the finder's email, blocks, pause), on a throwaway local Postgres (needs Docker)
 npm run build
 ```
+
+**Large text.** `scripts/qurtag/large-text.check.mjs` opens the signed-in screens, sign-in, Help, Terms and the finder's page in
+WebKit at 375, 402 and 430 px wide, at the root font sizes 17, 23, 28, 33 and 53 px (the iPhone's default, its largest standard
+text size and Accessibility 1, 2 and 5), and fails on sideways scrolling, a word broken in the middle, overlapping controls, a
+button smaller than 44 by 44 px, a cut-off heading, or an Inbox tab not named "Inbox, N unread". It needs a running app on a
+throwaway database (below) and any copy of Playwright with WebKit, which the app does not depend on:
+`QURTAG_TEST_BASE=http://localhost:5173 NODE_PATH=<folder holding playwright> node scripts/qurtag/large-text.check.mjs`
+(`QURTAG_SHOTS=<folder>` keeps a screenshot of each case).
 
 To try the app by hand: `npm run dev:local` (a local database with the schema, plus the
 server functions on 127.0.0.1:56861), then in another Terminal
@@ -371,6 +447,39 @@ Stack: React 18, TypeScript, Vite, Tailwind, React Router 7, Better Auth 1.7.7, 
 postgrest-js. QR codes are made in the browser (`qrcode.react`) and drawn by `src/lib/tagStyles.ts`; the tag page
 prints a vector page of tags, or saves it as a PDF. Colours are CSS variables (`src/index.css`)
 with a dark set under `.dark`, so every page follows the theme without per-page dark rules.
+
+## Android app
+
+The Android app (package `app.impactconsultingai.qurtag`, Google Play) is the same web app in a Capacitor shell <!-- source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) -->
+(`android/`), configured in the `android` part of `capacitor.config.ts`.
+
+- `npm run cap:android` builds the web app, puts the app shell in place, syncs it into `android/` and checks the
+  bundle (`scripts/native/check-android-bundle.mjs`: the app shell, the live site, the RevenueCat Android key, no
+  local server, no plain http, no inspector). Then `cd android && ./gradlew bundleRelease` with Android Studio's
+  JDK writes `android/app/build/outputs/bundle/release/app-release.aab`. Release signing reads the gitignored
+  `android/keystore.properties` (see `keystore.properties.example`); the upload key is outside the repo.
+  versionName follows the iPhone app's version; versionCode counts up by one for every upload.
+- The pages load from `https://localhost`, which the server trusts and answers with CORS as it does the iPhone
+  origin (`server/auth/origins.ts`, `server/auth/phoneCors.ts`).
+- No push on Android: there is no Firebase project, so the push plugin is left out of the Android build
+  (`android.includePlugins`) and `pushOffered()` in `src/lib/platform.ts` hides the alert settings, the alerts
+  step and the permission question. Finders' notes reach Android owners by email, as on the web. The app asks for
+  no runtime permission: the photo picker is Android's own, which needs none, and files go to the app's cache
+  before the share sheet (which offers Print, Drive and others). The manifest holds only internet, network state
+  and Google Play Billing. <!-- source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) -->
+- The back button closes an open dialog, steps back through screens, goes to Items from a screen with nothing
+  behind it, and leaves the app on Items or the sign-in screen (`src/lib/androidBack.ts`).
+- With no network at start, the phone apps say "Can't reach QuR Tag" with Try again instead of the sign-in
+  screen, and a failed session check never signs anyone out (`src/lib/auth.tsx`). The inbox says when notes could
+  not load instead of "No notes yet".
+- The window, the launch screen (near-black with the mark) and the strips behind the system bars follow the
+  page's light or dark mode (`AndroidBarsPlugin.java`, `setAndroidBars`). Icons and the launch screen are drawn
+  from `public/brand/qurtag-mark.svg` by `design/android/build.sh`, which also writes the Play Store icon and <!-- source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) -->
+  feature graphic.
+- An emulator test build against the local server: `QURTAG_ANDROID_TEST_BUILD=1 VITE_QURTAG_API_URL=http://localhost:56861`
+  for the build and sync, `adb reverse tcp:56861 tcp:56861`, and `npm run dev:local` for the server. That build
+  allows plain http to the local server and Chrome's inspector; the bundle check refuses both for an upload.
+- `/delete-account` is the public page that says how to delete an account without the app (Google Play asks for one). <!-- source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) -->
 
 ## iPhone app
 
@@ -398,15 +507,31 @@ shell (`capacitor.config.ts`, `ios/`). The old Expo stub in `mobile/` is not use
   Help, Terms, Privacy and Make it last open inside that frame for signed-in people, at `/app/help`, `/app/terms`,
   `/app/privacy` and `/app/make-it-last` (`InAppDoc` in `src/routes/marketing/parts.tsx`); the public pages stay for visitors.
   A new account, and any account with no items, opens the first-tag walkthrough at `/app/first-tag`
-  (`src/routes/app/FirstTag.tsx`; skippable, resumes from Items; style chosen by `src/lib/tagRecommend.ts`). Its test step
-  opens the finder page in test mode (`/find/<code>#test=1`): no scan recorded, nothing sent. A scan with the phone camera is a
-  real scan, because the finder routes cannot tell an owner from a stranger. Items shows a Getting started card until its steps
-  are done or dismissed; progress is kept per account in the browser or phone (`src/lib/gettingStarted.ts`), as the database has
-  no preferences table. Help at `/app/help` is grouped by task with search (`src/lib/helpContent.ts`), and each main screen has a
+  (`src/routes/app/FirstTag.tsx`; skippable, resumes from Items; style chosen by `src/lib/tagRecommend.ts`). Print (or Save the
+  PDF) is the main action of the print step, with "I have printed it" after it. The test step asks the owner to scan the printed
+  tag with the phone camera and say whether the item's page opened; the finder page's test mode (`/find/<code>#test=1`: no scan
+  recorded, nothing sent) is the fallback for someone with no tag yet, worded as "the page a finder sees". A visit by someone signed in on that browser to a tag of their own household is not recorded as a scan either
+  (the page asks the data API, under row security, whether the tag is theirs; `shouldRecordScan` in `src/lib/finder.ts`), so an
+  owner's own camera scan stays out of the scan history and the measures when their phone's browser is signed in. The last step is the
+  iPhone's alerts in the app and, on the web when email is on, the email check below. Items shows a Getting started card (add,
+  print, stick on, scan the printed tag; alerts in the app) until its steps are done or skipped; "I stuck it on" and "It opened"
+  are buttons with a separate Skip, and opening the test view does not tick the scan step. The card is hidden for someone who
+  joined a family. Progress is kept per account in the browser or phone (`src/lib/gettingStarted.ts`), as the database has
+  no preferences table; so is each tag's printed and stuck-on state (`src/lib/tagProgress.ts`), which Items shows as the item's
+  status ("Tag ready to print", "Printed, not stuck on yet", "Tag is on"). The item name box says "Describe the thing, not the
+  person", and the name and the word for the finder warn, without blocking, when they look like they hold a name, a phone
+  number, an email or a street address (`src/lib/personalDetails.ts`). Add item checks the plan's limit when it opens
+  (`src/lib/itemLimit.ts`). Help at `/app/help` is grouped by task with search (`src/lib/helpContent.ts`), and each main screen has a
   "?" in its top bar that opens the matching group. Each top-level screen has a phone top bar (the QuR Tag brand at the left; Add item on Items, Help and the account
   avatar at the right) over a large title that collapses into it (`AppPage`); the account card in Settings opens `/app/account` (name, password, data, deleting, signing out).
-  The How it works pictures are in `public/how` (tags drawn by `src/lib/tagStyles.ts`, two real screenshots, light and dark).
+  The How it works pictures are in `public/how` (tags drawn by `src/lib/tagStyles.ts`, written by `npx tsx scripts/qurtag/how-tags.mjs`; two real screenshots; light and dark).
 - The app follows the phone's light or dark setting, and Settings lets the owner pick Light, Auto or Dark.
+- The app follows the phone's text size at every size, the Accessibility sizes included (the root font size is the system body
+  size, `src/index.css`, and every text size is in rem). From the largest standard size up, `src/lib/textSize.ts` marks the page
+  `text-ax` (and `text-axx` from 40 px), and the `ax:` and `axx:` Tailwind variants change layouts rather than only sizes: rows with
+  a picture put the text under it, decorative icon chips are left out, switches drop under their text, grids become one column,
+  bars put the title on its own line, button labels may wrap, and side padding, gaps and corner radii keep their standard size in
+  px. Pictures, icons and switches are sized in px. Words wrap whole (`overflow-wrap: break-word`).
 - The app asks for notification permission once, right after the first item is saved, behind a short
   explanation (`src/components/push/PushPrimer.tsx`), never at launch. See "iPhone push notifications".
 - Version and build number are `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` in

@@ -4,23 +4,27 @@
  *
  *   POST /api/fn/finder-view   the finder-safe item card and the finder's own conversation
  *   POST /api/fn/finder-send   a finder's note (opens a conversation, or adds to theirs)
- *   GET  /api/fn?go=<code>     a short code (qurtag.com/k7m2p) sent on to the finder page
+ *   GET  /api/fn?go=<code>     a short code (qurtag.com/k7m2p4) sent on to the finder page
+ *   POST /api/fn/finder-resume, finder-email; GET and POST /api/fn/finder-email-stop: the finder's
+ *        conversation code, optional reply email and its unsubscribe link (server/routes/finderLoop.ts)
  *
  * Both are in server/routes/finder.ts. The iPhone app's push routes (push-register, push-unregister,
  * push-reply) are in server/routes/push.ts. The membership routes (billing-config, billing-checkout,
- * billing-portal, family-invite, stripe-webhook, revenuecat-webhook) are in server/routes/billing.ts. Errors become a plain 500; nothing internal
+ * billing-portal, family-invite, email-test, stripe-webhook, revenuecat-webhook) are in server/routes/billing.ts. Errors become a plain 500; nothing internal
  * reaches the caller.
  */
 import { withPhoneAppCors } from '../../server/auth/phoneCors.js';
 import { json } from '../../server/routes/core.js';
 import { createBillingRoutes } from '../../server/routes/billing.js';
 import { createFinderRoutes } from '../../server/routes/finder.js';
+import { createFinderLoopRoutes } from '../../server/routes/finderLoop.js';
 import { createPushRoutes } from '../../server/routes/push.js';
 import { createShortCodeRoute } from '../../server/routes/shortcode.js';
 
 export const config = { runtime: 'nodejs' };
 
 const finder = createFinderRoutes();
+const finderLoop = createFinderLoopRoutes();
 const billing = createBillingRoutes();
 const push = createPushRoutes();
 const shortCode = createShortCodeRoute();
@@ -28,11 +32,15 @@ const shortCode = createShortCodeRoute();
 const ROUTES: Record<string, (request: Request) => Promise<Response>> = {
   'finder-view': finder.view,
   'finder-send': finder.send,
+  'finder-resume': finderLoop.resume,
+  'finder-email': finderLoop.email,
+  'finder-email-stop': finderLoop.stop,
   'billing-config': billing.config,
   'billing-checkout': billing.checkout,
   'billing-portal': billing.portal,
   'family-invite': billing.invite,
   'support': billing.support,
+  'email-test': billing.emailTest,
   'stripe-webhook': billing.stripeWebhook,
   'revenuecat-webhook': billing.revenueCatWebhook,
   'push-register': push.register,

@@ -6,6 +6,10 @@ import { fetchMembership, type Membership } from '@/lib/membership';
 import { useMembershipsAvailable } from '@/lib/useMembershipsAvailable';
 import { PLAN_INFO } from '../../../server/billing/catalog';
 import { cn } from '@/lib/cn';
+import { axRow, axRowEnd, axRowText } from '@/components/ui/largeText';
+
+/** At large text sizes the card's lines wrap instead of being cut short. */
+const wrapAtAx = 'ax:whitespace-normal';
 
 /** The first letter of the name (or, with none, of the email), for the round avatar. */
 export function initialOf(name: string | undefined, email: string | undefined): string {
@@ -88,16 +92,16 @@ export function AccountCard({ compact = false }: { compact?: boolean }) {
       to="/app/account"
       className={cn(
         'flex items-center gap-3 transition-colors hover:bg-ink-50 active:bg-ink-50 focus-visible:outline-offset-[-2px]',
-        compact ? 'rounded-card px-3 py-2' : 'rounded-modal border border-hairline bg-canvas p-4',
+        compact ? 'rounded-card px-3 py-2' : cn('rounded-modal border border-hairline bg-canvas p-4', axRow),
       )}
     >
       <Avatar size={compact ? 36 : 56} />
-      <span className="flex min-w-0 flex-1 flex-col">
-        <span className={cn('truncate font-semibold text-ink-900', compact ? 'text-sm' : 'text-lg')}>{user?.name || user?.email}</span>
-        {user?.name && <span className="truncate text-sm text-muted">{user.email}</span>}
-        {plan && <span className="truncate text-sm text-muted">{plan}</span>}
+      <span className={cn('flex min-w-0 flex-1 flex-col', !compact && axRowText)}>
+        <span className={cn('truncate font-semibold text-ink-900', compact ? 'text-sm' : 'text-lg', wrapAtAx)}>{user?.name || user?.email}</span>
+        {user?.name && <span className={cn('truncate text-sm text-muted', wrapAtAx)}>{user.email}</span>}
+        {plan && <span className={cn('truncate text-sm text-muted', wrapAtAx)}>{plan}</span>}
       </span>
-      {!compact && <ChevronRight size={20} strokeWidth={1.75} className="shrink-0 text-ink-300" aria-hidden />}
+      {!compact && <ChevronRight size={20} strokeWidth={1.75} className={cn('shrink-0 text-ink-300', axRowEnd)} aria-hidden />}
     </Link>
   );
 }

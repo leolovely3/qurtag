@@ -3,7 +3,7 @@ import { Bell, BellOff, EyeOff, Mail, ScanLine, MessageCircle, ShieldAlert } fro
 import type { LucideIcon } from 'lucide-react';
 import { db } from '@/lib/db';
 import { pushPermission, turnOnPush, type PushPermission } from '@/lib/nativePush';
-import { isNative } from '@/lib/platform';
+import { pushOffered } from '@/lib/platform';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/lib/cn';
@@ -46,17 +46,22 @@ function Switch({ checked, onChange, label, disabled }: { checked: boolean; onCh
       aria-label={label}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className={cn(
-        'relative inline-flex h-7 w-12 shrink-0 items-center rounded-pill transition-colors duration-qurtag ease-qurtag disabled:opacity-60',
-        checked ? 'bg-ink-900' : 'bg-ink-200',
-      )}
+      // A switch keeps the phone's own size at every text size, with a 44 by 60 px place to tap.
+      className="group relative grid h-[44px] w-[60px] shrink-0 place-items-center rounded-pill disabled:opacity-60"
     >
       <span
         className={cn(
-          'inline-block size-5 rounded-full bg-canvas shadow-card transition-transform duration-qurtag ease-qurtag',
-          checked ? 'translate-x-6' : 'translate-x-1',
+          'relative inline-flex h-[28px] w-[48px] items-center rounded-pill transition-colors duration-qurtag ease-qurtag',
+          checked ? 'bg-ink-900' : 'bg-ink-200',
         )}
-      />
+      >
+        <span
+          className={cn(
+            'inline-block size-[20px] rounded-full bg-canvas shadow-card transition-transform duration-qurtag ease-qurtag',
+            checked ? 'translate-x-[24px]' : 'translate-x-[4px]',
+          )}
+        />
+      </span>
     </button>
   );
 }
@@ -64,9 +69,9 @@ function Switch({ checked, onChange, label, disabled }: { checked: boolean; onCh
 /** Same row as Settings' own (icon tile, title, one line of help, control at the right). */
 function SettingRow({ icon: Icon, title, body, children }: { icon: LucideIcon; title: string; body: string; children?: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-3 border-t border-hairline px-4 py-4 first:border-t-0">
+    <div className="flex items-center justify-between gap-3 border-t border-hairline px-4 py-4 first:border-t-0 ax:flex-col ax:items-start">
       <div className="flex min-w-0 items-start gap-3">
-        <div className="grid size-9 shrink-0 place-items-center rounded-card bg-ink-100">
+        <div className="grid size-[36px] shrink-0 place-items-center ax:hidden rounded-card bg-ink-100">
           <Icon size={18} strokeWidth={1.75} className="text-ink-900" aria-hidden />
         </div>
         <div className="flex min-w-0 flex-col gap-0.5">
@@ -89,7 +94,7 @@ export function NotificationSettings({ emailAvailable }: { emailAvailable: boole
   const load = useCallback(async () => {
     const { data } = await db.rpc('my_push_settings');
     setSettings({ ...DEFAULTS, ...((data as Partial<PushSettings> | null) ?? {}) });
-    if (isNative()) setPermission(await pushPermission());
+    if (pushOffered()) setPermission(await pushPermission());
     const a = await db.rpc('my_admin_alerts');
     setAdminAlerts(typeof a.data === 'boolean' ? a.data : null);
   }, []);
@@ -127,7 +132,8 @@ export function NotificationSettings({ emailAvailable }: { emailAvailable: boole
     if (r === 'granted') toast.show({ kind: 'success', title: 'Alerts are on' });
   }
 
-  const native = isNative();
+  // Phone alerts are offered only in the iPhone app; the Android app and the web email.
+  const native = pushOffered();
   const emailBody = native
     ? 'If you have not opened an alert after 10 minutes, we email you about it.'
     : 'We email you when a finder writes. If you also use the iPhone app, only when an alert went unopened for 10 minutes.';
@@ -163,7 +169,7 @@ export function NotificationSettings({ emailAvailable }: { emailAvailable: boole
           title="Notes from finders"
           body={
             emailAvailable
-              ? 'Notes arrive in your QuR Tag inbox here, and we email you when one comes in.'
+              ? 'Notes arrive in your QuR Tag inbox here, and we email you from no-reply@qurtag.com when one comes in. If you do not see our emails, check your spam or junk folder and add no-reply@qurtag.com to your contacts.'
               : 'Notes arrive in your QuR Tag inbox here. Check it, especially when something is lost.'
           }
         />

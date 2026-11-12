@@ -1,8 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { ChevronRight, Inbox as InboxIcon, Package, Plus, Tag as TagIcon } from 'lucide-react';
+import { ChevronRight, Inbox as InboxIcon, Mail, Package, Plus, Tag as TagIcon } from 'lucide-react';
 import { AppPage } from '@/components/layout/AppPage';
 import { GettingStarted } from '@/components/GettingStarted';
+import { LimitReached } from '@/components/membership/LimitReached';
+import { browserStorage, loadEmailCheck, showEmailReminder } from '@/lib/emailCheck';
+import { fetchEmailConfig } from '@/lib/membership';
+import { pushOffered } from '@/lib/platform';
+import { deviceStorage, itemStatus, tagProgress } from '@/lib/tagProgress';
 import { SKIP_KEY } from '@/lib/gettingStarted';
 import { buttonClasses } from '@/components/ui/Button';
 import { ItemRowSkeleton } from '@/components/ui/Skeleton';
@@ -10,8 +15,10 @@ import { useAuth } from '@/lib/auth';
 import { countUnreadForHousehold, fetchItems, fetchPrimaryHouseholdId, fetchTags } from '@/lib/queries';
 import { fetchMembership, type Membership } from '@/lib/membership';
 import { useMembershipsAvailable } from '@/lib/useMembershipsAvailable';
+import { showPlusNudge } from '@/lib/plusNudge';
 import type { Item, Tag } from '@/lib/database.types';
 import { cn } from '@/lib/cn';
+import { axIcon, axRow, axRowEnd, axRowText } from '@/components/ui/largeText';
 
 /** The owner's items with their tag and lost state; used by /app and /app/items. */
 export function useOwnerItems() {
@@ -65,7 +72,7 @@ export function useOwnerItems() {
 
 /** A square photo of the item, or a quiet placeholder when it has none. */
 export function ItemThumb({ src, size = 'md' }: { src?: string | null; size?: 'sm' | 'md' }) {
-  const box = size === 'sm' ? 'size-11' : 'size-14';
+  const box = size === 'sm' ? 'size-[44px]' : 'size-[56px]';
   return src ? (
     <img src={src} alt="" className={cn(box, 'shrink-0 rounded-card bg-ink-50 object-cover')} />
   ) : (
@@ -96,17 +103,17 @@ export function ItemList({ items, tagByItemId, readOnly }: { items: Item[]; tagB
           <li key={item.id}>
             <Link
               to={`/app/items/${item.id}`}
-              className="flex min-h-[4.5rem] items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-ink-50 focus-visible:outline-offset-[-2px] active:bg-ink-50"
+              className={cn('flex min-h-[4.5rem] items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-ink-50 focus-visible:outline-offset-[-2px] active:bg-ink-50', axRow)}
             >
               <ItemThumb src={item.hero_photo_url} />
-              <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <div className={cn('flex min-w-0 flex-1 flex-col gap-1', axRowText)}>
                 <span className="line-clamp-2 break-words text-base font-semibold leading-snug text-ink-900">{item.name}</span>
                 <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
                   <LostChip lost={item.lost_mode} />
-                  <span>{locked ? 'Read-only: over your plan' : tag ? 'Tag ready to print' : 'No working tag'}</span>
+                  <span>{itemStatus({ locked, hasTag: !!tag, progress: tag ? tagProgress(deviceStorage(), tag.id) : {} })}</span>
                 </span>
               </div>
-              <ChevronRight size={20} strokeWidth={1.75} className="shrink-0 text-ink-300" aria-hidden />
+              <ChevronRight size={20} strokeWidth={1.75} className={cn('shrink-0 text-ink-300', axRowEnd)} aria-hidden />
             </Link>
           </li>
         );
@@ -138,30 +145,45 @@ export function AddItemButton({ membership, first = false }: { membership?: Memb
 
 /** Under the list when the plan is full: what to do about it. */
 export function AddItemCard({ membership }: { count?: number; membership?: Membership | null }) {
-  const memberships = useMembershipsAvailable();
   if (!membership || membership.can_add_items) return null;
+  return <LimitReached membership={membership} className="mt-3 flex flex-col items-start gap-3 rounded-modal border border-hairline bg-paper p-4" />;
+}
+
+/**
+ * On the web a finder's note arrives by email; until the owner has sent themselves a test and said
+ * it arrived (src/lib/emailCheck.ts), Items reminds them, so the first real note is not lost in spam.
+ */
+function EmailReminder({ itemCount }: { itemCount: number }) {
+  const { user } = useAuth();
+  const [emailOn, setEmailOn] = useState(false);
+  useEffect(() => {
+    // The email reminder is for those who hear about notes by email: the web and the Android app.
+    if (!pushOffered()) void fetchEmailConfig().then((c) => setEmailOn(c?.email === true));
+  }, []);
+  if (!user) return null;
+  const check = loadEmailCheck(browserStorage(), user.id);
+  if (!showEmailReminder({ native: pushOffered(), emailOn, itemCount, check })) return null;
   return (
-    <div className="mt-3 flex flex-col items-start gap-3 rounded-modal border border-hairline bg-paper p-4">
-      <p className="text-sm text-ink-700 text-pretty">
-        {!memberships
-          ? 'Free accounts can tag up to three items.'
-          : membership.item_limit === 3
-            ? 'QuR Tag is free for up to three items, and you have three. To tag something else, upgrade your plan or delete one first.'
-            : `Your plan covers ${membership.item_limit} items. To tag something else, delete one first.`}
-      </p>
-      {memberships && (
-        <Link to="/app/membership" className={buttonClasses({ variant: 'secondary' })}>
-          See plans
-        </Link>
-      )}
-    </div>
+    <Link
+      to="/app/settings#email-check"
+      className="mb-4 flex min-h-14 items-center gap-3 rounded-modal border border-hairline bg-paper px-4 py-3 transition-colors hover:border-hairline-strong"
+    >
+      <span className="grid size-9 shrink-0 place-items-center rounded-pill bg-ink-100 text-ink-900">
+        <Mail size={18} strokeWidth={1.75} aria-hidden />
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span className="text-base font-medium text-ink-900">Make sure our emails reach you</span>
+        <span className="text-sm text-muted text-pretty">A finder's note comes by email. Send yourself a test so it does not land in spam.</span>
+      </span>
+      <ChevronRight size={20} strokeWidth={1.75} className="shrink-0 text-ink-300" aria-hidden />
+    </Link>
   );
 }
 
 function EmptyItems() {
   return (
     <section className="flex flex-col items-center gap-3 rounded-modal border border-hairline bg-paper px-6 py-10 text-center">
-      <div className="grid size-14 place-items-center rounded-modal bg-canvas shadow-card">
+      <div className="grid size-[56px] place-items-center rounded-modal bg-canvas shadow-card">
         <TagIcon size={24} strokeWidth={1.75} className="text-ink-900" aria-hidden />
       </div>
       <h2 className="text-xl font-semibold text-ink-900">Tag your first thing</h2>
@@ -185,7 +207,7 @@ function MoreLinks() {
     <ul className="mt-6 overflow-hidden rounded-modal border border-hairline bg-canvas md:hidden">
       <li>
         <Link to="/app/tags" className="flex min-h-14 items-center gap-3 px-4 py-3 transition-colors hover:bg-ink-50 focus-visible:outline-offset-[-2px] active:bg-ink-50">
-          <span className="grid size-9 shrink-0 place-items-center rounded-card bg-ink-100">
+          <span className={cn('grid size-[36px] shrink-0 place-items-center rounded-card bg-ink-100', axIcon)}>
             <TagIcon size={18} strokeWidth={1.75} className="text-ink-900" aria-hidden />
           </span>
           <span className="flex min-w-0 flex-1 flex-col">
@@ -202,6 +224,8 @@ function MoreLinks() {
 export function ItemsScreen() {
   const memberships = useMembershipsAvailable();
   const { items, tagByItemId, unread, membership, readOnly, loading, failed } = useOwnerItems();
+  // Bumped when a tag is marked stuck on, so the item's status line is read again.
+  const [, setTagEvents] = useState(0);
   // With no items, the walkthrough opens by itself; Skip for now leaves the empty screen for this visit.
   let skipped = false;
   try {
@@ -215,13 +239,29 @@ export function ItemsScreen() {
       : membership.item_limit === null
         ? `${items.length} ${items.length === 1 ? 'item' : 'items'}`
         : `${items.length} of ${membership.item_limit} items`;
+  const nudge = !loading && showPlusNudge(membership, items.length, memberships);
 
   if (!loading && !failed && items.length === 0 && !skipped) return <Navigate to="/app/first-tag" replace />;
 
   return (
     <AppPage
       title="Items"
-      subtitle={subtitle}
+      subtitle={
+        nudge ? (
+          <>
+            {subtitle}
+            <br />
+            <Link
+              to="/app/membership"
+              className="-my-2.5 inline-flex min-h-11 items-center font-medium text-ink-700 underline underline-offset-4 hover:text-ink-900"
+            >
+              Unlimited with Plus
+            </Link>
+          </>
+        ) : (
+          subtitle
+        )
+      }
       help="getting-started"
       action={!loading ? <AddItemButton membership={membership} first={items.length === 0} /> : undefined}
     >
@@ -230,17 +270,24 @@ export function ItemsScreen() {
           to="/app/inbox"
           className="mb-4 flex min-h-14 items-center gap-3 rounded-modal border border-signal-200 bg-signal-50 px-4 py-3 transition-colors hover:border-signal-300"
         >
-          <span className="grid size-9 shrink-0 place-items-center rounded-pill bg-signal-700 text-canvas">
+          <span className={cn('grid size-[36px] shrink-0 place-items-center rounded-pill bg-signal-700 text-canvas', axIcon)}>
             <InboxIcon size={18} strokeWidth={2} aria-hidden />
           </span>
-          <span className="flex-1 text-base font-medium text-ink-900">
+          <span className="min-w-0 flex-1 text-base font-medium text-ink-900">
             {unread === 1 ? 'Someone sent you a note' : `You have ${unread} new notes`}
           </span>
           <ChevronRight size={20} strokeWidth={1.75} className="shrink-0 text-signal-700" aria-hidden />
         </Link>
       )}
 
-      {!loading && items.length > 0 && <GettingStarted itemCount={items.length} firstTag={tagByItemId.get(items[items.length - 1].id) ?? null} />}
+      {!loading && items.length > 0 && <GettingStarted
+          itemCount={items.length}
+          firstTag={tagByItemId.get(items[items.length - 1].id) ?? null}
+          joinedFamily={!!membership && membership.household_id !== null && membership.household_id !== membership.own_household_id}
+          onTagChange={() => setTagEvents((n) => n + 1)}
+        />}
+
+      {!loading && items.length > 0 && <EmailReminder itemCount={items.length} />}
 
       {failed && (
         <p role="alert" className="mb-4 rounded-card bg-signal-50 px-4 py-3 text-sm text-signal-700">

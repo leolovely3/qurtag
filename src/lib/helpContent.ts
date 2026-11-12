@@ -9,7 +9,7 @@ export interface HelpEntry {
   q: string;
   a: string;
   action?: { label: string; to: string };
-  /** About plans and prices: left out in the iPhone app while memberships are hidden. */
+  /** About plans and prices: left out in the phone apps while memberships are hidden. */
   paid?: boolean;
   /** About the iPhone app only. */
   iphone?: boolean;
@@ -43,7 +43,7 @@ export const HELP: HelpSection[] = [
       {
         id: 'test-tag',
         q: 'How do I test my tag?',
-        a: 'Open the test page from the Getting started card. It shows exactly what a finder sees, sends nothing to you and is not counted as a scan. You can also scan the printed tag with your phone camera, which counts as a scan like any other.',
+        a: 'Scan the printed tag with your phone camera once it is on. If your item\'s page opens, the tag works at the size it printed. If your phone\'s browser is signed in to QuR Tag, your own scan is not counted as a finder\'s scan; if not, it shows in your scan history like a finder\'s. With no tag yet, Test on the Tags screen shows the page a finder sees without counting anything, but it does not check the paper tag.',
         action: { label: 'Your tags', to: '/app/tags' },
       },
       {
@@ -61,8 +61,20 @@ export const HELP: HelpSection[] = [
       {
         id: 'which-style',
         q: 'Which tag style should I print?',
-        a: 'A small sticker or label strip suits bottles, lunchboxes, laptops and cases. A key fob insert suits keys. A bag tag suits backpacks, gym bags and luggage, a wallet card suits wallets and walkers, and a clothing strip suits jackets. Each comes in Clean, Bold and Playful looks, on US Letter or A4, with several copies on a page.',
+        a: 'A small sticker or label strip suits bottles, lunchboxes, laptops and cases. A key fob insert suits keys. A bag tag suits backpacks, gym bags and luggage, a wallet card suits wallets and walkers, and a clothing strip suits jackets. Each comes in Clean, Bold and Playful looks, on US Letter or A4. The key fob, wallet card and bag tag go in a clear holder (about $3); the tag page says what each style needs and how to do without.',
         action: { label: 'Print a tag', to: '/app/tags' },
+      },
+      {
+        id: 'no-printer',
+        q: 'I have no printer. What can I do?',
+        a: 'On the tag page choose Save the PDF, then print it at a library, a print shop or on any computer. Ask for 100% (actual size). In the Facebook or Instagram app printing usually does nothing: open the page in Safari or Chrome first.',
+        action: { label: 'Your tags', to: '/app/tags' },
+      },
+      {
+        id: 'several',
+        q: 'Can I print tags for several things on one page?',
+        a: 'Yes. On Tags choose Print several items on one page, tick the things and choose how many of each. They print in one style, and the top edge of the page lists each item with the short address printed on its tags, so you can tell them apart once cut.',
+        action: { label: 'Your tags', to: '/app/tags' },
       },
       {
         id: 'make-it-last',
@@ -85,7 +97,7 @@ export const HELP: HelpSection[] = [
       {
         id: 'short-code',
         q: 'What is the short code on my tag?',
-        a: 'A few letters and numbers printed beside the QR code, for example qurtag.com/k7m2p. Typing it into a browser opens the same page as scanning the code, so a scuffed tag can still be used. It is not case sensitive.',
+        a: 'A few letters and numbers printed beside the QR code, for example qurtag.com/k7m2p4. Typing it into a browser opens the same page as scanning the code, so a scuffed tag can still be used. It is not case sensitive.',
       },
     ],
   },
@@ -96,20 +108,20 @@ export const HELP: HelpSection[] = [
       {
         id: 'finder-sees',
         q: 'What does the finder see?',
-        a: "The item's name, its photo if you added one, and your short word for the finder. They never see your email, name or phone number. They can write you a note from the page, with no app and no account.",
+        a: "The item's name, its photo if you added one, and your short word for the finder. They never see your email, name or phone number. So keep names out of what they do see: call it purple backpack, not Maya's backpack, most of all for a child's things. They can write you a note from the page, with no app and no account.",
         action: { label: 'Test what a finder sees', to: '/app/tags' },
       },
       {
         id: 'reply',
         q: 'How do I read and reply to a note?',
-        a: 'Notes from finders wait in your Inbox. Open one, read it and reply. The finder opens the same tag page on the same phone to read your reply.',
+        a: 'Notes from finders wait in your Inbox. Open one, read it and reply. The finder reads your reply on the tag page, on the same phone or on any browser with their conversation code at qurtag.com/reply, and can ask for an email when you reply. They never see your email address and you never see theirs. To stop new notes on a tag without switching it off, choose Pause new notes on this tag under More in a conversation. Archive tidies a conversation away; it comes back if the finder writes again.',
         action: { label: 'Open your inbox', to: '/app/inbox' },
       },
       {
         id: 'alerts',
         q: 'How do I get an alert when a finder writes?',
-        a: 'In the iPhone app, turn on alerts in Settings, under Notifications. You choose which alerts you want, and you can reply from the alert itself. On the website, the Inbox shows new notes and you can choose email alerts.',
-        action: { label: 'Turn on alerts', to: '/app/settings#alerts' },
+        a: 'In the iPhone app, turn on alerts in Settings, under Notifications. You choose which alerts you want, and you can reply from the alert itself. On the website and in the Android app, we email you when a finder writes, from no-reply@qurtag.com. In Settings, send yourself a test email and check it is not in spam.',
+        action: { label: 'Open Notifications', to: '/app/settings#alerts' },
       },
       {
         id: 'lost',
@@ -131,7 +143,7 @@ export const HELP: HelpSection[] = [
       {
         id: 'report-block',
         q: 'How do I report or block a finder?',
-        a: 'Open the conversation in your inbox. To report one note, choose Report under it, pick a reason and send. The note is hidden from you at once, and we review every report within 24 hours. To stop a finder writing to you, choose Block this finder: they cannot write again and are only told the conversation is closed. You can unblock in Settings, under Blocked finders. A note with offensive words or a threat arrives held back so you choose whether to read it.',
+        a: 'Open the conversation in your inbox. To report one note, choose Report under it, pick a reason and send. The note is hidden from you at once, and we review every report within 24 hours. To stop a finder writing to you, choose Block this finder under More: that conversation is closed to them, they are only told it is closed, and for 30 days new notes from the same network are refused. Someone on another network could still write, so to stop all new notes on a tag, choose Pause new notes on this tag. If a note threatens you or a child, do not meet alone, do not share your address, and contact your local police if you feel unsafe. You can unblock in Settings, under Blocked finders. A note with offensive words or a threat arrives held back so you choose whether to read it.',
         action: { label: 'Open your inbox', to: '/app/inbox' },
       },
       {
@@ -164,6 +176,12 @@ export const HELP: HelpSection[] = [
         action: { label: 'Change password', to: '/app/account' },
       },
       {
+        id: 'emails',
+        q: 'Not getting our emails?',
+        a: 'Our emails come from no-reply@qurtag.com. Check your spam or junk folder, and if one is there, mark it Not spam. Add no-reply@qurtag.com to your contacts so the next one reaches your inbox. On the website you can send yourself a test email in Settings.',
+        action: { label: 'Open Settings', to: '/app/settings#alerts' },
+      },
+      {
         id: 'name-email',
         q: 'How do I change my name or email?',
         a: 'Your name is on the Account screen. To change the email you sign in with, write to us and we will do it.',
@@ -186,7 +204,7 @@ export const HELP: HelpSection[] = [
         id: 'cancel',
         q: 'How do I cancel?',
         paid: true,
-        a: 'On the web, open Membership in your account and choose Manage membership. On iPhone, open Settings, tap your name, then Subscriptions. You keep your plan until the end of the period you paid for.',
+        a: 'On the web, open Membership in your account and choose Manage membership. On iPhone, open Settings, tap your name, then Subscriptions. On Android, open the Google Play app, tap your profile picture, then Payments and subscriptions, then Subscriptions. You keep your plan until the end of the period you paid for.',
         action: { label: 'Open Membership', to: '/app/membership' },
       },
       {

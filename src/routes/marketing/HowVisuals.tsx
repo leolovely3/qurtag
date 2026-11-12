@@ -1,9 +1,10 @@
-import { useTheme } from '@/lib/theme';
+import { ThemedImage } from '@/components/brand/ThemedImage';
 import { cn } from '@/lib/cn';
 
 /**
  * The three pictures of how QuR Tag works, in /public/how: the tags as the app prints them
- * (the 1.25 in sticker and the label strip, Clean look, drawn by src/lib/tagStyles.ts), the page
+ * (the 1.25 in sticker and the label strip, Clean look, drawn by src/lib/tagStyles.ts through
+ * scripts/qurtag/how-tags.mjs), the page
  * a finder sees (/find/<code> for a demo item) and the owner's conversation in the app. The two
  * screens are real screenshots from a local build at 390 x 780 (780 x 1560 files), framed like
  * the home page's hero. Each has a light and a dark file; the visitor's theme picks one.
@@ -16,7 +17,7 @@ const steps = [
     file: 'tags',
     width: 1600,
     height: 800,
-    alt: 'Two printed QuR Tag tags side by side: a square sticker that reads "Lost? Scan me" and a label strip that reads "If found, scan me", each with a QR code and a short web address.',
+    alt: 'Two printed QuR Tag tags side by side: a square sticker that reads "Lost? Scan me" and a label strip that reads "If found, scan me", each with a QR code, the QuR Tag logo and a short web address.',
   },
   {
     title: 'A finder scans it',
@@ -39,32 +40,27 @@ const steps = [
 ];
 
 export function HowVisuals({ className }: { className?: string }) {
-  const mode = useTheme().resolved === 'dark' ? 'dark' : 'light';
   return (
     <ol className={cn('grid gap-8 md:grid-cols-3 md:gap-6', className)}>
       {steps.map((s, i) => (
         <li key={s.title} className="flex flex-col gap-5">
           <div className="flex items-center justify-center md:min-h-[26rem]">
             {s.kind === 'tags' ? (
-              <img
-                src={`/how/${s.file}-${mode}.webp`}
+              <ThemedImage
+                base={s.file}
                 width={s.width}
                 height={s.height}
-                loading="lazy"
-                decoding="async"
                 alt={s.alt}
-                className="block h-auto w-full rounded-modal ring-1 ring-hairline-strong"
+                className="h-auto w-full rounded-modal ring-1 ring-hairline-strong"
               />
             ) : (
               <div className="w-[14rem] rounded-[2.25rem] bg-[#050608] p-2 shadow-device ring-1 ring-hairline-strong">
-                <img
-                  src={`/how/${s.file}-${mode}.webp`}
+                <ThemedImage
+                  base={s.file}
                   width={s.width}
                   height={s.height}
-                  loading="lazy"
-                  decoding="async"
                   alt={s.alt}
-                  className="block h-auto w-full rounded-[1.75rem]"
+                  className="h-auto w-full rounded-[1.75rem]"
                 />
               </div>
             )}

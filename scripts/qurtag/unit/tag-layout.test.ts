@@ -110,8 +110,8 @@ test('copiesOnPage clamps the request', () => {
   assert.equal(copiesOnPage(s, 'letter', 3), 3);
   assert.equal(copiesOnPage(s, 'letter', 0), 1);
   assert.equal(copiesOnPage(s, 'letter', Number.NaN), 8);
-  assert.deepEqual(copyChoices(s, 'letter'), [8, 6, 3, 1]);
-  assert.deepEqual(copyChoices(styleById('bag'), 'letter'), [3, 1]);
+  assert.deepEqual(copyChoices(s, 'letter'), [8, 6, 4, 3, 2, 1]);
+  assert.deepEqual(copyChoices(styleById('bag'), 'letter'), [3, 2, 1]);
 });
 
 test('planGrid centres the grid and counts what fits', () => {

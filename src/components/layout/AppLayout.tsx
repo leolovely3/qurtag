@@ -9,7 +9,7 @@ import { AccountCard } from '@/components/account/Account';
 import { NativePushBridge } from '@/components/push/NativePushBridge';
 import { useAuth } from '@/lib/auth';
 import { useIsSuperAdmin } from '@/lib/admin';
-import { countUnreadForHousehold, fetchPrimaryHouseholdId } from '@/lib/queries';
+import { UNREAD_CHANGED, countUnreadForHousehold, fetchPrimaryHouseholdId } from '@/lib/queries';
 import { useMembershipsAvailable } from '@/lib/useMembershipsAvailable';
 import { cn } from '@/lib/cn';
 
@@ -55,20 +55,25 @@ const nav: NavEntry[] = [
 
 const adminEntry: NavEntry = { to: '/app/admin', label: 'Admin', icon: ShieldCheck, key: 'admin', tab: true, match: (p) => p.startsWith('/app/admin') };
 
+/** The unread count as a picture; screen readers hear it in the link's name (navName). */
 function Badge({ count, className }: { count: number; className?: string }) {
   if (count <= 0) return null;
   return (
     <span
+      aria-hidden
       className={cn(
-        'inline-flex h-5 min-w-5 items-center justify-center rounded-pill bg-signal-700 px-1.5 text-xs font-semibold leading-none text-canvas',
+        'inline-flex h-[20px] min-w-[20px] items-center justify-center rounded-pill bg-signal-700 px-[6px] text-[12px] font-semibold leading-none text-canvas',
         className,
       )}
     >
-      <span className="sr-only">, </span>
       {count > 9 ? '9+' : count}
-      <span className="sr-only"> unread</span>
     </span>
   );
+}
+
+/** The name a screen reader says for a destination: "Inbox, 1 unread" when notes wait. */
+function navName(item: NavEntry, unread: number): string | undefined {
+  return item.key === 'inbox' && unread > 0 ? `${item.label}, ${unread} unread` : undefined;
 }
 
 export function AppLayout() {
@@ -110,6 +115,12 @@ export function AppLayout() {
     window.scrollTo(0, 0);
   }, [pathname]);
 
+  useEffect(() => {
+    const again = () => void refreshUnread();
+    window.addEventListener(UNREAD_CHANGED, again);
+    return () => window.removeEventListener(UNREAD_CHANGED, again);
+  }, [refreshUnread]);
+
   // Keep the inbox count fresh while the app is open.
   usePoll(refreshUnread, !!householdId);
 
@@ -133,6 +144,7 @@ export function AppLayout() {
                 key={item.key}
                 to={item.to}
                 aria-current={active ? 'page' : undefined}
+                aria-label={navName(item, unread)}
                 className={cn(
                   'flex h-11 items-center gap-3 rounded-card px-3 text-sm font-medium transition-colors duration-150',
                   active ? 'bg-ink-100 text-ink-900' : 'text-ink-600 hover:bg-ink-50 hover:text-ink-900',
@@ -177,6 +189,7 @@ export function AppLayout() {
                   <Link
                     to={item.to}
                     aria-current={active ? 'page' : undefined}
+                    aria-label={navName(item, unread)}
                     className={cn(
                       'flex h-14 flex-col items-center justify-center gap-1 text-[min(0.75rem,3.2vw)] font-medium transition-colors duration-150',
                       active ? 'text-ink-900' : 'text-muted hover:text-ink-900',

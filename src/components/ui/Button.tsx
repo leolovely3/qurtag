@@ -6,7 +6,9 @@ import { cn } from '@/lib/cn';
  *
  * Every button is one line (`whitespace-nowrap`), at least 44px tall, with its icon before the
  * label. Labels that might not fit a narrow phone get a shorter label or a full-width layout at
- * the call site, never a second line. `primary` is the one filled action on a screen.
+ * the call site, never a second line at standard text sizes. At Accessibility text sizes (the
+ * `ax:` variant, src/lib/textSize.ts) a label may wrap onto more lines, whole words only, and the
+ * button grows taller rather than run off the screen. `primary` is the one filled action on a screen.
  */
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success';
 /** `sm` is kept for older call sites; it is the same 44px height as `md`, with tighter padding. */
@@ -37,6 +39,7 @@ export function buttonClasses({
     'transition-colors duration-150 ease-out select-none',
     'disabled:opacity-50 disabled:cursor-not-allowed aria-disabled:opacity-50 aria-disabled:cursor-not-allowed',
     '[&>svg]:shrink-0',
+    'ax:h-auto ax:min-h-[44px] ax:max-w-full ax:shrink ax:whitespace-normal ax:rounded-[1.375rem] ax:py-2 ax:text-center ax:leading-tight',
     variants[variant],
     sizes[size],
     block && 'w-full',

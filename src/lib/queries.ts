@@ -152,7 +152,7 @@ export async function uploadItemPhoto(input: { householdId: string | null; file:
 
 export interface ThreadWithItem extends Thread {
   item: Pick<Item, 'id' | 'name' | 'brand' | 'hero_photo_url' | 'lost_mode'> | null;
-  last_message: Pick<Message, 'body' | 'sender_kind' | 'created_at'> | null;
+  last_message: Pick<Message, 'body' | 'sender_kind' | 'created_at' | 'sender_user_id'> | null;
   unread_count: number;
   /** Notes the filter held that the owner has not chosen to show (no text). */
   held_count: number;
@@ -170,7 +170,12 @@ export async function sendOwnerReply(input: { threadId: string; body: string }):
   return true;
 }
 
-export async function fetchThreadById(threadId: string): Promise<Thread | null> {
+/**
+ * One conversation, or null when it is not in the owner's inbox. With throwOnError a failed
+ * request (no signal, server busy) throws instead, so the screen can say "could not load"
+ * rather than "not in your inbox".
+ */
+export async function fetchThreadById(threadId: string, opts: { throwOnError?: boolean } = {}): Promise<Thread | null> {
   const { data, error } = await supabase
     .from('threads')
     .select('*')
@@ -178,6 +183,7 @@ export async function fetchThreadById(threadId: string): Promise<Thread | null> 
     .maybeSingle();
   if (error) {
     console.error('[QuR Tag] fetchThreadById', error);
+    if (opts.throwOnError) throw new Error('could not load the conversation');
     return null;
   }
   return (data as Thread | null) ?? null;
@@ -196,14 +202,17 @@ export async function fetchMessagesForThread(threadId: string): Promise<Message[
   return (data ?? []) as Message[];
 }
 
-export async function fetchThreadsForHousehold(_householdId?: string): Promise<ThreadWithItem[]> {
+/** The conversations the person can read; [] when the request fails, or null with `orNull` (the inbox says so). */
+export async function fetchThreadsForHousehold(_householdId?: string): Promise<ThreadWithItem[]>;
+export async function fetchThreadsForHousehold(_householdId: string | undefined, orNull: true): Promise<ThreadWithItem[] | null>;
+export async function fetchThreadsForHousehold(_householdId?: string, orNull = false): Promise<ThreadWithItem[] | null> {
   const { data: threads, error } = await supabase
     .from('threads')
     .select('*')
     .order('last_message_at', { ascending: false });
   if (error) {
     console.error('[QuR Tag] fetchThreadsForHousehold', error);
-    return [];
+    return orNull ? null : [];
   }
   if (!threads || threads.length === 0) return [];
 
@@ -223,13 +232,13 @@ export async function fetchThreadsForHousehold(_householdId?: string): Promise<T
   const held = await fetchHeldNotes();
   const { data: msgs } = await supabase
     .from('messages')
-    .select('thread_id, body, sender_kind, created_at, read_by_owner_at')
+    .select('thread_id, body, sender_kind, created_at, read_by_owner_at, sender_user_id')
     .in('thread_id', threadIds);
 
   const lastByThread = new Map<string, ThreadWithItem['last_message']>();
   const unreadByThread = new Map<string, number>();
   for (const m of (msgs ?? []) as Array<
-    Pick<Message, 'thread_id' | 'body' | 'sender_kind' | 'created_at' | 'read_by_owner_at'>
+    Pick<Message, 'thread_id' | 'body' | 'sender_kind' | 'created_at' | 'read_by_owner_at' | 'sender_user_id'>
   >) {
     const prev = lastByThread.get(m.thread_id);
     if (!prev || prev.created_at < m.created_at) {
@@ -237,6 +246,7 @@ export async function fetchThreadsForHousehold(_householdId?: string): Promise<T
         body: m.body,
         sender_kind: m.sender_kind,
         created_at: m.created_at,
+        sender_user_id: m.sender_user_id ?? null,
       });
     }
     if (m.sender_kind === 'finder' && !m.read_by_owner_at) {
@@ -560,6 +570,20 @@ export async function markThreadStatus(
   if (error) console.error('[QuR Tag] markThreadStatus', error);
 }
 
+/** Archives a conversation (the owner's own tidying), or brings it back. A finder's new note brings it back too. */
+export async function setThreadArchived(threadId: string, archived: boolean): Promise<boolean> {
+  const { error } = await supabase.from('threads').update({ archived_at: archived ? new Date().toISOString() : null }).eq('id', threadId);
+  if (error) console.error('[QuR Tag] setThreadArchived', error);
+  return !error;
+}
+
+/** Pauses new notes on an item's tag, or takes the pause off. Existing conversations go on. */
+export async function setItemNotesPaused(itemId: string, paused: boolean): Promise<boolean> {
+  const { error } = await supabase.rpc('set_item_notes_paused', { p_item: itemId, p_paused: paused });
+  if (error) console.error('[QuR Tag] setItemNotesPaused', error);
+  return !error;
+}
+
 /* ─────────────── moderation of finders' notes (db/moderation.sql) ─────────────── */
 
 export type ReportReason = 'harassment' | 'spam' | 'threats' | 'inappropriate' | 'other';
@@ -630,6 +654,8 @@ export interface HeldNote {
   thread_id: string;
   created_at: string;
   read: boolean;
+  /** Why the filter held it: offensive words, or a threat (which shows safety advice). */
+  reason?: 'language' | 'threat' | null;
 }
 
 /** The held notes of one conversation, or of every conversation when no id is given. */
@@ -648,9 +674,14 @@ export async function showHeldNote(messageId: string): Promise<boolean> {
   return !error;
 }
 
+/** Fired on window when the owner's unread count may have changed. */
+export const UNREAD_CHANGED = 'qurtag:unread-changed';
+
 export async function markThreadReadByOwner(threadId: string): Promise<void> {
   const { error } = await supabase.rpc('mark_thread_read', { p_thread_id: threadId });
   if (error) console.error('[QuR Tag] markThreadReadByOwner', error);
+  // The Inbox badge counts again now, not at its next poll.
+  else if (typeof window !== 'undefined') window.dispatchEvent(new Event(UNREAD_CHANGED));
 }
 
 /* ─────────────── items + tags ─────────────── */
@@ -676,8 +707,8 @@ export async function createItemWithPrintableTag(input: {
     if (error?.message === 'item_limit') {
       return {
         error: membershipsAvailableInApp()
-          ? 'You have reached the limit of your plan (3 items on Free). Delete an item, or upgrade on the Membership page, to add another.'
-          : 'Free accounts can tag up to three items.',
+          ? 'Your plan holds no more items. See the plans in Membership, or delete an item you no longer need.'
+          : 'You have three items, the most for now. Delete an item you no longer need to tag something else.',
       };
     }
     console.error('[QuR Tag] createItemWithPrintableTag', error);

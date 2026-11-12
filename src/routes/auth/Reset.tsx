@@ -56,7 +56,7 @@ export function ForgotPassword() {
         <div className="grid size-11 place-items-center rounded-pill bg-ink-100">
           <Mail size={20} strokeWidth={1.75} className="text-ink-900" aria-hidden />
         </div>
-        <p role="status" className="text-base text-muted text-pretty">If an account exists, we've sent a link. It works once and expires in 1 hour.</p>
+        <p role="status" className="text-base text-muted text-pretty">If an account exists, we've sent a link. It works once and expires in 1 hour. Check your inbox, and your spam or junk folder.</p>
         <Link to="/start?mode=signin" className={LINK}>Back to sign in</Link>
       </Card>
     );

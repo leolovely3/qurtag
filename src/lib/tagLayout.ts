@@ -72,6 +72,17 @@ export interface StyleSpec {
   mirrorable: boolean;
   /** True when the page lines up with a standard label sheet on Letter. */
   labelSheet: boolean;
+  /**
+   * Copies printed when the person has not chosen: a few spares, not a full sheet of one code, so
+   * the rest of a sheet of sticker paper is left for the next thing (or several things share it).
+   */
+  defaultCopies: number;
+  /** What the person needs besides a printer and paper, said before they print. */
+  needs: string;
+  /** A way to use the tag without buying anything more. */
+  noHolder: string;
+  /** True when the style has room for the item's name ("On: ...") if the owner asks for it. */
+  showsName: boolean;
 }
 
 export const STYLES: StyleSpec[] = [
@@ -84,12 +95,16 @@ export const STYLES: StyleSpec[] = [
     h: 1.25,
     panels: 1,
     qr: 0.75,
-    quiet: 3,
+    quiet: 2,
     gap: 0.2,
     margin: 0.5,
-    howTo: 'Print on sticker paper and cut along the marks. Several copies print, so you have spares.',
+    howTo: 'Print on sticker paper and cut along the marks.',
     mirrorable: false,
     labelSheet: false,
+    defaultCopies: 4,
+    needs: 'Sticker paper, or plain paper and clear packing tape.',
+    noHolder: 'No sticker paper? Print on plain paper, cut it out and cover it with clear packing tape.',
+    showsName: false,
   },
   {
     id: 'strip',
@@ -107,6 +122,10 @@ export const STYLES: StyleSpec[] = [
       'On US Letter this lines up with the standard 30 per sheet address label sheet (3 across, 10 down). Print at 100% with no scaling.',
     mirrorable: false,
     labelSheet: true,
+    defaultCopies: 3,
+    needs: 'Address label sheets (30 a sheet), or plain paper and clear packing tape.',
+    noHolder: 'No label sheets? Print on plain paper, cut it out and cover it with clear packing tape.',
+    showsName: false,
   },
   {
     id: 'fob',
@@ -123,6 +142,10 @@ export const STYLES: StyleSpec[] = [
     howTo: 'Cut along the marks, fold on the dashed line with the printing outside, and slide it into the holder.',
     mirrorable: false,
     labelSheet: false,
+    defaultCopies: 2,
+    needs: 'A key ring with a clear photo holder (about $3).',
+    noHolder: 'No holder? Print the small sticker instead, put it on the key head or the fob and cover it with clear tape.',
+    showsName: false,
   },
   {
     id: 'wallet',
@@ -139,6 +162,10 @@ export const STYLES: StyleSpec[] = [
     howTo: 'Print on thick paper or card, cut along the marks, and slide it into a clear card holder.',
     mirrorable: false,
     labelSheet: false,
+    defaultCopies: 2,
+    needs: 'Thick paper or card, and a clear card holder (about $3).',
+    noHolder: 'No holder? Cover both sides with clear packing tape.',
+    showsName: true,
   },
   {
     id: 'bag',
@@ -155,6 +182,10 @@ export const STYLES: StyleSpec[] = [
     howTo: 'Print on thick paper, cut along the marks, fold on the dashed line with the printing outside, and put it in a clear holder or cover it with packing tape.',
     mirrorable: false,
     labelSheet: false,
+    defaultCopies: 1,
+    needs: 'Thick paper and a clear luggage tag holder (about $3).',
+    noHolder: 'No holder? Cover both sides with clear packing tape, punch a hole and tie it on with a ribbon or a zip tie.',
+    showsName: true,
   },
   {
     id: 'clothing',
@@ -171,6 +202,10 @@ export const STYLES: StyleSpec[] = [
     howTo: 'Print on iron-on transfer paper, cut out each strip, and iron it inside the collar or on a care label.',
     mirrorable: true,
     labelSheet: false,
+    defaultCopies: 4,
+    needs: 'Iron-on transfer paper and an iron.',
+    noHolder: 'No transfer paper? Write the short address (it is on every tag) inside the collar with a fabric marker. A finder can type it.',
+    showsName: false,
   },
 ];
 
@@ -257,8 +292,13 @@ export function copiesOnPage(style: StyleSpec, paperId: PaperId, requested?: num
 /** The copy counts the page offers to print, from the whole page down to a few. */
 export function copyChoices(style: StyleSpec, paperId: PaperId): number[] {
   const cap = gridFor(style, paperId).count;
-  const options = [cap, 12, 6, 3, 1].filter((n) => n <= cap);
+  const options = [cap, 12, 6, 4, 3, 2, 1].filter((n) => n <= cap);
   return [...new Set(options)];
+}
+
+/** The copies to print when the person has not chosen: the style's default, never more than fit. */
+export function defaultCopies(style: StyleSpec, paperId: PaperId): number {
+  return copiesOnPage(style, paperId, style.defaultCopies);
 }
 
 /** Which paper to suggest: US Letter in the US, Canada and Mexico, A4 elsewhere. */
@@ -272,7 +312,7 @@ export function printReadySize(style: StyleSpec, bleed = BLEED_IN): { w: number;
   return { w: style.w + 2 * bleed, h: style.h + 2 * bleed };
 }
 
-/** The short address printed beside the QR code, for example qurtag.com/k7m2p. */
+/** The short address printed beside the QR code, for example qurtag.com/k7m2p4. */
 export function shortAddress(code: string | null | undefined): string {
   return code ? `qurtag.com/${code}` : '';
 }

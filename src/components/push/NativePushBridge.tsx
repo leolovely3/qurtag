@@ -4,10 +4,11 @@ import { useAuth } from '@/lib/auth';
 import { shareSessionWithApp } from '@/lib/authClient';
 import { onPushTap, refreshPushRegistration } from '@/lib/nativePush';
 import { clearDeliveredNotifications, setAppBadge } from '@/lib/nativeSession';
-import { isNative } from '@/lib/platform';
+import { pushOffered } from '@/lib/platform';
 
 /**
- * Wires the iPhone app's notifications to the screens. Renders nothing; does nothing on the web.
+ * Wires the iPhone app's notifications to the screens. Renders nothing; does nothing on the web
+ * or in the Android app, which has no push (pushOffered in src/lib/platform.ts).
  *
  *  - hands the app's native code the session (so Reply in a notification works with the app
  *    closed) and re-registers a phone that already allowed alerts;
@@ -23,20 +24,20 @@ export function NativePushBridge({ unread }: { unread: number | null }) {
   const userId = user?.id ?? null;
 
   useEffect(() => {
-    if (!isNative() || !userId) return;
+    if (!pushOffered() || !userId) return;
     shareSessionWithApp();
     void refreshPushRegistration();
   }, [userId]);
 
   useEffect(() => {
-    if (isNative() && unread !== null) void setAppBadge(unread);
+    if (pushOffered() && unread !== null) void setAppBadge(unread);
   }, [unread]);
 
   useEffect(() => onPushTap(({ thread, open }) => navigate(open ?? (thread ? `/app/inbox/${thread}` : '/app/items'))), [navigate]);
 
   useEffect(() => {
     const m = /^\/app\/inbox\/([0-9a-f-]{36})$/i.exec(pathname);
-    if (isNative() && m) void clearDeliveredNotifications(m[1]);
+    if (pushOffered() && m) void clearDeliveredNotifications(m[1]);
   }, [pathname]);
 
   return null;

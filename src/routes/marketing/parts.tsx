@@ -6,6 +6,7 @@ import { Container } from '@/components/ui/Container';
 import { Lede } from '@/components/brand/Typography';
 import { buttonClasses } from '@/components/ui/Button';
 import { cn } from '@/lib/cn';
+import { CONTACT } from '@/lib/contact';
 
 /** Shared building blocks for the plain marketing pages. */
 
@@ -67,7 +68,7 @@ export function PageHero({
     <section>
       <Container size="md">
         <div className="flex flex-col gap-4 pb-10 pt-10 md:pb-12 md:pt-16" data-section={eyebrow}>
-          <h1 className="text-4xl font-semibold leading-[1.1] tracking-[-0.025em] text-ink-900 text-balance sm:text-5xl">
+          <h1 className="text-4xl font-semibold leading-[1.1] tracking-[-0.025em] text-ink-900 text-balance sm:text-5xl ax:text-[min(2.25rem,12vw)]">
             {title}
           </h1>
           {lede && <Lede>{lede}</Lede>}
@@ -124,7 +125,7 @@ export function Steps({ items }: { items: { title: string; body: string }[] }) {
     <ol className="flex flex-col gap-qurtag-3">
       {items.map((s, i) => (
         <li key={s.title} className="flex gap-4 rounded-modal border border-hairline bg-canvas p-5 shadow-card">
-          <span className="grid size-8 shrink-0 place-items-center rounded-full bg-ink-900 text-sm font-semibold text-canvas">
+          <span className="grid size-[32px] shrink-0 place-items-center rounded-full bg-ink-900 text-sm font-semibold text-canvas">
             {i + 1}
           </span>
           <div className="flex flex-col gap-1 min-w-0">
@@ -172,7 +173,7 @@ export function CtaBand({ title, body, wide = false }: { title: string; body?: s
   );
 }
 
-export const CONTACT = 'info@impactconsulting.ai';
+export { CONTACT };
 
 export function ContactLink() {
   return (

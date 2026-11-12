@@ -4,9 +4,9 @@
  *
  * The plan is never decided here. The database computes it (my_membership) from the
  * subscriptions that Stripe's and RevenueCat's webhooks recorded, so a membership bought on
- * the web or on the iPhone reads the same on both. Buying on the iPhone goes through Apple
- * (src/lib/iap.ts); buying on the web goes through Stripe Checkout (below), and the
- * iPhone app never shows a way to pay outside Apple.
+ * the web, on iPhone or on Android reads the same everywhere. Buying in the phone apps goes
+ * through the phone's store, Apple or Google Play (src/lib/iap.ts); buying on the web goes
+ * through Stripe Checkout (below), and neither phone app shows a way to pay outside its store.
  */
 import { db } from './db';
 import { getDataPass } from './authClient';
@@ -25,7 +25,7 @@ export interface Membership {
   item_limit: number | null;
   items_used: number;
   can_add_items: boolean;
-  provider: 'stripe' | 'apple' | null;
+  provider: 'stripe' | 'apple' | 'google' | null;
   billing_interval: Interval | null;
   status: 'none' | 'active' | 'canceling' | 'billing_issue';
   /** Whether it renews by itself. */
@@ -125,6 +125,18 @@ async function post<T>(name: string, body: unknown, signedIn: boolean): Promise<
 export async function fetchBillingConfig(): Promise<Record<string, boolean> | null> {
   const a = await post<{ available: Record<string, boolean> }>('billing-config', {}, false);
   return a.data?.available ?? null;
+}
+
+/** Whether the server can send email, and the address it sends from. Null when it could not be asked. */
+export async function fetchEmailConfig(): Promise<{ email: boolean; from: string } | null> {
+  const a = await post<{ email?: boolean; emailFrom?: string }>('billing-config', {}, false);
+  return a.data ? { email: a.data.email === true, from: a.data.emailFrom || 'no-reply@qurtag.com' } : null;
+}
+
+/** Sends a test email to the signed-in account's own address (server/routes/billing.ts, email-test). */
+export async function sendTestEmail(): Promise<{ to: string } | { error: string }> {
+  const a = await post<{ to: string }>('email-test', {}, true);
+  return a.data?.to ? { to: a.data.to } : { error: a.message ?? 'The test email could not be sent.' };
 }
 
 /** Whether the server can send email (RESEND_API_KEY is set). Null when it could not be asked. */

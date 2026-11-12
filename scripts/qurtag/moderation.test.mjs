@@ -273,9 +273,13 @@ await sql(`update qurtag.message_reports set created_at = now() - interval '2 da
   check('and one an admin blocked is marked as such', (blocked.data ?? []).some((b) => b.by_admin === true));
   check("another owner's list is empty", (await other.db.rpc('my_blocked_finders')).data?.length === 0);
   check("another owner cannot unblock this owner's finder", !!(await other.db.rpc('unblock_finder', { p_thread: thread })).error);
-  // The same finder can still start over only with a new token; the old token stays dead.
-  const fresh = await e.send(tag, null, 'A new conversation');
-  check('a finder with no token can still open a new conversation (a block is per conversation token)', fresh.status === 200 && !!fresh.json?.token);
+  // The same finder cannot start over from the same network for 30 days (db/ux-fixes.sql); someone on
+  // another network can.
+  const sameNetwork = await e.send(tag, null, 'A new conversation');
+  check('a blocked finder cannot open a new conversation from the same network', sameNetwork.status === 409 && sameNetwork.json?.error === 'not_taking', `${sameNetwork.status}`);
+  const elsewhere = new Person('moderation-elsewhere', '10.66.9.9');
+  const fresh = await elsewhere.send(tag, null, 'A new conversation');
+  check('someone on another network can still open one', fresh.status === 200 && !!fresh.json?.token);
   const un = await owner.db.rpc('unblock_finder', { p_thread: thread });
   check('Unblock works', !un.error && un.data?.blocked === false, JSON.stringify(un.error));
   check('the conversation is back in the inbox', (await owner.db.from('threads').select('id').eq('id', thread)).data?.length === 1 && (await ownerNotes(thread)).length === 1);

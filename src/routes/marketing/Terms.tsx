@@ -4,7 +4,7 @@ export function Terms() {
   return (
     <>
       <PageHero eyebrow="Terms" title="Terms of use" lede="The rules for using QuR Tag, in plain words.">
-        <p className="text-caption text-muted">Last updated 25 October 2026</p>
+        <p className="text-caption text-muted">Last updated 10 November 2026</p>
       </PageHero>
       <PageBody>
         <Section title="1. Who we are and what this covers">
@@ -44,12 +44,16 @@ export function Terms() {
             On the web, payment is taken by Stripe, and you manage or cancel your membership from the Membership page
             in your account. On iPhone, payment is taken by Apple through the App Store. It is charged to your Apple
             ID at confirmation of purchase and renews unless you cancel at least 24 hours before the period ends; you
-            manage or cancel it in your iPhone's Settings, under Subscriptions. A membership bought either way applies
-            to your QuR Tag account wherever you sign in. If you have bought one both ways, the better plan applies.
+            manage or cancel it in your iPhone's Settings, under Subscriptions. On Android, payment is taken by Google
+            through Google Play. It is charged to your Google Play account when you confirm the purchase and renews unless {/* source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) */}
+            you cancel before the renewal date; you manage or cancel it in the Google Play app, under Payments and {/* source: the Play Console listing for app.impactconsultingai.qurtag (Android release prepared 10 Nov 2026) */}
+            subscriptions. A membership bought any of these ways applies to your QuR Tag account wherever you sign in. If
+            you have bought more than one, the better plan applies.
           </P>
           <P>
             Refunds for purchases made in the iPhone app are handled by Apple, under Apple's rules, at
-            reportaproblem.apple.com. If you think you were charged by mistake on the web, use the Contact us form (in{' '}
+            reportaproblem.apple.com. Refunds for purchases made in the Android app are handled by Google, under Google
+            Play's rules. If you think you were charged by mistake on the web, use the Contact us form (in{' '}
             <DocLink to="/help" className="text-ink-900 underline underline-offset-4">Help</DocLink>, or "Question about a charge?" on the Membership page),
             or email <ContactLink /> if you cannot sign in. If we change a price, we will tell you before the new price
             applies to your next renewal.
@@ -127,7 +131,7 @@ export function Terms() {
             items={[
               'Filter. Every note a finder sends is checked by our system before you see it. A note with offensive words or a threat is held back: you see "This note may be offensive. Show it?" and choose whether to read it. Notes that are only links, or that carry many links, are not delivered, and a finder can only send so many notes in a short time.',
               'Report. Open a conversation and choose Report under any note from a finder. Pick a reason (harassment, spam, threats, inappropriate or other) and add a comment if you like. The note is hidden from you at once. A person at QuR Tag reviews every report within 24 hours and can hide the note for everyone, block the finder, or close the account of anyone who keeps breaking these rules.',
-              'Block. Choose Block this finder in a conversation. That finder cannot write to you again, their notes leave your inbox, and they are only told that the conversation is closed. You can see and unblock the finders you blocked in Settings.',
+              'Block. Choose Block this finder in a conversation. That conversation is closed to the finder, their notes leave your inbox, they are only told that the conversation is closed, and for 30 days new notes from the same network are refused. Someone on another network could still write; to stop all new notes on a tag, pause new notes on it. You can see and unblock the finders you blocked in Settings.',
               'Finders. If an owner\'s page or reply is abusive or unsafe, write to us at the address below with the tag page you were on. We review it within 24 hours too.',
             ]}
           />

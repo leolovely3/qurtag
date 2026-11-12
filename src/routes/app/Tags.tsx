@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Printer, Tag as TagIcon } from 'lucide-react';
+import { Layers, Printer, Tag as TagIcon } from 'lucide-react';
 import { AppPage } from '@/components/layout/AppPage';
 import { buttonClasses } from '@/components/ui/Button';
 import { ThreadRowSkeleton } from '@/components/ui/Skeleton';
@@ -9,6 +9,7 @@ import { db } from '@/lib/db';
 import { fetchItems, fetchPrimaryHouseholdId, fetchTags } from '@/lib/queries';
 import type { Item, Tag } from '@/lib/database.types';
 import { useToast } from '@/components/ui/Toast';
+import { Modal } from '@/components/ui/Modal';
 import { cn } from '@/lib/cn';
 import { shortAddress } from '@/lib/tagLayout';
 
@@ -29,6 +30,8 @@ export function Tags() {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
+  // Switching a tag off is asked first: a finder holding the item could no longer write.
+  const [confirmOff, setConfirmOff] = useState<Tag | null>(null);
   const toast = useToast();
 
   const load = useCallback(async () => {
@@ -72,6 +75,12 @@ export function Tags() {
         Each item gets a tag with its own code. Print it as often as you like, or switch it off if you
         no longer want it to work.
       </p>
+      {tags.filter((t) => t.status === 'active').length > 1 && (
+        <Link to="/app/tags/sheet" className={buttonClasses({ variant: 'secondary', className: 'mb-4' })}>
+          <Layers size={16} strokeWidth={1.75} aria-hidden />
+          Print several items on one page
+        </Link>
+      )}
 
       {loading ? (
         <div className="overflow-hidden rounded-modal border border-hairline bg-canvas divide-y divide-hairline" aria-busy="true" aria-label="Loading your tags">
@@ -93,7 +102,7 @@ export function Tags() {
             return (
               <li key={tag.id} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center">
                 <div className="flex min-w-0 flex-1 items-center gap-3">
-                  <span className="grid size-11 shrink-0 place-items-center rounded-card bg-ink-100">
+                  <span className="grid size-[44px] shrink-0 place-items-center rounded-card bg-ink-100 ax:hidden">
                     <TagIcon size={20} strokeWidth={1.75} className="text-ink-900" aria-hidden />
                   </span>
                   <div className="min-w-0">
@@ -104,7 +113,7 @@ export function Tags() {
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {tag.status === 'active' && (
                     <Link to={`/app/tags/${tag.id}/print`} className={buttonClasses({ variant: 'primary', className: 'flex-1 sm:flex-none' })}>
                       <Printer size={16} strokeWidth={1.75} aria-hidden />
@@ -120,7 +129,7 @@ export function Tags() {
                     <button
                       type="button"
                       disabled={busy === tag.id}
-                      onClick={() => setStatus(tag, tag.status === 'active' ? 'inactive' : 'active')}
+                      onClick={() => (tag.status === 'active' ? setConfirmOff(tag) : void setStatus(tag, 'active'))}
                       className={buttonClasses({ variant: 'secondary', className: 'flex-1 sm:flex-none' })}
                     >
                       {tag.status === 'active' ? 'Switch off' : 'Switch on'}
@@ -132,6 +141,25 @@ export function Tags() {
           })}
         </ul>
       )}
+
+      <Modal
+        open={!!confirmOff}
+        onClose={() => setConfirmOff(null)}
+        eyebrow="Switch off"
+        title={`Switch off the tag on ${(confirmOff?.current_item_id && itemById.get(confirmOff.current_item_id)?.name) || 'this item'}?`}
+        description="Anyone who scans it will see that the tag is not working and will not be able to send you a note, even if they are holding your thing. Existing conversations stay in your inbox. You can switch it back on at any time."
+        primaryAction={{
+          label: 'Switch it off',
+          tone: 'destructive',
+          pending: !!confirmOff && busy === confirmOff.id,
+          onClick: async () => {
+            const t = confirmOff;
+            setConfirmOff(null);
+            if (t) await setStatus(t, 'inactive');
+          },
+        }}
+        secondaryAction={{ label: 'Keep it working', onClick: () => setConfirmOff(null) }}
+      />
     </AppPage>
   );
 }

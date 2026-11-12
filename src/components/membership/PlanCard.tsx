@@ -30,10 +30,10 @@ export function PlanCard({
         current ? 'border-ink-900' : 'border-hairline',
       )}
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
         <h3 className="text-xl font-semibold text-ink-900">{info.name}</h3>
         {current && (
-          <span className="text-caption px-2 py-0.5 rounded-pill bg-ink-900 text-canvas">Your plan</span>
+          <span className="whitespace-nowrap text-caption px-2 py-0.5 rounded-pill bg-ink-900 text-canvas">Your plan</span>
         )}
       </div>
       <p className="text-caption text-muted text-pretty">{info.summary}</p>

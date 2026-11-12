@@ -1,4 +1,4 @@
-import { forwardRef, useId, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { forwardRef, useId, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { Send } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { buttonClasses } from '@/components/ui/Button';
@@ -13,6 +13,8 @@ interface MessageComposerProps {
   tone?: 'light' | 'dark';
   /** Show a quiet header above the textarea. */
   label?: string;
+  /** One-tap openings shown under the box; a tap puts the words in the box to finish. */
+  starters?: readonly string[];
 }
 
 const DEFAULT_MAX = 1200;
@@ -32,13 +34,14 @@ function keyboardHint(): string | null {
 
 export const MessageComposer = forwardRef<HTMLTextAreaElement, MessageComposerProps>(
   function MessageComposer(
-    { placeholder, onSend, disabled, maxLength = DEFAULT_MAX, tone = 'light', label },
+    { placeholder, onSend, disabled, maxLength = DEFAULT_MAX, tone = 'light', label, starters },
     ref,
   ) {
     const [body, setBody] = useState('');
     const [sending, setSending] = useState(false);
     const [hint] = useState(keyboardHint);
     const fieldId = useId();
+    const boxRef = useRef<HTMLTextAreaElement | null>(null);
     const trimmed = body.trim();
     const canSend = !!trimmed && !sending && !disabled;
 
@@ -81,7 +84,11 @@ export const MessageComposer = forwardRef<HTMLTextAreaElement, MessageComposerPr
           )}
         >
           <textarea
-            ref={ref}
+            ref={(el) => {
+              boxRef.current = el;
+              if (typeof ref === 'function') ref(el);
+              else if (ref) ref.current = el;
+            }}
             id={fieldId}
             aria-label={label ? undefined : "Message"}
             value={body}
@@ -118,6 +125,27 @@ export const MessageComposer = forwardRef<HTMLTextAreaElement, MessageComposerPr
             </button>
           </div>
         </div>
+        {starters && starters.length > 0 && !trimmed && !disabled && (
+          <div className="flex flex-wrap gap-2 px-1" role="group" aria-label="Start your note with">
+            {starters.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => {
+                  setBody(s);
+                  const el = boxRef.current;
+                  if (el) {
+                    el.focus();
+                    requestAnimationFrame(() => el.setSelectionRange(s.length, s.length));
+                  }
+                }}
+                className="inline-flex min-h-11 items-center rounded-pill border border-hairline-strong bg-canvas px-4 text-sm font-medium text-ink-900 transition-colors hover:border-ink-900"
+              >
+                {s.trim()}...
+              </button>
+            ))}
+          </div>
+        )}
       </form>
     );
   },

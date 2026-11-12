@@ -15,6 +15,9 @@ interface ThreadViewProps {
   /** Owner only: notes the filter held. Their text is not here until the owner shows one. */
   held?: { id: string; created_at: string }[];
   onShowHeld?: (messageId: string) => void;
+  /** Owner only, in a Family: who wrote each reply, by account id, and who is looking. */
+  ownerNames?: ReadonlyMap<string, string>;
+  viewerId?: string;
 }
 
 function timestamp(iso: string): string {
@@ -124,7 +127,7 @@ function SystemCard({ payload }: { payload: SystemPayload }) {
   }
 }
 
-export function ThreadView({ messages, viewerKind, autoScroll = true, className, onReport, held = [], onShowHeld }: ThreadViewProps) {
+export function ThreadView({ messages, viewerKind, autoScroll = true, className, onReport, held = [], onShowHeld, ownerNames, viewerId }: ThreadViewProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // A new message scrolls into view; opening the screen does not, so it starts at its title.
@@ -226,7 +229,10 @@ export function ThreadView({ messages, viewerKind, autoScroll = true, className,
             </div>
             <span className="flex items-center gap-3 px-2 text-xs text-muted">
               <span>
-                {senderLabel(m.sender_kind, viewerKind)} · {timestamp(m.created_at)}
+                {m.sender_kind === 'owner' && viewerKind === 'owner' && m.sender_user_id && m.sender_user_id !== viewerId && ownerNames?.get(m.sender_user_id)
+                  ? ownerNames.get(m.sender_user_id)
+                  : senderLabel(m.sender_kind, viewerKind)}{' '}
+                · {timestamp(m.created_at)}
               </span>
               {onReport && m.sender_kind === 'finder' && (
                 <button

@@ -1,18 +1,25 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Check, Copy, Gift, Lock, Package, SearchX, TestTube2, WifiOff } from 'lucide-react';
+import { CheckCircle2, Eye, Gift, Heart, Lock, Package, PauseCircle, SearchX, TestTube2, WifiOff } from 'lucide-react';
 import { buttonClasses } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { MessageComposer } from '@/components/ui/MessageComposer';
 import { ThreadView } from '@/components/ui/ThreadView';
 import {
+  NOTE_STARTERS,
+  rememberCode,
+  rememberedCode,
   rememberToken,
   rememberedToken,
   sendNote,
+  shouldRecordScan,
   tokenFromHash,
   viewTag,
   type FinderView as View,
 } from '@/lib/finder';
+import { useAuth } from '@/lib/auth';
+import { db } from '@/lib/db';
+import { ReplyEmail, SaveConversation } from './FinderLoop';
 import { usePoll } from '@/lib/realtime';
 import { OWNER_TEST_KEY } from '@/lib/gettingStarted';
 import type { Message } from '@/lib/database.types';
@@ -29,11 +36,14 @@ import { cn } from '@/lib/cn';
 export function FinderView() {
   const { tagId = '' } = useParams();
   const [view, setView] = useState<View | null>(null);
-  const [state, setState] = useState<'loading' | 'ready' | 'missing' | 'offline'>('loading');
+  const [state, setState] = useState<'loading' | 'ready' | 'missing' | 'gone' | 'offline'>('loading');
+  const [code, setCode] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  // Set right after this browser sent a note, for the "Sent" confirmation.
+  const [justSent, setJustSent] = useState(false);
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   // The owner's test view (/find/<code>#test=1): the page as a finder sees it, with no scan
   // recorded, nothing sent and no conversation started. Opened from the first-tag walkthrough
   // and the Getting started card (src/routes/app/FirstTag.tsx).
@@ -41,8 +51,7 @@ export function FinderView() {
 
   const load = useCallback(
     async (scan: boolean, t: string | null) => {
-      // A finder who already wrote a note and comes back to read the reply is not a new scan.
-      const r = await viewTag(tagId, t, scan && !t);
+      const r = await viewTag(tagId, t, scan);
       if (r.ok) {
         setView(r.data);
         setState('ready');
@@ -60,6 +69,8 @@ export function FinderView() {
         }
       } else if (r.status === 404) {
         setState('missing');
+      } else if (r.status === 410) {
+        setState('gone');
       } else if (scan || testMode) {
         setState('offline');
       }
@@ -72,6 +83,9 @@ export function FinderView() {
       void load(false, null);
       return;
     }
+    // Wait to know who is looking: an owner signed in on this browser is not a finder.
+    if (authLoading) return;
+    let cancelled = false;
     // A saved conversation link carries the token after #; keep it and tidy the address.
     const fromLink = tokenFromHash(window.location.hash);
     if (fromLink) {
@@ -80,8 +94,31 @@ export function FinderView() {
     }
     const t = fromLink ?? rememberedToken(tagId);
     setToken(t);
-    void load(true, t);
-  }, [tagId, load, testMode]);
+    setCode(t ? rememberedCode(tagId) : null);
+    (async () => {
+      // Row security answers only the tags of households this person belongs to.
+      let ownsTag = false;
+      if (user) {
+        const { data } = await db.from('tags').select('id').eq('public_id', tagId).maybeSingle();
+        ownsTag = !!data;
+        if (ownsTag) {
+          try {
+            // The owner opened their own tag (for example by scanning the printed tag): a real test.
+            window.localStorage.setItem(OWNER_TEST_KEY, tagId);
+          } catch {
+            /* storage off */
+          }
+        }
+      }
+      if (cancelled) return;
+      await load(shouldRecordScan({ testMode, hasToken: !!t, ownsTag }), t);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // Only the first answer about who is signed in matters for this visit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tagId, load, testMode, authLoading]);
 
   usePoll(() => load(false, token), state === 'ready' && !!token);
 
@@ -99,26 +136,19 @@ export function FinderView() {
         throw new Error(r.message);
       }
       const next = r.data.token ?? token;
+      setJustSent(true);
       if (r.data.token) {
         rememberToken(tagId, r.data.token);
         setToken(r.data.token);
+      }
+      if (r.data.code) {
+        rememberCode(tagId, r.data.code);
+        setCode(r.data.code);
       }
       await load(false, next);
     },
     [tagId, token, load],
   );
-
-  async function copyLink() {
-    if (!token) return;
-    const link = `${window.location.origin}/find/${tagId}#t=${token}`;
-    try {
-      await navigator.clipboard.writeText(link);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2500);
-    } catch {
-      window.prompt('Copy this link to come back to this conversation:', link);
-    }
-  }
 
   if (state === 'loading') {
     // Shaped like the page it becomes, so nothing jumps when the tag arrives.
@@ -136,17 +166,30 @@ export function FinderView() {
     );
   }
 
-  if (state === 'missing') {
+  if (state === 'missing' || state === 'gone') {
     return (
       <div className="flex flex-col items-start gap-4 py-4">
         <span className="grid size-12 place-items-center rounded-modal bg-ink-100">
           <SearchX size={24} strokeWidth={1.75} className="text-ink-900" aria-hidden />
         </span>
-        <h1 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900 sm:text-3xl">This tag isn't registered</h1>
+        <h1 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900 sm:text-3xl">
+          {state === 'gone' ? 'This is an old QuR Tag' : "We don't know this code"}
+        </h1>
         <p className="text-base text-ink-700 text-pretty">
-          The code may be mistyped, or the owner may have switched this tag off or printed a new one.
-          Check the address on the tag and try again. If you found something, you could also hand it
-          in where you found it.
+          {state === 'gone'
+            ? 'Thank you for scanning it. Its owner switched this tag off or printed a new one, so it cannot take notes any more.'
+            : 'Thank you for scanning it. This is not a QuR Tag code we know. If you typed the address, check it and try again.'}
+        </p>
+        <p className="text-base text-ink-700 text-pretty">
+          If you have the item, you can still help. Hand it in where you found it (a front desk, staff or
+          lost property), or email us at{' '}
+          <a
+            href="mailto:info@impactconsulting.ai?subject=I%20found%20something%20with%20a%20QuR%20Tag"
+            className="font-medium text-ink-900 underline underline-offset-4"
+          >
+            info@impactconsulting.ai
+          </a>{' '}
+          with the code printed on the tag and where you found it. We will try to reach the owner.
         </p>
         <Link to="/" className={buttonClasses({ variant: 'secondary', className: 'mt-2' })}>
           What is QuR Tag?
@@ -186,6 +229,29 @@ export function FinderView() {
   }));
   const talking = !testMode && messages.length > 0;
   const closed = thread?.status === 'closed';
+  const returned = thread?.status === 'reunited';
+  const ownerReplied = messages.some((m) => m.sender_kind === 'owner');
+  const finderNotes = (thread?.messages ?? []).filter((m) => m.sender_kind === 'finder');
+  const lastNoteSeen = finderNotes.length > 0 && finderNotes[finderNotes.length - 1].seen === true;
+
+  const heading = !talking
+    ? item.lost
+      ? 'You found something someone is missing.'
+      : 'You found something with a QuR Tag.'
+    : returned
+      ? 'The owner has it back.'
+      : closed
+        ? 'This conversation has ended.'
+        : ownerReplied
+          ? 'The owner replied.'
+          : 'Your note was sent.';
+  const lead = !talking
+    ? 'Send the owner a short note: where you found it and how they can get it back. You do not need an account or an app, and the owner will not see your phone number or email.'
+    : returned
+      ? 'Thank you for being kind. You helped someone get their thing back.'
+      : closed
+        ? 'The owner closed this conversation, so you cannot write here any more. Thank you for taking the time. If you still have the item, hand it in where you found it.'
+        : 'Replies from the owner show up on this page.';
 
   function leaveTest() {
     const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0;
@@ -199,10 +265,11 @@ export function FinderView() {
         <div role="status" className="flex flex-col gap-3 rounded-modal border border-verdigris-300 bg-verdigris-50 p-4">
           <p className="flex items-start gap-2 text-base font-semibold text-ink-900">
             <TestTube2 size={18} strokeWidth={1.75} className="mt-0.5 shrink-0" aria-hidden />
-            It works. This is what a finder sees.
+            This is the page a finder sees.
           </p>
           <p className="text-sm text-ink-700 text-pretty">
-            This is your test view. It was not counted as a scan, and nothing you do here is sent to you.
+            This preview was not counted as a scan, and nothing you do here is sent to you. It does not
+            check your printed tag: scan the paper tag with your phone camera for that.
           </p>
           <button type="button" onClick={leaveTest} className={buttonClasses({ variant: 'primary', block: true })}>
             Done
@@ -223,24 +290,49 @@ export function FinderView() {
 
       <div className="flex flex-col gap-3">
         <h1 className="text-2xl font-semibold leading-tight tracking-[-0.02em] text-ink-900 text-pretty sm:text-3xl">
-          {talking
-            ? 'Your conversation with the owner.'
-            : item.lost
-              ? 'You found something someone is missing.'
-              : 'You found something with a QuR Tag.'}
+          {heading}
         </h1>
-        <p className="text-base text-ink-700 text-pretty">
-          {talking
-            ? 'Replies from the owner show up here. Keep this page, or come back to this tag later on this phone.'
-            : 'Send the owner a short note: where you found it and how they can get it back. You do not need an account or an app, and the owner will not see your phone number or email.'}
-        </p>
+        <p className="text-base text-ink-700 text-pretty">{lead}</p>
       </div>
 
-      <div className="flex items-center gap-4 rounded-modal border border-hairline bg-canvas p-4 shadow-card">
+      {talking && returned && (
+        <div role="status" className="flex items-start gap-3 rounded-modal border border-verdigris-300 bg-verdigris-50 p-4">
+          <Heart size={20} strokeWidth={1.75} className="mt-0.5 shrink-0 text-verdigris-700" aria-hidden />
+          <p className="text-base text-ink-900 text-pretty">
+            The owner marked it as back with them. Nothing else to do. Thank you.
+          </p>
+        </div>
+      )}
+
+      {talking && justSent && !closed && !returned && (
+        <div role="status" className="flex flex-col gap-2 rounded-modal border border-verdigris-300 bg-verdigris-50 p-4">
+          <p className="flex items-start gap-2 text-base font-semibold text-ink-900">
+            <CheckCircle2 size={20} strokeWidth={1.75} className="mt-0.5 shrink-0 text-verdigris-700" aria-hidden />
+            Sent. We have told the owner.
+          </p>
+          <p className="text-sm text-ink-700 text-pretty">
+            Their reply will show up on this page. If you meet, choose a public place. Handing it to staff
+            where you found it is fine too.
+          </p>
+        </div>
+      )}
+
+      {talking && !closed && !returned && token && <SaveConversation tag={tagId} token={token} code={code} />}
+
+      {talking && !closed && !returned && token && (view.emailAvailable || thread?.email_on) && (
+        <ReplyEmail
+          tag={tagId}
+          token={token}
+          on={!!thread?.email_on}
+          onChange={(on) => setView((v) => (v && v.thread ? { ...v, thread: { ...v.thread, email_on: on } } : v))}
+        />
+      )}
+
+      <div className="flex items-center gap-4 rounded-modal border border-hairline bg-canvas p-4 shadow-card ax:flex-col ax:items-start">
         {item.photo ? (
-          <img src={item.photo} alt={`Photo of the ${item.name}`} className="size-20 shrink-0 rounded-card bg-ink-100 object-cover" />
+          <img src={item.photo} alt={`Photo of the ${item.name}`} className="size-[80px] shrink-0 rounded-card bg-ink-100 object-cover" />
         ) : (
-          <div className="grid size-20 shrink-0 place-items-center rounded-card bg-ink-100">
+          <div className="grid size-[80px] shrink-0 place-items-center rounded-card bg-ink-100">
             <Package size={28} strokeWidth={1.5} className="text-muted" aria-hidden />
           </div>
         )}
@@ -252,7 +344,7 @@ export function FinderView() {
 
       {item.reward_text && (
         <aside className="flex items-start gap-3 rounded-modal border border-hairline bg-canvas p-4">
-          <div className="grid size-10 shrink-0 place-items-center rounded-pill bg-signal-50">
+          <div className="grid size-[40px] shrink-0 place-items-center rounded-pill bg-signal-50 ax:hidden">
             <Gift size={20} strokeWidth={1.75} className="text-signal-700" aria-hidden />
           </div>
           <div className="min-w-0 flex-1">
@@ -269,21 +361,30 @@ export function FinderView() {
         <div className="flex flex-col gap-3 rounded-modal border border-hairline bg-canvas p-4">
           <h2 className="text-sm font-semibold text-ink-700">Conversation</h2>
           <ThreadView messages={messages} viewerKind="finder" />
+          {lastNoteSeen && (
+            <p className="flex items-center justify-end gap-1.5 text-sm text-muted">
+              <Eye size={14} strokeWidth={1.75} aria-hidden />
+              Seen by the owner
+            </p>
+          )}
         </div>
       )}
 
-      {testMode ? null : closed ? (
-        <p className="rounded-card border border-hairline bg-paper px-4 py-3 text-sm text-ink-700">
-          This conversation is closed.
-        </p>
-      ) : (
+      {!testMode && !talking && item.paused ? (
+        <div role="status" className="flex items-start gap-3 rounded-modal border border-hairline bg-paper p-4">
+          <PauseCircle size={20} strokeWidth={1.75} className="mt-0.5 shrink-0 text-ink-700" aria-hidden />
+          <p className="text-base text-ink-900 text-pretty">
+            The owner is not taking new notes on this tag right now. If you have the item, please hand it in where you
+            found it, such as a front desk, staff or lost property.
+          </p>
+        </div>
+      ) : testMode || closed ? null : (
         <div className="flex flex-col gap-2">
           <MessageComposer
             label={talking ? 'Write another note' : 'Send a note to the owner'}
-            placeholder={
-              talking ? 'A short reply' : 'I found this at the bus stop on Main Street. I can leave it at the library desk.'
-            }
+            placeholder={talking ? 'A short reply' : 'Where did you find it?'}
             maxLength={2000}
+            starters={talking ? undefined : NOTE_STARTERS}
             onSend={handleSend}
           />
           {error && (
@@ -291,22 +392,6 @@ export function FinderView() {
               {error}
             </p>
           )}
-        </div>
-      )}
-
-      {token && !testMode && (
-        <div className="flex flex-col gap-3 rounded-modal border border-hairline bg-paper p-4 sm:flex-row sm:items-center">
-          <p className="flex-1 text-sm text-ink-700 text-pretty">
-            This phone remembers your conversation. To open it somewhere else, keep this private link.
-          </p>
-          <button
-            type="button"
-            onClick={copyLink}
-            className={buttonClasses({ variant: 'secondary' })}
-          >
-            {copied ? <Check size={16} aria-hidden /> : <Copy size={16} aria-hidden />}
-            {copied ? 'Link copied' : 'Copy my private link'}
-          </button>
         </div>
       )}
 

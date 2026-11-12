@@ -1,12 +1,17 @@
 /**
- * The iPhone side of payment: RevenueCat tells the server, by webhook, what the App Store
- * sold or ended, and the server turns it into the same plan the web payments set.
+ * The phone side of payment: RevenueCat tells the server, by webhook, what the App Store
+ * (iPhone app) or Google Play (Android app) sold or ended, and the server turns it into the
+ * same plan the web payments set. An App Store subscription is recorded with provider
+ * `apple`, a Google Play one with `google` (db/google-play.sql allows it), so each screen
+ * can say where it was bought and how to manage it.
  *
  * The request is trusted only when its `Authorization` header equals REVENUECAT_WEBHOOK_AUTH
  * (the value pasted into RevenueCat's webhook settings), compared in constant time. The
  * account is RevenueCat's app user id: the app signs RevenueCat in with the QuR Tag account
- * id, so the id in the event is the account. The plan comes from the App Store product id.
- * Products that are not QuR Tag's (RevenueCat projects can hold several apps) are ignored.
+ * id, so the id in the event is the account. The plan comes from the store's product id: the
+ * same id in both stores, which Google Play may send as `<id>:yearly` (productByStoreId).
+ * Products that are not QuR Tag's (RevenueCat projects can hold several apps) and other stores
+ * (Stripe through RevenueCat, Amazon, promotional grants) are ignored.
  *
  * Event meanings:
  *   INITIAL_PURCHASE, RENEWAL, UNCANCELLATION, SUBSCRIPTION_EXTENDED   active until expiration
@@ -14,11 +19,11 @@
  *                    takes effect at the next renewal, which arrives as RENEWAL)
  *   CANCELLATION     auto-renew is off: the plan lasts until expiration; a refund
  *                    (cancel reason CUSTOMER_SUPPORT) ends it at once
- *   BILLING_ISSUE    the renewal payment failed; Apple retries, the plan lasts until expiration
+ *   BILLING_ISSUE    the renewal payment failed; the store retries, the plan lasts until expiration
  *   EXPIRATION       over
  * Anything else (TEST, TRANSFER, and so on) is acknowledged and ignored.
  */
-import { productByAppleId, type Interval, type PaidPlan } from './catalog.js';
+import { productByStoreId, type Interval, type PaidPlan } from './catalog.js';
 import type { Action, Applied } from './stripe.js';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -44,13 +49,14 @@ export function actionForRevenueCatEvent(body: unknown): Action {
   if (!ev || !type) return { kind: 'ignore', why: 'unreadable event' };
   if (type === 'TEST') return { kind: 'ignore', why: 'test event' };
   const store = text(ev.store);
-  if (store !== 'APP_STORE' && store !== 'MAC_APP_STORE') return { kind: 'ignore', why: `store ${store ?? '(none)'}` };
+  const provider = store === 'APP_STORE' || store === 'MAC_APP_STORE' ? 'apple' : store === 'PLAY_STORE' ? 'google' : null;
+  if (!provider) return { kind: 'ignore', why: `store ${store ?? '(none)'}` };
 
   const handled = new Set(['INITIAL_PURCHASE', 'RENEWAL', 'UNCANCELLATION', 'SUBSCRIPTION_EXTENDED', 'PRODUCT_CHANGE', 'CANCELLATION', 'BILLING_ISSUE', 'EXPIRATION']);
   if (!handled.has(type)) return { kind: 'ignore', why: `event type ${type}` };
 
   const productId = type === 'PRODUCT_CHANGE' ? (text(ev.new_product_id) ?? text(ev.product_id)) : text(ev.product_id);
-  const product = productByAppleId(productId);
+  const product = productByStoreId(productId);
   if (!product) return { kind: 'ignore', why: 'not a QuR Tag product' };
   const userId = userFromEvent(ev);
   if (!userId) return { kind: 'ignore', why: 'no QuR Tag account in the event' };
@@ -71,7 +77,7 @@ export function actionForRevenueCatEvent(body: unknown): Action {
   return {
     kind: 'apply',
     apply: {
-      provider: 'apple',
+      provider,
       eventId: id,
       eventType: type,
       eventAt: new Date(at),

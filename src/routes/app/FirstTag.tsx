@@ -1,40 +1,57 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { Backpack, Bell, Check, Glasses, GlassWater, Guitar, KeyRound, Laptop, Lock, Printer, ScanLine, Share, Sparkles } from 'lucide-react';
+import { Backpack, Bell, Check, Glasses, GlassWater, Guitar, KeyRound, Laptop, Lock, ScanLine, Sparkles } from 'lucide-react';
 import { AppPage } from '@/components/layout/AppPage';
 import { buttonClasses } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { DetailWarning } from '@/components/ui/DetailWarning';
+import { NAME_HINT } from '@/lib/personalDetails';
 import { PhotoUploader } from '@/components/ui/PhotoUploader';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/cn';
 import { markPushExplained, pushPermission, turnOnPush } from '@/lib/nativePush';
-import { isNative, publicUrl } from '@/lib/platform';
+import { isNative, publicUrl, pushOffered } from '@/lib/platform';
 import { createItemWithPrintableTag, fetchItems, fetchPrimaryHouseholdId, fetchTagById } from '@/lib/queries';
 import { PICKS, recommendStyle, type Pick, type PickId } from '@/lib/tagRecommend';
-import { LOOKS, STYLES, PAPERS, copiesOnPage, defaultPaper, gridFor, styleById, type StyleId } from '@/lib/tagLayout';
+import { STYLES, defaultCopies, defaultPaper, styleById, type StyleId } from '@/lib/tagLayout';
+import { PrintArea, PrintChoices } from '@/components/print/PrintChoices';
+import { rememberTagStyle } from '@/lib/printPrefs';
+import { recordTagPrint } from '@/lib/measures';
+import { recordTag } from '@/lib/tagProgress';
+import { fetchEmailConfig } from '@/lib/membership';
+import { EmailCheck } from '@/components/alerts/EmailCheck';
 import { OWNER_TEST_KEY, SKIP_KEY } from '@/lib/gettingStarted';
-import { saveTagPdf } from '@/lib/tagExport';
 import { pageToSvg } from '@/lib/tagSvg';
 import { buildPreview, buildSheet } from '@/lib/tagStyles';
 import { recordStep } from '@/lib/useGettingStarted';
 
 /**
  * The first-tag walkthrough at /app/first-tag: what to tag, a photo, a word for the finder,
- * the tag style, print or share, a test scan, and (iPhone app) alerts. It opens after
+ * the tag style, print (or save the PDF), a scan of the printed tag, and the way alerts arrive
+ * (the iPhone's alerts in the app; on the web, the email check, when email is on). It opens after
  * sign-up and whenever the account has no items, can be skipped, and resumes from Items.
  *
  * The item is saved when the person leaves step 3, so the rest of the walkthrough works on
  * a real tag. Where they are is kept per account on this device (qurtag.first-tag.<id>), so
  * closing the app mid-way resumes at the same step.
  *
- * The test (step 6) opens the finder's own page in test mode (/find/<code>#test=1,
- * src/routes/finder/FinderView.tsx): it asks the server for the page without recording a scan,
- * sends nothing and starts no conversation, so a test never shows in the scan history or the
- * measures. A scan made with the phone camera is a real scan: the finder routes cannot tell
- * the owner from a stranger, so the walkthrough says so.
+ * Print is the main action of step 5 and "I have printed it" comes after it. The test (step 6)
+ * asks for a scan of the printed tag with the phone camera, the only test of the paper itself
+ * (scaling, a smudge, the wrong printer setting), and the owner says whether it opened. The test
+ * view of the finder page (/find/<code>#test=1) is the fallback for someone with no tag yet: it
+ * records no scan and starts no conversation, and it is worded as "the page a finder sees", not
+ * as proof that the tag works.
  */
+
+/**
+ * What the walkthrough says about the owner's own camera scan: today the finder routes count it
+ * like any scan (they cannot tell the owner from a stranger), so the words say so. When the routes
+ * skip scans from a browser signed in to the tag's account, this line and the Help answer
+ * "How do I test my tag?" change with them.
+ */
+const OWN_SCAN_NOTE = 'If your phone’s browser is signed in to QuR Tag, your own scan is not counted as a finder’s scan. If it is not signed in, the scan shows in your scan history like a finder’s.';
 
 const ICONS = { GlassWater, Laptop, Backpack, KeyRound, Glasses, Guitar, Sparkles } as const;
 
@@ -85,11 +102,17 @@ export function FirstTag() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [changeStyle, setChangeStyle] = useState(false);
-  const [busy, setBusy] = useState(false);
   const [tested, setTested] = useState(false);
   const [alerts, setAlerts] = useState<'unknown' | 'granted' | 'denied'>('unknown');
   const native = isNative();
-  const total = native ? 7 : 6;
+  // The last step: alerts in the iPhone app; the email check on the web and in the Android app
+  // (no push there, so finders' notes arrive by email), when email is on (the server says so).
+  const alertsStep = pushOffered();
+  const [emailFrom, setEmailFrom] = useState<string | null>(null);
+  useEffect(() => {
+    if (!alertsStep) void fetchEmailConfig().then((c) => setEmailFrom(c?.email ? c.from : null));
+  }, [alertsStep]);
+  const total = alertsStep || emailFrom ? 7 : 6;
 
   useEffect(() => {
     if (loading) return;
@@ -149,8 +172,8 @@ export function FirstTag() {
   }, [s.created]);
 
   useEffect(() => {
-    if (s.step === 7 && native) void pushPermission().then((v) => setAlerts(v === 'granted' ? 'granted' : v === 'denied' ? 'denied' : 'unknown'));
-  }, [s.step, native]);
+    if (s.step === 7 && alertsStep) void pushPermission().then((v) => setAlerts(v === 'granted' ? 'granted' : v === 'denied' ? 'denied' : 'unknown'));
+  }, [s.step, alertsStep]);
 
   const styleId: StyleId = s.styleId ?? recommendStyle(s.pick, s.name);
   const spec = styleById(styleId);
@@ -164,7 +187,7 @@ export function FirstTag() {
   const { preview, sheet } = useMemo(() => {
     if (!finderUrl) return { preview: null, sheet: null };
     try {
-      const count = copiesOnPage(spec, paperId, gridFor(spec, paperId).count);
+      const count = defaultCopies(spec, paperId);
       return { preview: buildPreview(styleId, 'clean', data), sheet: buildSheet(styleId, 'clean', data, { paper: paperId, copies: count }) };
     } catch {
       return { preview: null, sheet: null };
@@ -218,18 +241,10 @@ export function FirstTag() {
     window.scrollTo(0, 0);
   }
 
-  async function printOrShare() {
-    if (!sheet || !user) return;
-    setBusy(true);
-    try {
-      if (native) await saveTagPdf(sheet, `qurtag-${styleId}-clean.pdf`, 'Print your tags');
-      else window.print();
-      recordStep(user.id, 'print');
-    } catch (err) {
-      if (!/cancel/i.test(err instanceof Error ? err.message : '')) setError('The tag could not be prepared. Please try again.');
-    } finally {
-      setBusy(false);
-    }
+  /** After the test: alerts (iPhone), the email check (web, when email is on), or done. */
+  function afterTest() {
+    if (alertsStep || emailFrom) go(7);
+    else finish();
   }
 
   function finish() {
@@ -267,15 +282,7 @@ export function FirstTag() {
       back={{ to: '/app', label: 'Items' }}
       width="narrow"
     >
-      <style>{`@media print { body { background: white !important; } @page { size: ${PAPERS[paperId].w}in ${PAPERS[paperId].h}in; margin: 0; } }`}</style>
-      {sheet && (
-        <div
-          aria-hidden
-          className="hidden bg-white print:fixed print:left-0 print:top-0 print:z-[200] print:block print:overflow-hidden"
-          style={{ width: `${PAPERS[paperId].w}in`, height: `${PAPERS[paperId].h}in` }}
-          dangerouslySetInnerHTML={{ __html: pageToSvg(sheet) }}
-        />
-      )}
+      <PrintArea sheet={sheet} paper={paperId} />
       <div className="no-print flex flex-col gap-5">
         <div className="flex items-center justify-between gap-3">
           <div role="progressbar" aria-valuemin={1} aria-valuemax={total} aria-valuenow={s.step} aria-label="Progress" className="flex flex-1 gap-1.5">
@@ -291,7 +298,7 @@ export function FirstTag() {
         {s.step === 1 && (
           <>
             <h2 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900 text-balance">What do you want to tag first?</h2>
-            <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="What to tag first">
+            <div className="grid grid-cols-2 gap-2 ax:grid-cols-1" role="radiogroup" aria-label="What to tag first">
               {PICKS.map((p) => {
                 const Icon = ICONS[p.icon];
                 const on = s.pick === p.id;
@@ -304,7 +311,7 @@ export function FirstTag() {
                     )}
                   >
                     <input type="radio" name="pick" className="sr-only" checked={on} onChange={() => choose(p)} />
-                    <span className="grid size-10 shrink-0 place-items-center rounded-card bg-ink-100">
+                    <span className="grid size-[40px] shrink-0 place-items-center rounded-card bg-ink-100 ax:hidden">
                       <Icon size={20} strokeWidth={1.75} className="text-ink-900" aria-hidden />
                     </span>
                     <span className="text-base font-medium leading-tight text-ink-900">{p.label}</span>
@@ -321,8 +328,9 @@ export function FirstTag() {
                   maxLength={80}
                   value={s.name}
                   onChange={(e) => setS((p) => ({ ...p, name: e.target.value, styleId: null }))}
-                  hint="The finder sees this. You can change it later."
+                  hint={NAME_HINT}
                 />
+                <DetailWarning text={s.name} />
               </div>
             )}
             {next('Continue', () => go(2), !nameOk)}
@@ -356,6 +364,7 @@ export function FirstTag() {
                 onChange={(e) => setS((p) => ({ ...p, reward: e.target.value }))}
                 hint="The finder sees this on the page."
               />
+              <DetailWarning text={s.reward} />
               <div className="flex flex-col gap-2">
                 <span className="text-sm font-medium text-ink-900">Ideas</span>
                 {WORDS.map((w) => (
@@ -370,8 +379,8 @@ export function FirstTag() {
                 ))}
               </div>
               <p className="rounded-card bg-signal-50 px-3 py-2 text-sm text-signal-700 text-pretty">
-                Do not put your phone number or address here. Anyone who scans the tag can read it. The finder writes to you
-                through QuR Tag instead.
+                Do not put your phone number, your address or anyone's name here, and no names in the item's name either.
+                Anyone who scans the tag can read them. The finder writes to you through QuR Tag instead.
               </p>
             </div>
             {next(saving ? 'Saving…' : 'Make my tag', () => void makeTag(), saving)}
@@ -396,11 +405,14 @@ export function FirstTag() {
                 <figcaption className="text-center text-sm text-muted">Your tag: {spec.sizeLabel}.</figcaption>
               </figure>
             )}
+            <p className="rounded-card border border-hairline bg-paper px-4 py-3 text-sm text-ink-700 text-pretty">
+              <span className="font-medium text-ink-900">You will need:</span> {spec.needs} {spec.noHolder}
+            </p>
             <button type="button" onClick={() => setChangeStyle((v) => !v)} aria-expanded={changeStyle} className={buttonClasses({ variant: 'secondary', block: true })}>
               Change style
             </button>
             {changeStyle && (
-              <div role="radiogroup" aria-label="Tag style" className="grid gap-2 sm:grid-cols-2">
+              <div role="radiogroup" aria-label="Tag style" className="grid gap-2 sm:grid-cols-2 ax:grid-cols-1">
                 {STYLES.map((st) => (
                   <label
                     key={st.id}
@@ -417,11 +429,7 @@ export function FirstTag() {
               </div>
             )}
             {next('Continue', () => {
-              try {
-                window.localStorage.setItem('qurtag.tagstyle', JSON.stringify({ style: styleId, look: LOOKS[0].id, paper: paperId }));
-              } catch {
-                /* nothing to remember */
-              }
+              if (s.created) rememberTagStyle(s.created.tagId, styleId);
               go(5);
             })}
           </>
@@ -430,15 +438,18 @@ export function FirstTag() {
         {s.step === 5 && (
           <>
             <h2 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900 text-balance">{native ? 'Print or share your tag' : 'Print your tag'}</h2>
-            <button type="button" onClick={() => void printOrShare()} disabled={busy || !sheet} className={buttonClasses({ variant: 'secondary', size: 'lg', block: true })}>
-              {native ? <Share size={18} aria-hidden /> : <Printer size={18} aria-hidden />}
-              {busy ? 'Preparing…' : native ? 'Print or share' : 'Print'}
-            </button>
+            <PrintChoices
+              sheet={sheet}
+              fileName={`qurtag-${styleId}-clean.pdf`}
+              linkPath={`/app/tags/${s.created?.tagId}/print`}
+              onDone={(c) => {
+                if (user) recordStep(user.id, 'print');
+                recordTag(s.created?.tagId, 'printed');
+                recordTagPrint({ style: styleId, look: 'clean', paper: paperId, action: c });
+              }}
+            />
             <p className="text-sm text-muted text-pretty">
-              {native
-                ? 'Print or share opens the share sheet: print it, save it to Files or AirDrop it to a computer.'
-                : 'Print at 100% (actual size), with no scaling or "fit to page".'}{' '}
-              The page has spare copies.{' '}
+              The page has a few spare copies.{' '}
               <Link to={`/app/tags/${s.created?.tagId}/print`} className="font-medium text-ink-900 underline underline-offset-4">More choices</Link>
             </p>
             <div className={card}>
@@ -450,50 +461,65 @@ export function FirstTag() {
               </ul>
               <Link to="/app/make-it-last" className="text-sm font-medium text-ink-900 underline underline-offset-4">More in Make it last</Link>
             </div>
-            {next('I have printed it', () => {
-              if (user) recordStep(user.id, 'print');
-              go(6);
-            })}
+            <button
+              type="button"
+              onClick={() => {
+                if (user) recordStep(user.id, 'print');
+                recordTag(s.created?.tagId, 'printed');
+                go(6);
+              }}
+              className={buttonClasses({ variant: 'secondary', size: 'lg', block: true })}
+            >
+              I have printed it
+            </button>
           </>
         )}
 
         {s.step === 6 && (
           <>
-            <h2 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900 text-balance">Test it</h2>
-            {tested ? (
-              <div role="status" className="flex items-start gap-3 rounded-modal border border-verdigris-300 bg-verdigris-50 p-4">
-                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-verdigris-700 text-canvas"><Check size={16} strokeWidth={2.5} aria-hidden /></span>
+            <h2 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900 text-balance">Scan the tag you printed</h2>
+            <p className="text-base text-ink-700 text-pretty">
+              Point your phone camera at the printed tag and tap the link that appears. Your item's page should open: the page
+              a finder sees. This proves the paper tag works, at the size it printed.
+            </p>
+            <p className="text-sm text-muted text-pretty">{OWN_SCAN_NOTE}</p>
+            {tested && (
+              <div role="status" className="flex items-start gap-3 rounded-modal border border-hairline bg-paper p-4">
+                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-ink-900 text-canvas"><Check size={16} strokeWidth={2.5} aria-hidden /></span>
                 <div className="flex flex-col gap-1">
-                  <p className="text-base font-semibold text-ink-900">It works. This is what a finder sees.</p>
-                  <p className="text-sm text-ink-700">The test sent nothing and was not counted as a scan.</p>
+                  <p className="text-base font-semibold text-ink-900">That is the page a finder sees.</p>
+                  <p className="text-sm text-ink-700 text-pretty">The test view sent nothing and was not counted as a scan. It does not check the paper tag, so scan that too when you can.</p>
                 </div>
               </div>
-            ) : (
-              <>
-                <p className="text-base text-ink-700 text-pretty">
-                  Open the page a finder would see. It is a test view: nothing is sent to you and it does not count as a scan.
-                </p>
-                <Link to={`/find/${s.created?.publicId}#test=1`} className={buttonClasses({ variant: 'primary', size: 'lg', block: true })}>
-                  <ScanLine size={18} aria-hidden />
-                  Open the test page
-                </Link>
-                <p className="text-sm text-muted text-pretty">
-                  You can also scan the printed tag with your phone camera. A scan with the camera is counted in your scan
-                  history like any other.
-                </p>
-              </>
             )}
-            {tested ? (
-              next(native ? 'Continue' : 'Finish', () => (native ? go(7) : finish()))
-            ) : (
-              <button type="button" onClick={() => (native ? go(7) : finish())} className={buttonClasses({ variant: 'secondary', size: 'lg', block: true })}>
-                Skip the test
-              </button>
+            {next('It opened my item’s page', () => {
+              if (user) recordStep(user.id, 'test');
+              afterTest();
+            })}
+            {!tested && (
+              <Link to={`/find/${s.created?.publicId}#test=1`} className={buttonClasses({ variant: 'secondary', size: 'lg', block: true })}>
+                <ScanLine size={18} aria-hidden />
+                No tag yet? See the page a finder sees
+              </Link>
             )}
+            <button type="button" onClick={afterTest} className={buttonClasses({ variant: 'ghost', block: true })}>
+              Skip the test
+            </button>
           </>
         )}
 
-        {s.step === 7 && native && (
+        {s.step === 7 && !alertsStep && emailFrom && (
+          <>
+            <h2 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900 text-balance">Know when someone writes</h2>
+            <p className="text-base text-ink-700 text-pretty">
+              A finder's note comes to you by email. Send yourself a test now, so the real one does not end up in spam.
+            </p>
+            <EmailCheck from={emailFrom} compact />
+            {next('Finish', finish)}
+          </>
+        )}
+
+        {s.step === 7 && alertsStep && (
           <>
             <h2 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900 text-balance">Know the moment someone finds it</h2>
             <p className="text-base text-ink-700 text-pretty">

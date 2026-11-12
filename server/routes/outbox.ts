@@ -14,6 +14,13 @@
  *   push_scan       2 minutes after a scan: "Your tag was scanned" to the people who asked for it,
  *                   once an hour per tag and person, unless the finder wrote a note meanwhile.
  *
+ *   finder_reply    the owner replied in a conversation whose finder gave an email (db/ux-fixes.sql):
+ *                   one email to the finder with the replies since the last one (at most one per 10
+ *                   minutes per conversation; the database times the row), a link back to the
+ *                   conversation and a one-click stop. When the owner marked the thing returned, the
+ *                   email says so and the database then deletes the address. With email not set up,
+ *                   or an address that cannot be read, nothing is sent and the row is finished.
+ *
  *   admin_alert     a new report of a finder's note, or a note the filter held: every super admin who
  *                   has "Admin alerts" on gets an iPhone alert ("New report on QuR Tag. Review it in
  *                   Admin.", time-sensitive, no note text; a tap opens Admin at Reported notes), and
@@ -44,10 +51,11 @@
  * server_outbox_finish and the server_* functions of db/qurtag.sql and db/push.sql.
  */
 import type pg from 'pg';
-import { adminReportMail, finderMessageMail, mailConfigured, senderFromEnv, type MailSender } from '../auth/mailer.js';
+import { adminReportMail, finderMessageMail, finderReplyMail, mailConfigured, senderFromEnv, type MailSender } from '../auth/mailer.js';
 import { siteUrl } from '../auth/origins.js';
 import { apnsFromEnv, buildPayload, devicesFor, type Apns, type Device, type PushInput, type PushKind } from '../push/apns.js';
 import { serverPool } from './core.js';
+import { openContact, stopUrl } from './finderCrypto.js';
 
 const BATCH = 25;
 const MAX_ATTEMPTS = 6;
@@ -69,7 +77,7 @@ export interface DrainResult {
 
 interface Row {
   id: string;
-  kind: 'finder_message' | 'push_email' | 'push_scan' | 'admin_alert';
+  kind: 'finder_message' | 'push_email' | 'push_scan' | 'admin_alert' | 'finder_reply';
   ref: string;
   attempts: number;
 }
@@ -226,6 +234,34 @@ export async function drainOutbox(env: NodeJS.ProcessEnv = process.env, db: pg.P
     }
   }
 
+  async function finderReply(row: Row): Promise<void> {
+    const { rows: got } = await db.query<{ r: { enc: string; public_id: string; item_name: string; status: string; upto: string; replies: string[]; more: boolean } | null }>(
+      'select qurtag.server_finder_reply_due($1) as r',
+      [row.ref],
+    );
+    const r = got[0]?.r;
+    if (!r) return;
+    const returned = r.status === 'reunited';
+    const contact = openContact(r.enc, env);
+    if (contact && sendMail && (returned || r.replies.length > 0)) {
+      await sendMail(
+        finderReplyMail({
+          to: contact.email,
+          itemName: r.item_name,
+          replies: r.replies,
+          more: r.more,
+          returned,
+          conversationUrl: `${siteUrl(env)}/find/${r.public_id}#t=${contact.token}`,
+          stopUrl: stopUrl(row.ref, env),
+        }),
+      );
+      result.emailed++;
+    } else if (!sendMail) {
+      result.unsent++;
+    }
+    await db.query('select qurtag.server_finder_reply_sent($1, $2)', [row.ref, r.upto]);
+  }
+
   try {
     for (const row of rows) {
       try {
@@ -233,6 +269,7 @@ export async function drainOutbox(env: NodeJS.ProcessEnv = process.env, db: pg.P
         else if (row.kind === 'push_email') await copy(row);
         else if (row.kind === 'push_scan') await scan(row);
         else if (row.kind === 'admin_alert') await adminAlert();
+        else if (row.kind === 'finder_reply') await finderReply(row);
         await db.query('select qurtag.server_outbox_finish($1, null, 0)', [row.id]);
         result.done++;
       } catch (e) {

@@ -1,5 +1,5 @@
 /**
- * Short codes: qurtag.com/k7m2p opens the same finder page as the QR code on the tag.
+ * Short codes: qurtag.com/k7m2p4 opens the same finder page as the QR code on the tag.
  *
  * vercel.json sends any path of 5 or 6 letters and digits that holds a digit (and so is never a
  * page of the site) to /api/fn?go=<code>, which lands here:

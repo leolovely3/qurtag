@@ -2,7 +2,8 @@
  * Push notifications in the iPhone app: asking permission at a good moment, registering the
  * phone's Apple device token with the server, and forgetting it on sign out.
  *
- * Nothing here runs on the web (the web app has no push), and nothing runs at launch except
+ * Nothing here runs on the web (the web app has no push) or in the Android app (no Firebase, so
+ * no push: pushOffered() in src/lib/platform.ts), and nothing runs at launch except
  * re-registering a phone that already allowed alerts, which keeps its token current. The
  * permission question is asked only after the person's first item is saved, behind a short
  * explanation (components/push/PushPrimer.tsx), never cold. If they say no there, or to
@@ -15,7 +16,7 @@
 import { PushNotifications } from '@capacitor/push-notifications';
 import { getDataPass } from './authClient';
 import { pushEnvironment } from './nativeSession';
-import { isNative, serverUrl } from './platform';
+import { pushOffered, serverUrl } from './platform';
 
 export type PushPermission = 'prompt' | 'granted' | 'denied' | 'unsupported';
 
@@ -39,7 +40,7 @@ function write(key: string, value: string | null): void {
 }
 
 export async function pushPermission(): Promise<PushPermission> {
-  if (!isNative()) return 'unsupported';
+  if (!pushOffered()) return 'unsupported';
   try {
     const { receive } = await PushNotifications.checkPermissions();
     if (receive === 'granted') return 'granted';
@@ -52,7 +53,7 @@ export async function pushPermission(): Promise<PushPermission> {
 
 /** True once, on a phone that has not been asked: the moment to show the explanation. */
 export async function shouldExplainPush(): Promise<boolean> {
-  if (!isNative() || read(ASKED_KEY)) return false;
+  if (!pushOffered() || read(ASKED_KEY)) return false;
   return (await pushPermission()) === 'prompt';
 }
 
@@ -95,7 +96,7 @@ function listen(): void {
 
 /** Asks Apple's permission question and, if allowed, registers the phone. */
 export async function turnOnPush(): Promise<'granted' | 'denied' | 'error'> {
-  if (!isNative()) return 'error';
+  if (!pushOffered()) return 'error';
   try {
     listen();
     const { receive } = await PushNotifications.requestPermissions();
@@ -109,7 +110,7 @@ export async function turnOnPush(): Promise<'granted' | 'denied' | 'error'> {
 
 /** On launch: a phone that already allowed alerts asks Apple for its (possibly new) token again. */
 export async function refreshPushRegistration(): Promise<void> {
-  if (!isNative() || (await pushPermission()) !== 'granted') return;
+  if (!pushOffered() || (await pushPermission()) !== 'granted') return;
   try {
     listen();
     await PushNotifications.register();
@@ -121,7 +122,7 @@ export async function refreshPushRegistration(): Promise<void> {
 /** Sign out: this phone stops receiving this account's alerts. Call it before the session ends. */
 export async function forgetPushDevice(): Promise<void> {
   const token = read(TOKEN_KEY);
-  if (!isNative() || !token) return;
+  if (!pushOffered() || !token) return;
   await post('/api/fn/push-unregister', { token });
   write(TOKEN_KEY, null);
 }
@@ -134,7 +135,7 @@ export interface PushTap {
 
 /** Calls back when the person taps a notification (not Reply, which the app's native code handles). */
 export function onPushTap(handler: (tap: PushTap) => void): () => void {
-  if (!isNative()) return () => {};
+  if (!pushOffered()) return () => {};
   let handle: { remove: () => Promise<void> } | null = null;
   let gone = false;
   void PushNotifications.addListener('pushNotificationActionPerformed', (event) => {

@@ -110,6 +110,28 @@ const ipCodes = [];
 for (let i = 0; i < 5; i++) ipCodes.push((await post(MAIL, '/api/auth/request-password-reset', { email: `u${i}@example.com`, redirectTo: '/reset-password' }, '10.7.7.7')).status);
 check('per IP: the 4th request in 5 minutes is refused', ipCodes.slice(0, 3).every((c) => c === 200) && ipCodes[3] === 429, ipCodes.join(','));
 
+// The test email a web owner sends themselves (POST /api/fn/email-test), with the capture sender.
+await makeAccount('tess@example.com', '10.7.8.1');
+const tessCookie = cookieOf(await signIn('tess@example.com', OLD, '10.7.8.2'));
+const tessPass = (await (await fetch(`${BASE}/api/auth/token`, { headers: { cookie: tessCookie, origin: BASE } })).json())?.token;
+const emailTest = (base, auth, body = {}) =>
+  fetch(`${base}/api/fn/email-test`, {
+    method: 'POST',
+    headers: { origin: BASE, 'content-type': 'application/json', 'x-forwarded-for': '10.7.8.3', ...(auth ? { authorization: `Bearer ${auth}` } : {}) },
+    body: JSON.stringify(body),
+  });
+check('test email: signed out is refused', (await emailTest(MAIL, null)).status === 401);
+check('test email: with email off it says so', (await emailTest(BASE, tessPass)).status === 503);
+const beforeTest = mails().length;
+const te = await emailTest(MAIL, tessPass, { to: 'someone-else@example.com' });
+const teBody = await te.json();
+const teMail = mails().at(-1) ?? {};
+check('test email: sent to the account\'s own address only, whatever the request says', te.status === 200 && teBody.to === 'tess@example.com' && mails().length === beforeTest + 1 && teMail.to === 'tess@example.com' && teMail.kind === 'test-alert', `${te.status} ${teMail.to}`);
+check('test email: names the sender and says how to check spam', teBody.from === 'no-reply@qurtag.com' && /spam/.test(teMail.text) && !/—/.test(teMail.text + teMail.html + teMail.subject));
+await emailTest(MAIL, tessPass);
+await emailTest(MAIL, tessPass);
+check('test email: the 4th in an hour is refused', (await emailTest(MAIL, tessPass)).status === 429 && mails().length === beforeTest + 3);
+
 await admin.end();
 console.log(`\nreset: ${passed} passed, ${failures.length} failed`);
 if (failures.length) {

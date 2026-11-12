@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { buttonClasses } from '@/components/ui/Button';
+import { useAndroidBackClose } from '@/lib/androidBack';
 
 interface ModalProps {
   open: boolean;
@@ -58,6 +59,9 @@ export function Modal({
       previouslyFocused.current?.focus();
     };
   }, [open]);
+
+  // The Android back button closes the dialog, as Escape does.
+  useAndroidBackClose(open, onClose);
 
   // Escape to close, body scroll lock.
   useEffect(() => {

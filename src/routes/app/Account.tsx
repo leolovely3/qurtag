@@ -9,6 +9,8 @@ import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import { useAuth } from '@/lib/auth';
 import { exportMyData } from '@/lib/queries';
+import { DELETE_WORD, needsTypedConfirm, typedOk } from '@/lib/accountDelete';
+import { fetchFamily, fetchMembership } from '@/lib/membership';
 import { saveFile } from '@/lib/saveFile';
 import { useMembershipsAvailable } from '@/lib/useMembershipsAvailable';
 import { cn } from '@/lib/cn';
@@ -40,6 +42,17 @@ export function Account() {
   const [exporting, setExporting] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [typed, setTyped] = useState('');
+  const [mustType, setMustType] = useState(false);
+  // How much would go: asked when the dialog opens, so the typed word is asked for only when it matters.
+  useEffect(() => {
+    if (!deleteOpen) return;
+    setTyped('');
+    void Promise.all([fetchMembership(), fetchFamily()]).then(([m, f]) => {
+      const people = (f?.members ?? []).filter((p) => p.user_id !== user?.id).length + (f?.invites?.length ?? 0);
+      setMustType(needsTypedConfirm({ itemsUsed: m?.items_used ?? 0, familyRole: f?.role ?? 'none', otherPeople: people }));
+    });
+  }, [deleteOpen, user?.id]);
   const [signOutOpen, setSignOutOpen] = useState(false);
 
   async function saveName(e: FormEvent) {
@@ -104,7 +117,7 @@ export function Account() {
   const row =
     'flex min-h-14 w-full items-center gap-3 border-t border-hairline px-4 py-3 text-left transition-colors first:border-t-0 hover:bg-ink-50 active:bg-ink-50 disabled:opacity-60 focus-visible:outline-offset-[-2px]';
   const icon = (I: typeof Mail, danger = false) => (
-    <span className={cn('grid size-9 shrink-0 place-items-center rounded-card', danger ? 'bg-signal-50' : 'bg-ink-100')}>
+    <span className={cn('grid size-[36px] shrink-0 place-items-center ax:hidden rounded-card', danger ? 'bg-signal-50' : 'bg-ink-100')}>
       <I size={18} strokeWidth={1.75} className={danger ? 'text-signal-700' : 'text-ink-900'} aria-hidden />
     </span>
   );
@@ -114,7 +127,7 @@ export function Account() {
       <div className="flex flex-col gap-6">
         <div className="flex flex-col items-center gap-2 py-2">
           <Avatar size={72} />
-          <p className="text-sm text-muted">{user?.email}</p>
+          <p className="text-sm text-muted [overflow-wrap:anywhere]">{user?.email}</p>
         </div>
 
         <AppSection title="Your name" description="Shown on your account card. Finders never see it.">
@@ -130,7 +143,7 @@ export function Account() {
           <div className={cn(row, 'cursor-default hover:bg-transparent active:bg-transparent')}>
             {icon(Mail)}
             <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <span className="break-words text-base font-medium text-ink-900">{user?.email}</span>
+              <span className="text-base font-medium text-ink-900 [overflow-wrap:anywhere]">{user?.email}</span>
               <span className="text-sm text-muted text-pretty">The email you sign in with. To change it, write to info@impactconsulting.ai. Finders never see it.</span>
             </span>
           </div>
@@ -212,9 +225,25 @@ export function Account() {
             ? "Your account, items, tags, scans and conversations are deleted at once and cannot be brought back. Any tag you printed stops working. If you have a family, its members lose access to the family's items. A membership that is still renewing must be canceled first."
             : 'Your account, items, tags, scans and conversations are deleted at once and cannot be brought back. Any tag you printed stops working.'
         }
-        primaryAction={{ label: 'Delete everything', tone: 'destructive', onClick: handleDelete, pending: deleting }}
+        primaryAction={{ label: 'Delete everything', tone: 'destructive', onClick: handleDelete, pending: deleting, disabled: mustType && !typedOk(typed) }}
         secondaryAction={{ label: 'Cancel', onClick: () => setDeleteOpen(false) }}
-      />
+      >
+        <button type="button" onClick={handleExport} disabled={exporting} className={buttonClasses({ variant: 'secondary', className: 'self-start' })}>
+          <Download size={16} strokeWidth={1.75} aria-hidden />
+          {exporting ? 'Preparing your file…' : 'Download my data first'}
+        </button>
+        {mustType && (
+          <Input
+            name="confirm-delete"
+            label={`Type ${DELETE_WORD} to confirm`}
+            autoComplete="off"
+            autoCapitalize="characters"
+            value={typed}
+            onChange={(e) => setTyped(e.target.value)}
+            hint="You have several items or a family, so we ask once more."
+          />
+        )}
+      </Modal>
     </AppPage>
   );
 }

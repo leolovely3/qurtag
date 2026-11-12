@@ -19,7 +19,7 @@ export function LostModeToggle({ value, onChange, pending, className }: LostMode
   return (
     <div
       className={cn(
-        'flex items-center justify-between gap-4 rounded-modal border px-4 py-4 transition-colors duration-150',
+        'flex items-center justify-between gap-4 rounded-modal border px-4 py-4 transition-colors duration-150 ax:flex-col ax:items-start',
         value ? 'border-signal-200 bg-signal-50' : 'border-hairline bg-canvas',
         className,
       )}
@@ -43,19 +43,19 @@ export function LostModeToggle({ value, onChange, pending, className }: LostMode
         aria-labelledby={labelId}
         aria-describedby={descId}
         onClick={() => !pending && onChange(!value)}
-        className="relative grid h-11 w-[3.75rem] shrink-0 place-items-center rounded-pill"
+        className="relative grid h-[44px] w-[60px] shrink-0 place-items-center rounded-pill"
       >
         <span
           className={cn(
-            'relative inline-flex h-[1.9375rem] w-[3.1875rem] items-center rounded-pill transition-colors duration-200',
+            'relative inline-flex h-[31px] w-[51px] items-center rounded-pill transition-colors duration-200',
             value ? 'bg-signal-700' : 'bg-ink-300',
             pending && 'opacity-60',
           )}
         >
           <span
             className={cn(
-              'grid size-[1.6875rem] place-items-center rounded-full bg-white shadow-card transition-transform duration-200',
-              value ? 'translate-x-[1.375rem]' : 'translate-x-0.5',
+              'grid size-[27px] place-items-center rounded-full bg-white shadow-card transition-transform duration-200',
+              value ? 'translate-x-[22px]' : 'translate-x-[2px]',
             )}
           >
             {pending && <Loader2 size={14} strokeWidth={2} className="animate-spin text-ink-500" aria-hidden />}

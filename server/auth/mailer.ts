@@ -24,6 +24,8 @@ export interface Mail {
   text: string;
   html: string;
   replyTo?: string;
+  /** Extra headers, such as List-Unsubscribe. */
+  headers?: Record<string, string>;
 }
 
 export const OPERATOR = 'Impact Consulting AI LLC';
@@ -59,6 +61,7 @@ export function resendSender(apiKey: string, from: string): MailSender {
         text: mail.text,
         html: mail.html,
         reply_to: mail.replyTo ?? CONTACT_EMAIL,
+        ...(mail.headers ? { headers: mail.headers } : {}),
         tags: [{ name: 'category', value: mail.kind.replace(/[^a-z0-9_-]/gi, '_') }],
       }),
       signal: AbortSignal.timeout(15_000),
@@ -79,6 +82,33 @@ export function senderFromEnv(env: NodeJS.ProcessEnv = process.env): MailSender 
   return offSender;
 }
 
+/** The address emails come from, without the display name (for example no-reply@qurtag.com). */
+export function fromAddress(env: NodeJS.ProcessEnv = process.env): string {
+  const from = env.QURTAG_EMAIL_FROM?.trim() || DEFAULT_FROM;
+  return /<([^>]+)>/.exec(from)?.[1]?.trim() ?? from;
+}
+
+/** The test an owner sends to themselves from Settings or the first-tag walkthrough. */
+export function testAlertMail(to: string, settingsUrl: string): Mail {
+  const lead = 'This is a test from QuR Tag. When someone finds one of your things and writes to you, an email like this one comes to this address.';
+  const after = 'If this email was in spam or junk, mark it Not spam and add this sender to your contacts, so the real one reaches your inbox.';
+  return {
+    kind: 'test-alert',
+    to,
+    subject: 'QuR Tag test: this is how you will hear from a finder',
+    text: `${lead}\n\n${after}\n\nTell QuR Tag it arrived: ${settingsUrl}\n\n${OPERATOR}\n${CONTACT_EMAIL}\n`,
+    html:
+      `<p style="font-size:20px;font-weight:600;margin:0 0 16px">QuR Tag</p>` +
+      `<p>${escapeHtml(lead)}</p>` +
+      `<p style="color:#555">${escapeHtml(after)}</p>` +
+      `<p><a href="${escapeHtml(settingsUrl)}" style="display:inline-block;padding:10px 18px;background:#0A0B0F;color:#fff;border-radius:8px;text-decoration:none">It arrived</a></p>` +
+      `<p style="color:#777;font-size:12px;margin-top:24px">${OPERATOR}<br>${CONTACT_EMAIL}</p>`,
+  };
+}
+
+/** Said in the owner's emails, so the next one (a finder's note) does not land in spam or junk. */
+export const KEEP_OUT_OF_SPAM = 'To keep our emails out of spam or junk, add no-reply@qurtag.com to your contacts.';
+
 export function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 }
@@ -91,7 +121,7 @@ export function signInMail(kind: 'verify-email' | 'reset-password', to: string, 
           subject: 'Confirm your email for QuR Tag',
           lead: 'Confirm your email address to finish setting up your QuR Tag account.',
           button: 'Confirm my email',
-          after: 'If you did not create a QuR Tag account, you can ignore this email.',
+          after: `If you did not create a QuR Tag account, you can ignore this email. ${KEEP_OUT_OF_SPAM}`,
         }
       : {
           subject: 'Reset your QuR Tag password',
@@ -143,11 +173,60 @@ export function finderMessageMail(to: string, itemName: string, plainInboxUrl: s
     kind: 'finder-message',
     to,
     subject: `A note about your ${itemName}`,
-    text: `${lead}\n\nRead it and reply: ${inboxUrl}\n\n${after}\n`,
+    text: `${lead}\n\nRead it and reply: ${inboxUrl}\n\n${after}\n\n${KEEP_OUT_OF_SPAM}\n`,
     html:
       `<p>${escapeHtml(lead)}</p>` +
       `<p><a href="${escapeHtml(inboxUrl)}" style="display:inline-block;padding:10px 18px;background:#0A0B0F;color:#fff;border-radius:8px;text-decoration:none">Read and reply</a></p>` +
-      `<p style="color:#555">${escapeHtml(after)}</p>`,
+      `<p style="color:#555">${escapeHtml(after)}</p>` +
+      `<p style="color:#777;font-size:12px">${escapeHtml(KEEP_OUT_OF_SPAM)}</p>`,
+  };
+}
+
+/**
+ * Tells a finder the owner replied (or, at the end, that the owner has it back). The owner's words are
+ * written for the finder, so they are included; up to five replies, oldest first. A link back to the
+ * conversation (the token after #, which a browser never sends to a server), a way to stop the emails
+ * with one click, and nothing about the owner.
+ */
+export function finderReplyMail(input: {
+  to: string;
+  itemName: string;
+  replies: string[];
+  more: boolean;
+  returned: boolean;
+  conversationUrl: string;
+  stopUrl: string;
+}): Mail {
+  const { to, itemName, replies, more, returned, conversationUrl, stopUrl } = input;
+  const lead = returned
+    ? `The owner of the ${itemName} has it back. Thank you for being kind.`
+    : replies.length > 0
+      ? `The owner of the ${itemName} replied to your note.`
+      : 'The owner replied.';
+  const quoted = replies.map((r) => r.slice(0, 2000));
+  const moreLine = more ? 'There are more replies in the conversation.' : '';
+  const privacy = returned
+    ? 'We have now deleted your email address. The owner never saw it.'
+    : 'The owner never sees your email address. We delete it when the conversation ends, or after 30 days without a note.';
+  const keep = 'To keep these emails out of spam or junk, add no-reply@qurtag.com to your contacts.';
+  return {
+    kind: 'finder-reply',
+    to,
+    subject: returned ? `The owner has the ${itemName} back` : `The owner replied about the ${itemName}`,
+    headers: { 'List-Unsubscribe': `<${stopUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
+    text:
+      `${lead}\n\n` +
+      (quoted.length ? quoted.map((r) => `"${r}"`).join('\n\n') + '\n\n' : '') +
+      (moreLine ? `${moreLine}\n\n` : '') +
+      `Open the conversation: ${conversationUrl}\n\n${privacy}\n${keep}\n\nStop these emails: ${stopUrl}\n\n${OPERATOR}, makers of QuR Tag\n`,
+    html:
+      `<p style="font-size:20px;font-weight:600;margin:0 0 16px">QuR Tag</p>` +
+      `<p>${escapeHtml(lead)}</p>` +
+      quoted.map((r) => `<blockquote style="margin:12px 0;padding:10px 14px;border-left:3px solid #FF5C2E;background:#F6F6F4;white-space:pre-wrap">${escapeHtml(r)}</blockquote>`).join('') +
+      (moreLine ? `<p>${escapeHtml(moreLine)}</p>` : '') +
+      `<p><a href="${escapeHtml(conversationUrl)}" style="display:inline-block;padding:10px 18px;background:#0A0B0F;color:#fff;border-radius:8px;text-decoration:none">Open the conversation</a></p>` +
+      `<p style="color:#555">${escapeHtml(privacy)} ${escapeHtml(keep)}</p>` +
+      `<p style="color:#777;font-size:12px;margin-top:24px"><a href="${escapeHtml(stopUrl)}" style="color:#777">Stop these emails</a><br>${OPERATOR}, makers of QuR Tag</p>`,
   };
 }
 

@@ -1,15 +1,18 @@
 import { Link } from 'react-router-dom';
 import { Camera, Lock, MessageCircle, Printer, Smartphone } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
-import { useTheme } from '@/lib/theme';
+import { useEffect, useState } from 'react';
+import { ThemedImage } from '@/components/brand/ThemedImage';
 import { Lede } from '@/components/brand/Typography';
 import { HowVisuals } from './HowVisuals';
+import { audienceFor, HERO, type Audience } from '@/lib/audience';
+import { CHANNEL_KEY, channelFromSearch } from '@/lib/measures';
 import { PrimaryLink, SecondaryLink, CtaBand } from './parts';
 
 const audiences = [
   {
-    title: 'Students and parents',
-    body: 'Water bottles, instruments and instrument cases, school uniforms and sports gear, school bags and lunch boxes. A parent sets up the tags, so the note comes to you.',
+    title: 'Parents of students',
+    body: 'Water bottles, instruments and instrument cases, school uniforms and sports gear, school bags and lunch boxes. Accounts are for adults: parents tag their children’s things, and notes come to the parent.',
   },
   {
     title: 'Ages 18 to 30',
@@ -39,8 +42,22 @@ const points = [
   },
 ];
 
+function storedChannel(): string | null {
+  try {
+    return window.sessionStorage.getItem(CHANNEL_KEY) ?? channelFromSearch(window.location.search);
+  } catch {
+    return null;
+  }
+}
+
 export function MarketingHome() {
-  const theme = useTheme();
+  // The page written at build time has the general words. A visit from a campaign for parents swaps in
+  // theirs once the page is up, so the browser's first draw matches the written page exactly.
+  const [audience, setAudience] = useState<Audience>('general');
+  useEffect(() => {
+    setAudience(audienceFor(storedChannel()));
+  }, []);
+  const hero = HERO[audience];
   return (
     <>
       <section className="relative overflow-hidden">
@@ -52,22 +69,18 @@ export function MarketingHome() {
                 Free QR tags for everyday things
               </span>
               <h1 className="text-[2.5rem] font-semibold leading-[1.05] tracking-[-0.03em] text-ink-900 text-balance sm:text-5xl lg:text-[3.5rem]">
-                A free QR tag, so a kind stranger can message you.
+                {hero.headline}
               </h1>
-              <Lede>
-                Print a tag at home and stick it on a water bottle, a violin case or your keys. When
-                someone finds it, they scan it with their camera and write you a note. Free, private,
-                and no app for the finder.
-              </Lede>
+              <Lede>{hero.lede}</Lede>
               <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                 <PrimaryLink to="/start">Make a free tag</PrimaryLink>
                 <SecondaryLink to="/how-it-works">How it works</SecondaryLink>
               </div>
-              {/* Apple's "Download on the App Store" badge may only link to a live listing, so
-                  until the app is approved this is plain text; swap in the badge on launch day. */}
-              <p className="inline-flex items-center gap-2 rounded-pill border border-hairline bg-paper px-3 py-1.5 text-caption font-medium text-ink-700">
-                <Smartphone size={16} strokeWidth={1.75} aria-hidden />
-                The QuR Tag iPhone app is coming soon to the App Store.
+              <p className="inline-flex items-start gap-2 text-base text-ink-700 text-pretty">
+                <Printer size={18} strokeWidth={1.75} className="mt-0.5 shrink-0" aria-hidden />
+                <span>
+                  What you need: a printer and ordinary paper. Sticker paper or clear tape makes it last.
+                </span>
               </p>
               <p className="text-caption text-muted text-pretty max-w-md">
                 QuR Tag is not a tracker. It does not find anything by itself. It works when someone
@@ -77,15 +90,13 @@ export function MarketingHome() {
             <div className="flex justify-center">
               {/* A real screen from the app, light or dark to match the visitor. */}
               <div className="w-[17.5rem] rounded-[2.75rem] bg-[#050608] p-2.5 shadow-device ring-1 ring-hairline-strong sm:w-[19rem]">
-                <picture>
-                  <img
-                    src={theme.resolved === 'dark' ? '/how/inbox-dark.webp' : '/how/inbox-light.webp'}
-                    width={780}
-                    height={1560}
-                    alt="The QuR Tag app on a phone: the owner of a blue water bottle reads a note from the person who found it at the gym, and replies."
-                    className="block h-auto w-full rounded-[2.125rem]"
-                  />
-                </picture>
+                <ThemedImage
+                  base="inbox"
+                  width={780}
+                  height={1560}
+                  alt="The QuR Tag app on a phone: the owner of a blue water bottle reads a note from the person who found it at the gym, and replies."
+                  className="h-auto w-full rounded-[2.125rem]"
+                />
               </div>
             </div>
           </div>
@@ -101,8 +112,15 @@ export function MarketingHome() {
               </h2>
             </div>
             <HowVisuals />
-            <div>
+            <div className="flex flex-col items-start gap-4">
               <SecondaryLink to="/how-it-works">See both sides in full</SecondaryLink>
+              {/* Below the first screen, so it does not pull attention to something a visitor cannot have yet.
+                  Apple's "Download on the App Store" badge may only link to a live listing, so until the
+                  app is approved this is plain text; swap in the badge on launch day. */}
+              <p className="inline-flex items-center gap-2 rounded-pill border border-hairline bg-paper px-3 py-1.5 text-caption font-medium text-ink-700">
+                <Smartphone size={16} strokeWidth={1.75} aria-hidden />
+                The QuR Tag iPhone app is coming soon to the App Store. The website works on any phone today.
+              </p>
             </div>
           </div>
         </Container>
@@ -173,7 +191,26 @@ export function MarketingHome() {
         </Container>
       </section>
 
-      <CtaBand wide title="Make your first tag in a few minutes." body="It is free for up to three items. You need an email address and a printer." />
+      <section className="border-t border-hairline">
+        <Container size="xl">
+          <div className="flex max-w-2xl flex-col items-start gap-4 py-16 md:py-24">
+            <h2 className="text-3xl font-semibold tracking-[-0.02em] text-ink-900 text-balance sm:text-4xl">
+              Already use a tracker? Add a QuR Tag as the backup.
+            </h2>
+            <p className="text-body text-ink-700 text-pretty">
+              A Bluetooth tracker shows where your thing is. A QuR Tag helps an honest finder send it
+              back: they scan it with any phone camera, no app, and write you a note without ever
+              seeing your phone number or email. It needs no battery, so it keeps working after the
+              tracker's battery runs out.
+            </p>
+            <p className="text-body text-ink-700 text-pretty">
+              For the things that matter most, like luggage, backpacks and instrument cases, use both.
+            </p>
+          </div>
+        </Container>
+      </section>
+
+      <CtaBand wide title="Make your first tag in a few minutes." body="It is free for up to three items. You need an email address, a printer and ordinary paper. Sticker paper or clear tape makes it last." />
     </>
   );
 }

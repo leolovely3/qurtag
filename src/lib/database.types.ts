@@ -151,6 +151,8 @@ export interface Item {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  /** When the owner paused new notes on this item's tag (db/ux-fixes.sql), or null. */
+  notes_paused_at?: string | null;
   // Hidden features only (not in schema qurtag yet).
   model?: string | null;
   declared_value_cents?: number | null;
@@ -182,6 +184,8 @@ export interface Thread {
   status: ThreadStatus;
   last_message_at: string;
   created_at: string;
+  /** The owner archived it; a new note from the finder brings it back (db/ux-fixes.sql). */
+  archived_at?: string | null;
 }
 
 export interface Message {
@@ -192,6 +196,8 @@ export interface Message {
   read_by_owner_at: string | null;
   read_by_finder_at: string | null;
   created_at: string;
+  /** Which family member wrote an owner reply (db/ux-fixes.sql). */
+  sender_user_id?: string | null;
 }
 
 export interface FinderSession {
