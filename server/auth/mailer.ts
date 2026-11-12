@@ -115,8 +115,28 @@ export function signInMail(kind: 'verify-email' | 'reset-password', to: string, 
   };
 }
 
+/**
+ * A link in one of our own emails, tagged so a sign-up that follows can be traced to the email:
+ * utm_source=email, utm_medium=email, utm_campaign=<the kind of email>. A link that signs someone in,
+ * resets or confirms something, or unsubscribes must stay exactly as issued, so those are returned unchanged,
+ * as is a link that already carries a utm_source.
+ */
+export function emailLink(url: string, kind: string): string {
+  try {
+    const u = new URL(url);
+    if (/(unsubscribe|opt-?out|join|invite|reset|recover|verify|confirm|auth|token|sign-?in|log-?in|magic|callback|otp|code=)/i.test(u.pathname + u.search)) return url;
+    if (u.searchParams.has('utm_source')) return url;
+    u.searchParams.set('utm_source', 'email');
+    u.searchParams.set('utm_medium', 'email');
+    u.searchParams.set('utm_campaign', kind.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'email');
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
 /** Tells an owner that a finder wrote about one of their items. Nothing about the finder. */
-export function finderMessageMail(to: string, itemName: string, inboxUrl: string): Mail {
+export function finderMessageMail(to: string, itemName: string, plainInboxUrl: string): Mail {
+  const inboxUrl = emailLink(plainInboxUrl, 'finder-message');
   const lead = `Someone who found your ${itemName} sent you a note on QuR Tag.`;
   const after = 'Reply from your QuR Tag inbox. They will not see your email address.';
   return {
