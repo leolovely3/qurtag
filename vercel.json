@@ -1,4 +1,14 @@
 {
+  "redirects": [
+    { "source": "/fb", "destination": "/?utm_source=facebook&utm_medium=social&utm_campaign=profile", "statusCode": 302 },
+    { "source": "/ig", "destination": "/?utm_source=instagram&utm_medium=social&utm_campaign=profile", "statusCode": 302 },
+    { "source": "/x", "destination": "/?utm_source=x&utm_medium=social&utm_campaign=profile", "statusCode": 302 },
+    { "source": "/li", "destination": "/?utm_source=linkedin&utm_medium=social&utm_campaign=profile", "statusCode": 302 },
+    { "source": "/tt", "destination": "/?utm_source=tiktok&utm_medium=social&utm_campaign=profile", "statusCode": 302 },
+    { "source": "/yt", "destination": "/?utm_source=youtube&utm_medium=social&utm_campaign=profile", "statusCode": 302 },
+    { "source": "/th", "destination": "/?utm_source=threads&utm_medium=social&utm_campaign=profile", "statusCode": 302 },
+    { "source": "/rd", "destination": "/?utm_source=reddit&utm_medium=social&utm_campaign=profile", "statusCode": 302 }
+  ],
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "npm run build",
   "installCommand": "npm install",

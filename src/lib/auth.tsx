@@ -12,6 +12,7 @@ import { authClient, clearDataPass, forgetSession } from './authClient';
 import { db } from './db';
 import { iapSignOut } from './iap';
 import { recordPlatform, signupChannel } from './measures';
+import { recordThisSignupSource } from './signupSource';
 import { forgetPushDevice } from './nativePush';
 import { SKIP_KEY } from './gettingStarted';
 import { rememberAccountOnDevice } from './firstOpen';
@@ -118,7 +119,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // starts the call, nothing about the person is sent.
   const signedInId = user?.id;
   useEffect(() => {
-    if (signedInId) recordPlatform();
+    if (signedInId) {
+      recordPlatform();
+      recordThisSignupSource(signedInId);
+    }
   }, [signedInId]);
 
   // An account has been used on this phone, so a signed-out open goes to signing in from now on,

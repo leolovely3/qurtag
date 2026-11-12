@@ -73,7 +73,9 @@ psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/measures.sql
 psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/ux-fixes.sql
 # Rollout step 15 (memberships bought in the Android app through Google Play; needs steps 5 and 12).
 psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/google-play.sql
-echo "schema, logins, the admin role, push, moderation, short codes, measures, the finder loop and Google Play memberships applied"
+# Rollout step 16 (where each new account came from; needs step 12).
+psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/signup-source.sql
+echo "schema, logins, the admin role, push, moderation, short codes, measures, the finder loop, Google Play memberships and the sign-up source applied"
 
 export QURTAG_AUTH_URL="http://127.0.0.1:$API_PORT"
 export QURTAG_DATABASE_URL="postgres://qurtag_auth:$AUTH_PW@127.0.0.1:$PG_PORT/postgres"
@@ -195,3 +197,8 @@ QURTAG_TEST_PUSH_BASE="http://127.0.0.1:$PUSH_PORT" \
 QURTAG_TEST_MAIL_FILE="$WORK/push-mail.jsonl" \
 QURTAG_TEST_ADMIN_DB="$ADMIN" \
   npx tsx scripts/qurtag/finder-loop.test.mjs || { echo "--- server logs"; tail -40 "$WORK/server.log" "$WORK/push-server.log"; exit 1; }
+QURTAG_TEST_BASE="http://127.0.0.1:$API_PORT" \
+QURTAG_TEST_ADMIN_DB="$ADMIN" \
+QURTAG_TEST_LOGIN_DB_SERVER="$QURTAG_DATABASE_URL_SERVER" \
+QURTAG_TEST_LOGIN_DB_DATA="$QURTAG_DATABASE_URL_DATA" \
+  npx tsx scripts/qurtag/signup-source.test.mjs || { echo "--- server log"; tail -40 "$WORK/server.log"; exit 1; }

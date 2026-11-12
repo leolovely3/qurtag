@@ -9,6 +9,7 @@ import { installExternalLinks } from './lib/externalLinks';
 import { isNative } from './lib/platform';
 import { installTextSizeClasses } from './lib/textSize';
 import { captureChannel } from './lib/measures';
+import { captureSignupSource } from './lib/signupSource';
 import { startErrorReports } from './lib/errors';
 import { installAndroidBack } from './lib/androidBack';
 import '@fontsource/inter/latin-400.css';
@@ -24,6 +25,12 @@ installTextSizeClasses();
 
 // Where the visit came from (?ch=, else utm_source), kept in this tab only (src/lib/measures.ts).
 captureChannel();
+// And the rest of the first page's source (utm tags, referring page, channel) for sign-in to record.
+try {
+  captureSignupSource({ search: location.search, referrer: document.referrer, pathname: location.pathname, hostname: location.hostname, storage: window.sessionStorage });
+} catch {
+  /* storage off */
+}
 // Errors to Sentry, with nothing personal (src/lib/errors.ts).
 startErrorReports(isNative());
 
