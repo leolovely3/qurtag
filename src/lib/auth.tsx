@@ -11,6 +11,7 @@ import { authClient, clearDataPass, forgetSession } from './authClient';
 import { db } from './db';
 import { iapSignOut } from './iap';
 import { recordPlatform, signupChannel } from './measures';
+import { recordThisSignupSource } from './signupSource';
 import { forgetPushDevice } from './nativePush';
 import { SKIP_KEY } from './gettingStarted';
 
@@ -94,7 +95,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // starts the call, nothing about the person is sent.
   const signedInId = user?.id;
   useEffect(() => {
-    if (signedInId) recordPlatform();
+    if (signedInId) {
+      recordPlatform();
+      recordThisSignupSource(signedInId);
+    }
   }, [signedInId]);
 
   const signUp = useCallback<AuthContextValue['signUp']>(

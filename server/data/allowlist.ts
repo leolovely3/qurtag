@@ -171,6 +171,12 @@ export const RPCS: Readonly<Record<string, RpcRule>> = {
     callers: ['user'],
   },
   record_app_platform: { args: { p_platform: 'text' }, returns: 'void', callers: ['user'] },
+  // Where a new account came from (db/signup-source.sql): written once, for an account made in the last 7 days.
+  record_signup_source: {
+    args: { p_utm_source: 'text', p_utm_medium: 'text', p_utm_campaign: 'text', p_utm_term: 'text', p_utm_content: 'text', p_referrer_url: 'text', p_landing_path: 'text', p_channel: 'text' },
+    returns: 'value',
+    callers: ['user'],
+  },
   // With no pass: the Factory's counts (which check a token of their own).
   factory_metrics: { args: { p_token: 'text' }, returns: 'value', callers: ['anon'] },
 };

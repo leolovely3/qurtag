@@ -69,7 +69,9 @@ psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/admin-alerts.sql
 psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/shortcodes.sql
 # Rollout step 12 (first-party measures; needs steps 5, 8 and 9).
 psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/measures.sql
-echo "schema, logins, the admin role, push, moderation, short codes and measures applied"
+# Rollout step 16 (where each new account came from; needs step 12).
+psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/signup-source.sql
+echo "schema, logins, the admin role, push, moderation, short codes, measures and the sign-up source applied"
 
 export QURTAG_AUTH_URL="http://127.0.0.1:$API_PORT"
 export QURTAG_DATABASE_URL="postgres://qurtag_auth:$AUTH_PW@127.0.0.1:$PG_PORT/postgres"
@@ -184,3 +186,8 @@ QURTAG_TEST_LOGIN_DB_SERVER="$QURTAG_DATABASE_URL_SERVER" \
 QURTAG_TEST_LOGIN_DB_DATA="$QURTAG_DATABASE_URL_DATA" \
 QURTAG_TEST_FACTORY_TOKEN="$FACTORY_TOKEN" \
   npx tsx scripts/qurtag/measures.test.mjs || { echo "--- server log"; tail -40 "$WORK/server.log"; exit 1; }
+QURTAG_TEST_BASE="http://127.0.0.1:$API_PORT" \
+QURTAG_TEST_ADMIN_DB="$ADMIN" \
+QURTAG_TEST_LOGIN_DB_SERVER="$QURTAG_DATABASE_URL_SERVER" \
+QURTAG_TEST_LOGIN_DB_DATA="$QURTAG_DATABASE_URL_DATA" \
+  npx tsx scripts/qurtag/signup-source.test.mjs || { echo "--- server log"; tail -40 "$WORK/server.log"; exit 1; }

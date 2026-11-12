@@ -10,6 +10,7 @@ import { installPreloadErrorHandler } from './lib/chunkRecovery';
 import { installExternalLinks } from './lib/externalLinks';
 import { isNative } from './lib/platform';
 import { captureChannel } from './lib/measures';
+import { captureSignupSource } from './lib/signupSource';
 import { startErrorReports } from './lib/errors';
 import './index.css';
 
@@ -29,6 +30,12 @@ if (isNative()) {
 
 // Where the visit came from (?ch=, else utm_source), kept in this tab only (src/lib/measures.ts).
 captureChannel();
+// And the rest of the first page's source (utm tags, referring page, channel) for sign-in to record.
+try {
+  captureSignupSource({ search: location.search, referrer: document.referrer, pathname: location.pathname, hostname: location.hostname, storage: window.sessionStorage });
+} catch {
+  /* storage off */
+}
 // Errors to Sentry, with nothing personal (src/lib/errors.ts).
 startErrorReports(isNative());
 

@@ -88,6 +88,13 @@ with the sign-up (the iPhone app uses `ios-app` when it has none), records print
 records the platform after sign-in. Every call is fire and forget. Deploy order: run rollout step 12 first, then merge: the
 new site writes `signup_channel` at sign-up.
 
+### Where each new account came from
+
+`db/signup-source.sql` (rollout step 16; undo in `db/undo-signup-source.sql`) adds `qurtag.signup_sources`, one row per account: the five
+`utm_*` tags, the referring page without its query, the first page's path (never a tag code) and the channel worked out in the app
+(`src/lib/signupSource.ts`). `record_signup_source` is the only way in, for a signed-in owner, once, first touch kept, only for an account
+made in the last 7 days; no role has a right on the table. `supabase/migrations/20261112130000_signup_source.sql` mirrors the file for scanners; it is not applied.
+
 ### Error reports (Sentry)
 
 `src/lib/errors.ts` sends errors only, to the Sentry project `cairn`, from the website and the iPhone app: no user, cookies,
