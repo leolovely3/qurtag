@@ -273,7 +273,7 @@ export function createDataApi(opts: DataApiOptions) {
     // Who is asking. The Factory's metrics reader sends its own key in Authorization;
     // the counting function always runs with no pass, so that header is not read as one.
     let claims: PassClaims | null = null;
-    const guestOnly = path.length === 2 && path[0] === 'rpc' && path[1] === 'factory_metrics';
+    const guestOnly = path.length === 2 && path[0] === 'rpc' && (path[1] === 'factory_metrics' || path[1] === 'factory_signup_sources');
     const auth = guestOnly ? null : request.headers.get('authorization');
     if (auth !== null) {
       const token = /^Bearer\s+(\S+)$/i.exec(auth)?.[1];

@@ -101,6 +101,11 @@ new site writes `signup_channel` at sign-up.
 (`src/lib/signupSource.ts`). `record_signup_source` is the only way in, for a signed-in owner, once, first touch kept, only for an account
 made in the last 7 days; no role has a right on the table. `supabase/migrations/20261112130000_signup_source.sql` mirrors the file for scanners; it is not applied.
 
+`db/factory-signup-sources.sql` (rollout step 17; undo in `db/undo-factory-signup-sources.sql`) adds `qurtag.factory_signup_sources(p_token, p_days)`, the Company OS's read of those
+sources, through the data API's rpc route with its metrics token (the same guard as `factory_metrics`). It answers one row per account made in the last 1 to 90 days: the
+day, `utm_source`, `utm_content` (the post), the referrer host, the channel and whether the account is ours (a test or company address). No name, email, account id or landing
+path leaves it. Test: `scripts/qurtag/factory-signup-sources.test.mjs`. `supabase/migrations/20261113110000_factory_signup_sources.sql` mirrors the file for scanners; it is not applied.
+
 ### Error reports (Sentry)
 
 `src/lib/errors.ts` sends errors only, to the Sentry project `cairn`, from the website and the iPhone app: no user, cookies,

@@ -183,6 +183,8 @@ export const RPCS: Readonly<Record<string, RpcRule>> = {
   },
   // With no pass: the Factory's counts (which check a token of their own).
   factory_metrics: { args: { p_token: 'text' }, returns: 'value', callers: ['anon'] },
+  // The Factory's read of where each sign-up came from (db/factory-signup-sources.sql): rows with no name, email or id.
+  factory_signup_sources: { args: { p_token: 'text', p_days: 'integer' }, returns: 'value', callers: ['anon'] },
 };
 
 export const SCHEMA = 'qurtag';
