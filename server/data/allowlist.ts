@@ -181,6 +181,8 @@ export const RPCS: Readonly<Record<string, RpcRule>> = {
     returns: 'value',
     callers: ['user'],
   },
+  // With no pass: one anonymous page view (db/page-views.sql, rollout step 18): a route pattern and a source word, nothing about a person.
+  record_visit: { args: { p_path: 'text', p_source: 'text' }, returns: 'void', callers: ['anon'] },
   // With no pass: the Factory's counts (which check a token of their own).
   factory_metrics: { args: { p_token: 'text' }, returns: 'value', callers: ['anon'] },
   // The Factory's read of where each sign-up came from (db/factory-signup-sources.sql): rows with no name, email or id.
