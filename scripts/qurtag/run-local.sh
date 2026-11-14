@@ -79,6 +79,7 @@ psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/signup-source.sql
 psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/factory-signup-sources.sql
 # Rollout step 18 (anonymous page views, and the "visits" key in factory_metrics; needs step 12).
 psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/page-views.sql
+psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/visits-leave-out-test.sql
 echo "schema, logins, the admin role, push, moderation, short codes, measures, the finder loop, Google Play memberships, the sign-up source and its reader, and the page views applied"
 
 export QURTAG_AUTH_URL="http://127.0.0.1:$API_PORT"
