@@ -106,6 +106,13 @@ sources, through the data API's rpc route with its metrics token (the same guard
 day, `utm_source`, `utm_content` (the post), the referrer host, the channel and whether the account is ours (a test or company address). No name, email, account id or landing
 path leaves it. Test: `scripts/qurtag/factory-signup-sources.test.mjs`. `supabase/migrations/20261113110000_factory_signup_sources.sql` mirrors the file for scanners; it is not applied.
 
+`db/page-views.sql` (rollout step 18; undo in `db/undo-page-views.sql`) adds the anonymous page view counter: `qurtag.site_visits` (one number per UTC day, page route and source; no role has a
+right on it), `qurtag.record_visit(p_path, p_source)` (the only way in; the data API's rpc route calls it with no pass, as `qurtag_anon`; a bad path or source is ignored, at most 5000 pairs a day)
+and one more key in `qurtag.factory_metrics`, `visits`, which is how the Company OS reads it (`factory-metrics.json` `visitsSummary`). In the browser, `src/lib/visitCounter.ts` decides what is sent
+(the route pattern from `src/lib/siteVisitRoutes.ts`, never a tag code or a short link; a one-word source, never the referring site; once per page per tab; nothing from crawlers or scripted browsers)
+and `src/lib/siteVisits.ts` sends it from the router's root (`src/lib/useSiteVisits.tsx`). Tests: `scripts/qurtag/unit/site-visits.test.ts` and `scripts/qurtag/page-views.test.mjs`.
+`supabase/migrations/20261113130000_page_views.sql` mirrors the file for scanners; it is not applied.
+
 ### Error reports (Sentry)
 
 `src/lib/errors.ts` sends errors only, to the Sentry project `cairn`, from the website and the iPhone app: no user, cookies,

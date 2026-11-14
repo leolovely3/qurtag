@@ -77,7 +77,9 @@ psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/google-play.sql
 psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/signup-source.sql
 # Rollout step 17 (the Company OS's read of those sources; needs step 16).
 psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/factory-signup-sources.sql
-echo "schema, logins, the admin role, push, moderation, short codes, measures, the finder loop, Google Play memberships, the sign-up source and its reader applied"
+# Rollout step 18 (anonymous page views, and the "visits" key in factory_metrics; needs step 12).
+psql "$ADMIN" -X -q -v ON_ERROR_STOP=1 -1 -f db/page-views.sql
+echo "schema, logins, the admin role, push, moderation, short codes, measures, the finder loop, Google Play memberships, the sign-up source and its reader, and the page views applied"
 
 export QURTAG_AUTH_URL="http://127.0.0.1:$API_PORT"
 export QURTAG_DATABASE_URL="postgres://qurtag_auth:$AUTH_PW@127.0.0.1:$PG_PORT/postgres"
@@ -210,3 +212,9 @@ QURTAG_TEST_LOGIN_DB_SERVER="$QURTAG_DATABASE_URL_SERVER" \
 QURTAG_TEST_LOGIN_DB_DATA="$QURTAG_DATABASE_URL_DATA" \
 QURTAG_TEST_FACTORY_TOKEN="$FACTORY_TOKEN" \
   npx tsx scripts/qurtag/factory-signup-sources.test.mjs || { echo "--- server log"; tail -40 "$WORK/server.log"; exit 1; }
+QURTAG_TEST_BASE="http://127.0.0.1:$API_PORT" \
+QURTAG_TEST_ADMIN_DB="$ADMIN" \
+QURTAG_TEST_LOGIN_DB_SERVER="$QURTAG_DATABASE_URL_SERVER" \
+QURTAG_TEST_LOGIN_DB_DATA="$QURTAG_DATABASE_URL_DATA" \
+QURTAG_TEST_FACTORY_TOKEN="$FACTORY_TOKEN" \
+  npx tsx scripts/qurtag/page-views.test.mjs || { echo "--- server log"; tail -40 "$WORK/server.log"; exit 1; }
