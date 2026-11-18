@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
-import { Camera, Lock, MessageCircle, Printer, Smartphone } from 'lucide-react';
+import { Camera, Lock, MessageCircle, Printer } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
 import { useEffect, useState } from 'react';
 import { ThemedImage } from '@/components/brand/ThemedImage';
 import { Lede } from '@/components/brand/Typography';
 import { HowVisuals } from './HowVisuals';
+import { GetTheApp } from './GetTheApp';
 import { audienceFor, HERO, type Audience } from '@/lib/audience';
 import { CHANNEL_KEY, channelFromSearch } from '@/lib/measures';
 import { PrimaryLink, SecondaryLink, CtaBand } from './parts';
@@ -114,13 +115,10 @@ export function MarketingHome() {
             <HowVisuals />
             <div className="flex flex-col items-start gap-4">
               <SecondaryLink to="/how-it-works">See both sides in full</SecondaryLink>
-              {/* Below the first screen, so it does not pull attention to something a visitor cannot have yet.
-                  Apple's "Download on the App Store" badge may only link to a live listing, so until the
-                  app is approved this is plain text; swap in the badge on launch day. */}
-              <p className="inline-flex items-center gap-2 rounded-pill border border-hairline bg-paper px-3 py-1.5 text-caption font-medium text-ink-700">
-                <Smartphone size={16} strokeWidth={1.75} aria-hidden />
-                The QuR Tag iPhone app is coming soon to the App Store. The website works on any phone today.
-              </p>
+              {/* Below the first screen, so it does not pull attention from making a tag. Plain links in
+                  the HTML before any script runs: the App Store listing once there is one, and the web app
+                  for Android until Google Play is live (src/lib/appStore.ts). */}
+              <GetTheApp />
             </div>
           </div>
         </Container>

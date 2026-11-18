@@ -1,5 +1,6 @@
 import { Fragment, type ReactNode } from 'react';
-import { PageHero, PageBody, Section, P, CtaBand, ContactLink, DocLink } from './parts';
+import { PageHero, PageBody, Section, P, CtaBand, ContactLink, DocLink, WebOnly } from './parts';
+import { GetTheApp } from './GetTheApp';
 import { ContactForm } from '@/components/support/ContactForm';
 import { visibleFaqs } from '@/lib/faq';
 import { useMembershipsAvailable } from '@/lib/useMembershipsAvailable';
@@ -37,6 +38,11 @@ export function Help() {
             </Section>
           ))}
         </div>
+        <WebOnly>
+          <Section title="Get QuR Tag on your phone">
+            <GetTheApp />
+          </Section>
+        </WebOnly>
         <Section title="Contact us">
           <P>Write to us here and we will reply by email. If you are signed in we see your account and plan with your message.</P>
           <ContactForm />
