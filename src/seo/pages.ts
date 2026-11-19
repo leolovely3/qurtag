@@ -39,6 +39,7 @@ export const PUBLIC_PAGES: PublicPage[] = [
   page('/how-it-works', 'How QuR Tag works: make a tag, print it and stick it on. A finder scans it with their camera, writes you a note, and you reply.', 'monthly', 0.9),
   page('/tags', 'Pick a QR tag style for bottles, keys, bags or clothes, then print it at home on paper or sticker paper. A short code is printed as a backup.', 'weekly', 0.9),
   page('/make-it-last', 'How to make a printed QR tag last: what to print on, what to cover it with and where to put it, so it still scans when someone finds your thing.', 'monthly', 0.7),
+  page('/qr-stickers-for-lost-items', 'How QR stickers for lost items work, and how to label bottles, keys, bags and instruments so a finder can scan them and message you.', 'monthly', 0.7),
   page('/pricing', 'QuR Tag is free for up to three items. Plus is $19 a year with no item limit. Family is $29 a year and shares items and inbox with up to five people.', 'weekly', 0.9),
   page('/security', 'What a finder sees on a QuR Tag page and what they cannot. Your email and phone number stay private, and every conversation stays between you and the finder.', 'monthly', 0.8),
   page('/help', 'Answers about QuR Tag: what a finder sees, how replies work, what it costs, how to make a tag last, how to report a finder and how to delete your account.', 'monthly', 0.6),

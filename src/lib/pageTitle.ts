@@ -18,6 +18,7 @@ const PUBLIC_TITLES: Record<string, string> = {
   '/help': 'Help',
   '/tags': 'Tag styles',
   '/make-it-last': 'Make your tag last',
+  '/qr-stickers-for-lost-items': 'How QR stickers for lost items work',
   '/privacy': 'Privacy',
   '/delete-account': 'Delete your account',
   '/terms': 'Terms',
