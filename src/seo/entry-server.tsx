@@ -14,6 +14,7 @@ import { AppProviders } from '../AppProviders';
  */
 export { PUBLIC_PAGES, pageUrl, SITE_ORIGIN, SITE_NAME, SHARE_IMAGE, SHARE_IMAGE_ALT } from './pages';
 export { homeStructuredData, faqStructuredData } from './structured';
+export { llmsText } from './llms';
 
 export async function render(path: string): Promise<{ html: string; status: number }> {
   const handler = createStaticHandler(routes);

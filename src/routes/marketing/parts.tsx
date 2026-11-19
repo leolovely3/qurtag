@@ -38,6 +38,11 @@ export function InAppDoc({
   );
 }
 
+/** Content for the website only: left out when the page is read inside the app frame. */
+export function WebOnly({ children }: { children: ReactNode }) {
+  return useContext(InAppDocContext) ? null : <>{children}</>;
+}
+
 /** A link to one of the four shared pages: the app copy when read inside the app. */
 export function DocLink({ to, ...rest }: LinkProps & { to: string }) {
   const inApp = useContext(InAppDocContext);
