@@ -15,6 +15,7 @@ import { SecurityPage } from '@/routes/marketing/Security';
 import { Terms } from '@/routes/marketing/Terms';
 import { Tags } from '@/routes/marketing/Tags';
 import { MakeItLast } from '@/routes/marketing/MakeItLast';
+import { LostItemsGuide } from '@/routes/marketing/LostItemsGuide';
 import { NotFound } from '@/routes/marketing/NotFound';
 
 /**
@@ -50,6 +51,7 @@ export const routes: RouteObject[] = [
       { path: '/help', element: <Help /> },
       { path: '/tags', element: <Tags /> },
       { path: '/make-it-last', element: <MakeItLast /> },
+      { path: '/qr-stickers-for-lost-items', element: <LostItemsGuide /> },
       { path: '/privacy', element: <Privacy /> },
       { path: '/delete-account', element: <DeleteAccount /> },
       { path: '/terms', element: <Terms /> },

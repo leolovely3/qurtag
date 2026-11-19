@@ -16,6 +16,7 @@ export const VISIT_ROUTES = [
   '/help',
   '/tags',
   '/make-it-last',
+  '/qr-stickers-for-lost-items',
   '/privacy',
   '/delete-account',
   '/terms',
