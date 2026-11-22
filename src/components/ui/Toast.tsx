@@ -77,7 +77,7 @@ function Toaster({ toasts, onDismiss }: ToasterProps) {
   return createPortal(
     <div
       aria-live="polite"
-      className="fixed bottom-qurtag-3 right-qurtag-3 z-50 flex flex-col gap-2 pointer-events-none max-w-[380px] w-[calc(100vw-2rem)]"
+      className="fixed bottom-qurtag-3 right-[calc(1.5rem+env(safe-area-inset-right))] z-50 flex flex-col gap-2 pointer-events-none max-w-[380px] w-[calc(100vw-2rem-env(safe-area-inset-left)-env(safe-area-inset-right))]"
     >
       {toasts.map((t) => (
         <ToastCard key={t.id} toast={t} onDismiss={onDismiss} />
