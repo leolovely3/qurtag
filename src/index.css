@@ -261,6 +261,21 @@ html.native-app .fixed.inset-0 {
   padding-top: max(1rem, env(safe-area-inset-top));
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
+/* The sides of anything fixed across the screen (the bottom tab bar, dialogs, sheets and their
+   backdrops). The iPhone Duo shows its status bar as a vertical bar down one side, a left or right
+   inset that lasts for the whole posture; the body's side padding does not reach fixed layers. A
+   transparent border on each side keeps their content clear and adds to their own padding, while
+   their background still shows through it, so a bar or a backdrop still reaches the screen edge.
+   A backdrop drawn as its own layer inside one reaches back over the border. Zero on an upright phone. */
+html.native-app .fixed.inset-0,
+html.native-app .fixed.inset-x-0 {
+  border-left: env(safe-area-inset-left) solid transparent;
+  border-right: env(safe-area-inset-right) solid transparent;
+}
+html.native-app .fixed.inset-0 > .absolute.inset-0 {
+  left: calc(-1 * env(safe-area-inset-left));
+  right: calc(-1 * env(safe-area-inset-right));
+}
 /* A full-height layout fills the space between the safe areas, not the whole screen: the body's
    padding already holds the safe areas, so 100vh on top of it made every short screen scroll
    by their height and pushed anything pinned to the bottom (the welcome screen's buttons) off it. */
