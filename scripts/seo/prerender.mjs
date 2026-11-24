@@ -14,6 +14,7 @@
  *                       finder's page and invite links, none of which belong in search
  *   404.html            the "page not found" page, which Vercel serves with status 404
  *   sitemap.xml         the public pages, from the same list
+ *   llms.txt            a plain-text summary for answer engines, from the same list
  *
  * It fails the build if a page would reach search badly: a missing or repeated title, a description
  * outside 70 to 160 characters, not exactly one H1, or under 250 characters of text of its own.
@@ -25,7 +26,7 @@ import path from 'node:path';
 const root = process.cwd();
 const dist = path.join(root, process.env.SEO_DIST ?? 'dist');
 const server = await import(pathToFileURL(path.join(root, '.seo-build', 'entry-server.js')).href);
-const { PUBLIC_PAGES, pageUrl, render, homeStructuredData, faqStructuredData, SITE_NAME, SHARE_IMAGE, SHARE_IMAGE_ALT } = server;
+const { PUBLIC_PAGES, pageUrl, render, homeStructuredData, faqStructuredData, pageStructuredData, llmsText, SITE_NAME, SHARE_IMAGE, SHARE_IMAGE_ALT } = server;
 
 const template = await readFile(path.join(dist, 'index.html'), 'utf8');
 for (const need of ['<!--seo-head-->', '<title>QuR Tag</title>', '<div id="root"></div>']) {
@@ -85,6 +86,7 @@ for (const p of PUBLIC_PAGES) {
     ...previewTags(p.title, p.description, url).slice(1),
   ];
   if (p.path === '/') head.push(ld(homeStructuredData()));
+  else head.push(ld(pageStructuredData(p)));
   if (p.path === '/help') head.push(ld(faqStructuredData()));
   out[p.path === '/' ? 'index.html' : `${p.path.slice(1)}.html`] = compose({ title: p.title, head, html });
 
@@ -135,4 +137,6 @@ ${PUBLIC_PAGES.map(
 </urlset>
 `;
 await writeFile(path.join(dist, 'sitemap.xml'), sitemap);
+// The plain-text summary for answer engines, from the same page list (src/seo/llms.ts).
+await writeFile(path.join(dist, 'llms.txt'), llmsText());
 console.log(`Prerendered ${PUBLIC_PAGES.length} public pages, the app shell and the 404 page.`);

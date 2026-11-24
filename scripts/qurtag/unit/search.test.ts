@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { PUBLIC_PAGES, pageUrl } from '../../../src/seo/pages';
-import { faqStructuredData, homeStructuredData } from '../../../src/seo/structured';
+import { faqStructuredData, homeStructuredData, pageStructuredData } from '../../../src/seo/structured';
 import { FAQS, plainAnswer, visibleFaqs } from '../../../src/lib/faq';
 import { PRODUCTS } from '../../../server/billing/catalog';
 
@@ -51,6 +51,20 @@ test('the Help page markup is the visible list of questions, with plain answers'
   }
   assert.equal(plainAnswer('Read [the guide](/make-it-last) or email {contact}.'), 'Read the guide or email info@impactconsulting.ai.');
   assert.ok(visibleFaqs(false).every((f) => !f.paid));
+});
+
+test('every public page other than home carries WebPage markup naming its own www address, title and description', () => {
+  for (const p of PUBLIC_PAGES.filter((x) => x.path !== '/')) {
+    const ld = pageStructuredData(p) as Record<string, unknown>;
+    assert.equal(ld['@context'], 'https://schema.org');
+    assert.equal(ld['@type'], 'WebPage');
+    assert.equal(ld.url, pageUrl(p.path));
+    assert.equal(ld.name, p.title);
+    assert.equal(ld.description, p.description);
+    assert.deepEqual(ld.isPartOf, { '@type': 'WebSite', '@id': 'https://www.qurtag.com/#website', url: 'https://www.qurtag.com/', name: 'QuR Tag' });
+  }
+  // The build writes it into every page that has no other markup of its own.
+  assert.match(read('scripts/seo/prerender.mjs'), /head\.push\(ld\(pageStructuredData\(p\)\)\)/);
 });
 
 test('vercel.json: real pages and files stay served, the app and finder routes reach the shell, junk gets the 404 page', () => {

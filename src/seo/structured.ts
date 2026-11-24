@@ -1,6 +1,6 @@
 import { visibleFaqs, plainAnswer } from '../lib/faq';
 import { FREE_ITEM_LIMIT, FAMILY_SEATS, PRODUCTS, priceLabel } from '../../server/billing/catalog';
-import { SITE_NAME, SITE_ORIGIN } from './pages';
+import { SITE_NAME, SITE_ORIGIN, pageUrl, type PublicPage } from './pages';
 
 /**
  * JSON-LD for search (https://schema.org), written into the HTML at build time by
@@ -87,5 +87,21 @@ export function faqStructuredData(): object {
       name: f.q,
       acceptedAnswer: { '@type': 'Answer', text: plainAnswer(f.a) },
     })),
+  };
+}
+
+/**
+ * Every other public page: a WebPage naming its own www address, title and description, so each
+ * page a search engine reads carries markup that agrees with its canonical address.
+ */
+export function pageStructuredData(p: PublicPage): object {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    url: pageUrl(p.path),
+    name: p.title,
+    description: p.description,
+    inLanguage: 'en-US',
+    isPartOf: { '@type': 'WebSite', '@id': SITE_ID, url: `${SITE_ORIGIN}/`, name: SITE_NAME },
   };
 }
