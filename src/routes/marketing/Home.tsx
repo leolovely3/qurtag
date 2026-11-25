@@ -114,13 +114,14 @@ export function MarketingHome() {
             <HowVisuals />
             <div className="flex flex-col items-start gap-4">
               <SecondaryLink to="/how-it-works">See both sides in full</SecondaryLink>
-              {/* Below the first screen, so it does not pull attention to something a visitor cannot have yet.
-                  Apple's "Download on the App Store" badge may only link to a live listing, so until the
-                  app is approved this is plain text; swap in the badge on launch day. */}
-              <p className="inline-flex items-center gap-2 rounded-pill border border-hairline bg-paper px-3 py-1.5 text-caption font-medium text-ink-700">
+              {/* A plain link in the page's own HTML, so search engines and people without JavaScript see it. */}
+              <a
+                href="https://apps.apple.com/app/id6826832888"
+                className="inline-flex min-h-11 items-center gap-2 rounded-pill border border-hairline bg-paper px-4 py-2 text-base font-medium text-ink-900 underline underline-offset-4"
+              >
                 <Smartphone size={16} strokeWidth={1.75} aria-hidden />
-                The QuR Tag iPhone app is coming soon to the App Store. The website works on any phone today.
-              </p>
+                Get the QuR Tag iPhone app on the App Store
+              </a>
             </div>
           </div>
         </Container>
