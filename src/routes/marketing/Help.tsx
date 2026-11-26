@@ -37,6 +37,13 @@ export function Help() {
             </Section>
           ))}
         </div>
+        <Section title="The iPhone app">
+          <P>
+            Get the QuR Tag iPhone app from{' '}
+            <a href="https://apps.apple.com/app/id6826832888" className="text-ink-900 underline underline-offset-4">QuR Tag on the App Store</a>.
+            The website works on any phone, so you can use QuR Tag without it.
+          </P>
+        </Section>
         <Section title="Contact us">
           <P>Write to us here and we will reply by email. If you are signed in we see your account and plan with your message.</P>
           <ContactForm />
